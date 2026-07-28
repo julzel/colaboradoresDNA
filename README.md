@@ -43,7 +43,8 @@ pnpm test:coverage   # unit-test coverage report
 - [Architecture](./docs/architecture.md)
 - [Development guide](./docs/development.md)
 - [Deployment guide](./docs/deployment.md)
-- [Technology-stack decision](./tasks/tech-stack.md)
+- [Design system](./docs/design-system.md)
+- [Technology-stack decision](./tasks/done/tech-stack.md)
 
 ## Repository layout
 
