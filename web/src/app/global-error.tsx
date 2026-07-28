@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button/button";
+
 export default function GlobalError({
   reset,
 }: {
@@ -13,9 +15,7 @@ export default function GlobalError({
           <p className="eyebrow">Something went wrong</p>
           <h1>We could not load this page.</h1>
           <p>Please try again. If the problem continues, come back in a few minutes.</p>
-          <button className="button button--primary" onClick={reset} type="button">
-            Try again
-          </button>
+          <Button onClick={reset}>Try again</Button>
         </main>
       </body>
     </html>
