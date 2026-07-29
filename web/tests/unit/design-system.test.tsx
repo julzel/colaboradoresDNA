@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { House } from "lucide-react";
 import { describe, expect, it } from "vitest";
 
 import { Button } from "@/components/ui/button/button";
@@ -33,7 +34,7 @@ describe("design-system foundations", () => {
     render(
       <SideNavigation
         currentHref="/"
-        items={[{ href: "/", label: "Overview", marker: "OV" }]}
+        items={[{ href: "/", icon: House, label: "Overview" }]}
       />,
     );
 

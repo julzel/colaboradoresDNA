@@ -3,19 +3,19 @@ import { WorkspaceShell } from "@/components/layout/workspace-shell/workspace-sh
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import { getWorkspaceNavigation } from "@/features/navigation/workspace-navigation";
 
-export default async function HomePage() {
+export default async function CalendarPage() {
   const { platformUser } = await requirePlatformUser();
 
   return (
     <WorkspaceShell
-      breadcrumbs={[{ label: "Inicio" }]}
-      currentHref="/"
+      breadcrumbs={[{ href: "/", label: "Inicio" }, { label: "Calendario" }]}
+      currentHref="/calendario"
       navigationItems={getWorkspaceNavigation(platformUser.role)}
     >
       <ConstructionPlaceholder
-        description="Estamos preparando este espacio de trabajo. Muy pronto encontrarás aquí las herramientas para colaborar con tu equipo."
-        eyebrow="Colaboradores DNA"
-        title="Plataforma en construcción"
+        description="Pronto podrás consultar y organizar los eventos relevantes para tu equipo."
+        eyebrow="Planificación"
+        title="Calendario en construcción"
       />
     </WorkspaceShell>
   );
