@@ -42,6 +42,7 @@ pnpm test:coverage   # unit-test coverage report
 ## Documentation
 
 - [Architecture](./docs/architecture.md)
+- [Authentication and account lifecycle](./docs/authentication.md)
 - [Development guide](./docs/development.md)
 - [Deployment guide](./docs/deployment.md)
 - [Design system](./docs/design-system.md)

@@ -272,6 +272,20 @@ Clerk public metadata must not become the sole source of authorization truth.
 The sign-in and account screens, including Clerk-hosted or embedded text and
 emails, must be configured in Spanish.
 
+Implementation baseline as of 2026-07-28:
+
+- The development Clerk instance uses restricted mode, Google or email codes,
+  TOTP with backup codes, and Spanish authentication/security email templates.
+- Private resources resolve the stable Clerk user ID to an active MongoDB user;
+  administrators and supervisors are denied until Clerk MFA is enabled.
+- Invitations, safe resend, self-service session management, administrative
+  deactivation/reactivation, Clerk session revocation, and safe audit records
+  are implemented.
+- The non-secret Clerk desired state and administrator bootstrap procedure are
+  versioned in the repository.
+- Milestone 1 remains open until the production Clerk instance, approved Atlas
+  bootstrap identities, and Deploy Preview end-to-end journeys are completed.
+
 ### 2. Initial account bootstrap
 
 The platform requires two distinct bootstrap paths:

@@ -28,6 +28,7 @@ repository.
 | `CLERK_SECRET_KEY`                  | Builds and Functions | Matching server-only Clerk secret for each context                        |
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL`     | Builds and Functions | `/sign-in`                                                                |
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL`     | Builds and Functions | `/sign-up`                                                                |
+| `APP_BASE_URL`                      | Builds and Functions | Canonical HTTPS URL for the current Netlify context                       |
 | `MONGODB_URI`                       | Builds and Functions | Separate Production and Deploy Preview values                             |
 | `MONGODB_DB`                        | Builds and Functions | Separate Production and Deploy Preview values                             |
 
@@ -43,11 +44,13 @@ Before the first public deployment:
 2. Keep the development and production keys in their matching Netlify
    contexts; never deploy `pk_test_` or `sk_test_` credentials to Production.
 3. Configure the allowed sign-in methods, invitation-only registration, account
-   recovery, and Spanish email templates in the Clerk Dashboard.
+   recovery, and Spanish email templates from `web/config/clerk/`.
 4. Confirm that `/sign-in`, `/sign-up`, sign-out, session persistence, and
    unauthorized states work in a Deploy Preview.
 5. Run `clerk doctor` locally before release and confirm that it reaches the
    expected application and environment.
+6. Run the controlled administrator bootstrap once, verify the audit entries,
+   and remove all bootstrap variables.
 
 ## MongoDB Atlas checklist
 
