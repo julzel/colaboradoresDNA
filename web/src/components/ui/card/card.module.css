@@ -1,9 +1,5 @@
 .card {
   overflow: hidden;
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-card);
 }
 
 .header {

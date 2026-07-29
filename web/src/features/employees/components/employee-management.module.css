@@ -39,9 +39,6 @@
 .toolbar {
   align-items: end;
   padding: var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
 }
 
 .toolbar > * {
@@ -57,9 +54,6 @@
 
 .tableWrap {
   overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
 }
 
 .table {
@@ -102,10 +96,6 @@
 .empty,
 .formCard {
   padding: var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
 }
 
 .mobileItem {
@@ -158,10 +148,6 @@
 
 .detailCard {
   overflow: hidden;
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-card);
 }
 
 .detailCardHeader {

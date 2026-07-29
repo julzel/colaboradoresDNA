@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+
 import styles from "./employee-management.module.css";
 
 type EmployeeDetailCardProps = {
@@ -17,7 +19,7 @@ export function EmployeeDetailCard({
   title,
 }: EmployeeDetailCardProps) {
   return (
-    <section className={styles.detailCard}>
+    <ElevatedSurface as="section" className={styles.detailCard}>
       <header className={styles.detailCardHeader}>
         <div className={styles.detailCardTitle}>
           <span aria-hidden="true" className={styles.detailCardIcon}>
@@ -28,6 +30,6 @@ export function EmployeeDetailCard({
         {action && <div className={styles.detailCardAction}>{action}</div>}
       </header>
       <div className={styles.detailCardBody}>{children}</div>
-    </section>
+    </ElevatedSurface>
   );
 }

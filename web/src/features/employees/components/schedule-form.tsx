@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button/button";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { TextField } from "@/components/ui/form-field/form-field";
 import { updateEmployeeScheduleAction } from "@/features/employees/actions/employee-actions";
@@ -29,8 +30,9 @@ export function ScheduleForm({ employeeId, initialDays }: ScheduleFormProps) {
   );
 
   return (
-    <form
+    <ElevatedSurface
       action={action}
+      as="form"
       className={styles.formCard}
       onChange={handleChange}
       onSubmit={handleSubmit}
@@ -53,6 +55,6 @@ export function ScheduleForm({ employeeId, initialDays }: ScheduleFormProps) {
           Cancelar
         </Button>
       </div>
-    </form>
+    </ElevatedSurface>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import type { EmployeeDirectoryItem } from "@/features/employees/server/employee-read-repository";
 
@@ -23,7 +24,7 @@ type EmployeeDirectoryTableProps = {
 
 export function EmployeeDirectoryTable({ items }: EmployeeDirectoryTableProps) {
   return (
-    <div className={styles.tableWrap}>
+    <ElevatedSurface className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -75,6 +76,6 @@ export function EmployeeDirectoryTable({ items }: EmployeeDirectoryTableProps) {
           ))}
         </tbody>
       </table>
-    </div>
+    </ElevatedSurface>
   );
 }

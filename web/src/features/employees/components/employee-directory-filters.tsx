@@ -1,4 +1,5 @@
 import { Button, ButtonLink } from "@/components/ui/button/button";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SelectField, TextField } from "@/components/ui/form-field/form-field";
 import type {
   PlatformRole,
@@ -20,7 +21,7 @@ export function EmployeeDirectoryFilters({
   query,
 }: EmployeeDirectoryFiltersProps) {
   return (
-    <form className={styles.toolbar} method="get" role="search">
+    <ElevatedSurface as="form" className={styles.toolbar} method="get" role="search">
       <TextField
         defaultValue={query.search}
         id="search"
@@ -86,6 +87,6 @@ export function EmployeeDirectoryFilters({
           Limpiar
         </ButtonLink>
       </div>
-    </form>
+    </ElevatedSurface>
   );
 }

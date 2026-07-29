@@ -5,7 +5,6 @@ import {
   Building,
   CalendarCheck2,
   CalendarClock,
-  CalendarDays,
   CalendarX2,
   Cake,
   Clock3,
@@ -23,6 +22,7 @@ import {
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { resendEmployeeInvitation } from "@/features/employees/actions/employee-actions";
@@ -71,7 +71,10 @@ export default async function EmployeeDetailPage({
         <ButtonLink href="/admin/colaboradores" size="small" variant="quiet">
           ← Volver a colaboradores
         </ButtonLink>
-        <header className={`${styles.section} ${styles.detailHeader}`}>
+        <ElevatedSurface
+          as="header"
+          className={`${styles.section} ${styles.detailHeader}`}
+        >
           <span aria-hidden="true" className={styles.avatar}>
             {detail.employee.initials}
           </span>
@@ -115,7 +118,7 @@ export default async function EmployeeDetailPage({
           >
             Editar información
           </ButtonLink>
-        </header>
+        </ElevatedSurface>
 
         <div className={styles.detailGrid}>
           <EmployeeDetailCard
@@ -260,24 +263,6 @@ export default async function EmployeeDetailPage({
             </ol>
           ) : (
             <p className={styles.muted}>Sin historial de asignaciones.</p>
-          )}
-        </EmployeeDetailCard>
-
-        <EmployeeDetailCard icon={CalendarDays} title="Historial de horarios">
-          {detail.scheduleHistory.length ? (
-            <ol className={styles.historyList}>
-              {detail.scheduleHistory.map((schedule) => (
-                <li className={styles.historyItem} key={schedule.id}>
-                  <strong>
-                    Vigente desde {schedule.effectiveFrom} hasta{" "}
-                    {schedule.effectiveTo ?? "la actualidad"}
-                  </strong>
-                  <ScheduleSummary schedule={schedule} />
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className={styles.muted}>Sin historial de horarios.</p>
           )}
         </EmployeeDetailCard>
       </main>

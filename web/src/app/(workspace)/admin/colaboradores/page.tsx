@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { UserRoundPlus } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { EmployeeDirectoryFilters } from "@/features/employees/components/employee-directory-filters";
 import { EmployeeDirectoryMobileList } from "@/features/employees/components/employee-directory-mobile-list";
 import { EmployeeDirectoryTable } from "@/features/employees/components/employee-directory-table";
@@ -40,13 +42,16 @@ export default async function EmployeeDirectoryPage({
             <h1>Colaboradores</h1>
             <p>Gestioná información laboral, horarios y acceso a la plataforma.</p>
           </div>
-          <ButtonLink href="/admin/colaboradores/nuevo">Nuevo colaborador</ButtonLink>
+          <ButtonLink href="/admin/colaboradores/nuevo">
+            <UserRoundPlus aria-hidden="true" size={18} />
+            Nuevo colaborador
+          </ButtonLink>
         </header>
 
         <EmployeeDirectoryFilters departments={departments} query={query} />
 
         {directory.total === 0 ? (
-          <section className={styles.empty}>
+          <ElevatedSurface as="section" className={styles.empty}>
             <h2>
               {hasFilters
                 ? "No encontramos resultados con estos filtros"
@@ -57,7 +62,7 @@ export default async function EmployeeDirectoryPage({
                 ? "Probá cambiando o limpiando los filtros."
                 : "Creá el primer registro para comenzar."}
             </p>
-          </section>
+          </ElevatedSurface>
         ) : (
           <>
             <p aria-live="polite" className={styles.muted}>

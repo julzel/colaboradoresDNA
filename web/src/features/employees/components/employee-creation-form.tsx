@@ -3,6 +3,7 @@
 import { useActionState, useState, type MouseEvent } from "react";
 
 import { Button } from "@/components/ui/button/button";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import {
   CheckboxField,
@@ -84,8 +85,9 @@ export function EmployeeCreationForm({
   }
 
   return (
-    <form
+    <ElevatedSurface
       action={action}
+      as="form"
       className={styles.formCard}
       onChange={handleChange}
       onSubmit={handleSubmit}
@@ -293,6 +295,6 @@ export function EmployeeCreationForm({
           Cancelar
         </Button>
       </div>
-    </form>
+    </ElevatedSurface>
   );
 }
