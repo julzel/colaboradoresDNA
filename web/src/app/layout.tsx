@@ -89,6 +89,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       </head>
       <body>
         <ClerkProvider
+          afterSignOutUrl="/sign-in"
           appearance={{
             variables: {
               borderRadius: "0.625rem",

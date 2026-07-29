@@ -30,6 +30,8 @@ All executable application code and configuration live under `web/`.
 
 ```text
 web/
+├── config/clerk/           Versioned non-secret instance and email configuration
+├── scripts/                Controlled bootstrap and maintenance operations
 ├── src/app/                 Routes, layouts, error states, and Route Handlers
 ├── src/components/ui/       Reusable, domain-neutral UI primitives
 ├── src/features/<feature>/  Feature-owned actions, components, data, and schemas
@@ -70,6 +72,11 @@ Clerk owns identity and session lifecycle. MongoDB owns application roles,
 employment status, teams, and business data. Authorization must run on the
 server and use the stable Clerk user identifier to resolve the corresponding
 MongoDB user; client-visible metadata is not an authorization boundary.
+
+`requirePlatformUser()` is the shared server boundary for private resources. It
+denies users without a MongoDB invitation, inactive users, privileged roles
+without MFA, and callers outside a resource's allowed roles. Every future page,
+Server Action, and Route Handler must still invoke the boundary itself.
 
 For persistence changes, define indexes deliberately and add a repeatable
 migration under `web/scripts/` when existing data needs to change.
