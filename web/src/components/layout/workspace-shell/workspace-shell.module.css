@@ -11,7 +11,7 @@
   width: var(--sidebar-width);
   flex-direction: column;
   padding: var(--space-5);
-  background: var(--color-sidebar);
+  background: var(--background-navigation);
   color: var(--color-sidebar-text);
 }
 

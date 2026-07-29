@@ -97,7 +97,7 @@
     width: min(21rem, calc(100vw - 2rem));
     padding: var(--space-3);
     border-radius: var(--radius-lg);
-    background: var(--color-sidebar);
+    background: var(--background-navigation);
     box-shadow: var(--shadow-md);
   }
 
@@ -118,7 +118,7 @@
     overflow: hidden;
     padding-inline: var(--space-2);
     border-radius: var(--radius-md);
-    background: var(--color-sidebar);
+    background: var(--background-navigation);
   }
 
   .breadcrumbs {
