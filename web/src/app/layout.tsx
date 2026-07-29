@@ -16,11 +16,13 @@ const themeScript = `
     const isTheme = (value) => value === "light" || value === "dark";
 
     const updateControls = (theme) => {
-      document.querySelectorAll("[data-theme-option]").forEach((control) => {
-        control.setAttribute(
-          "aria-pressed",
-          String(control.getAttribute("data-theme-option") === theme),
-        );
+      document.querySelectorAll("[data-theme-toggle]").forEach((control) => {
+        const label =
+          theme === "light" ? "Activar tema oscuro" : "Activar tema claro";
+
+        control.setAttribute("data-current-theme", theme);
+        control.setAttribute("aria-label", label);
+        control.setAttribute("title", label);
       });
     };
 
@@ -48,12 +50,14 @@ const themeScript = `
       document.addEventListener("click", (event) => {
         const control =
           event.target instanceof Element
-            ? event.target.closest("[data-theme-option]")
+            ? event.target.closest("[data-theme-toggle]")
             : null;
-        const selectedTheme = control?.getAttribute("data-theme-option");
 
-        if (isTheme(selectedTheme)) {
-          applyTheme(selectedTheme, true);
+        if (control) {
+          const currentTheme = isTheme(root.dataset.theme)
+            ? root.dataset.theme
+            : "light";
+          applyTheme(currentTheme === "light" ? "dark" : "light", true);
         }
       });
 

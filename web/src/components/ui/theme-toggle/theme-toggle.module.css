@@ -1,31 +1,40 @@
-.toggle {
-  display: inline-flex;
+.button {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
   flex: 0 0 auto;
-  gap: var(--space-1);
-  padding: var(--space-1);
+  place-items: center;
+  padding: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface-muted);
-}
-
-.option {
-  min-height: var(--control-height-sm);
-  padding-inline: var(--space-3);
-  border: 0;
-  border-radius: calc(var(--radius-md) - var(--space-1));
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--text-xs);
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.option:hover {
+  background: var(--color-surface);
   color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
 }
 
-.option[aria-pressed="true"] {
-  background: var(--color-brand);
-  color: var(--color-brand-contrast);
-  box-shadow: var(--shadow-sm);
+.button:hover {
+  border-color: var(--color-brand);
+  background: var(--color-surface-muted);
+  color: var(--color-brand);
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.sunIcon {
+  display: none;
+}
+
+.button[data-current-theme="dark"] .moonIcon {
+  display: none;
+}
+
+.button[data-current-theme="dark"] .sunIcon {
+  display: block;
 }
