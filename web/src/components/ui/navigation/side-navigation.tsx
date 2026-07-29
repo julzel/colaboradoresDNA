@@ -1,12 +1,13 @@
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 
 import styles from "./side-navigation.module.css";
 
 export type NavigationItem = {
   badge?: string;
   href: string;
+  icon: LucideIcon;
   label: string;
-  marker: string;
 };
 
 type SideNavigationProps = {
@@ -25,6 +26,7 @@ export function SideNavigation({
       <ul className={styles.list}>
         {items.map((item) => {
           const isCurrent = item.href === currentHref;
+          const Icon = item.icon;
 
           return (
             <li key={item.label}>
@@ -33,9 +35,7 @@ export function SideNavigation({
                 className={styles.link}
                 href={item.href}
               >
-                <span className={styles.marker} aria-hidden="true">
-                  {item.marker}
-                </span>
+                <Icon aria-hidden="true" className={styles.icon} size={18} />
                 <span>{item.label}</span>
                 {item.badge && <span className={styles.badge}>{item.badge}</span>}
               </Link>
