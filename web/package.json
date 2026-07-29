@@ -10,6 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "bootstrap:admins": "node --env-file=.env.local scripts/bootstrap-admins.mjs",
+    "bootstrap:employee-model": "node --env-file=.env.local scripts/bootstrap-employee-model.mjs",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
