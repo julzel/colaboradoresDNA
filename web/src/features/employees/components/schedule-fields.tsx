@@ -33,13 +33,14 @@ export function ScheduleFields({ initialDays }: ScheduleFieldsProps) {
   function handleChange(event: ChangeEvent<HTMLSelectElement>) {
     const day = event.currentTarget.dataset.day;
     const field = event.currentTarget.dataset.field;
+    const selectedValue = event.currentTarget.value;
     if (!day || !field) return;
 
     setDays((current) =>
       current.map((item) => {
         if (item.dayOfWeek !== day) return item;
         if (field === "workFraction") {
-          const workFraction = Number(event.currentTarget.value) as WorkFraction;
+          const workFraction = Number(selectedValue) as WorkFraction;
           return {
             ...item,
             halfDayPeriod:
@@ -49,8 +50,7 @@ export function ScheduleFields({ initialDays }: ScheduleFieldsProps) {
         }
         return {
           ...item,
-          halfDayPeriod:
-            event.currentTarget.value === "afternoon" ? "afternoon" : "morning",
+          halfDayPeriod: selectedValue === "afternoon" ? "afternoon" : "morning",
         };
       }),
     );

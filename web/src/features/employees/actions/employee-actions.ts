@@ -148,15 +148,15 @@ export async function createEmployeeAction(
   const parsedAccess = z
     .object({ email: z.email(), role: platformRoleSchema })
     .safeParse({ email: formData.get("email"), role: formData.get("role") });
-  const parsedAssignment = employeeAssignmentInputSchema
-    .omit({ createdByPlatformUserId: true, employeeId: true })
-    .safeParse({
-      departmentId: formData.get("departmentId"),
-      effectiveFrom: formData.get("employmentStartedOn"),
-      effectiveTo: null,
-      managerEmployeeId: nullableString(formData, "managerEmployeeId"),
-      positionTitle: formData.get("positionTitle"),
-    });
+  const parsedAssignment = employeeAssignmentInputSchema.safeParse({
+    createdByPlatformUserId: "000000000000000000000001",
+    departmentId: formData.get("departmentId"),
+    effectiveFrom: formData.get("employmentStartedOn"),
+    effectiveTo: null,
+    employeeId: "000000000000000000000002",
+    managerEmployeeId: nullableString(formData, "managerEmployeeId"),
+    positionTitle: formData.get("positionTitle"),
+  });
   const parsedSchedule = employeeScheduleInputSchema.safeParse({
     createdByPlatformUserId: "000000000000000000000001",
     days: readSchedule(formData),
@@ -287,15 +287,15 @@ export async function updateEmployeeAssignmentAction(
   _state: EmployeeActionState,
   formData: FormData,
 ): Promise<EmployeeActionState> {
-  const parsed = employeeAssignmentInputSchema
-    .omit({ createdByPlatformUserId: true, effectiveTo: true })
-    .safeParse({
-      departmentId: formData.get("departmentId"),
-      effectiveFrom: formData.get("effectiveFrom"),
-      employeeId: formData.get("employeeId"),
-      managerEmployeeId: nullableString(formData, "managerEmployeeId"),
-      positionTitle: formData.get("positionTitle"),
-    });
+  const parsed = employeeAssignmentInputSchema.safeParse({
+    createdByPlatformUserId: "000000000000000000000001",
+    departmentId: formData.get("departmentId"),
+    effectiveFrom: formData.get("effectiveFrom"),
+    effectiveTo: null,
+    employeeId: formData.get("employeeId"),
+    managerEmployeeId: nullableString(formData, "managerEmployeeId"),
+    positionTitle: formData.get("positionTitle"),
+  });
   if (!parsed.success) return zodState(parsed.error);
 
   try {
