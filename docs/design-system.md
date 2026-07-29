@@ -57,14 +57,14 @@ The system uses the operating system sans-serif stack for speed, familiarity,
 and reliable rendering. The monospace stack is reserved for compact identifiers
 and technical values.
 
-| Token | Use |
-| --- | --- |
-| `--text-xs` | Metadata, table labels, helper text |
-| `--text-sm` | Controls, navigation, dense body content |
-| `--text-md` | Standard body content and card titles |
-| `--text-lg` | Emphasised supporting text |
-| `--text-xl` | Section headings |
-| `--text-2xl` | Page titles |
+| Token        | Use                                      |
+| ------------ | ---------------------------------------- |
+| `--text-xs`  | Metadata, table labels, helper text      |
+| `--text-sm`  | Controls, navigation, dense body content |
+| `--text-md`  | Standard body content and card titles    |
+| `--text-lg`  | Emphasised supporting text               |
+| `--text-xl`  | Section headings                         |
+| `--text-2xl` | Page titles                              |
 
 Keep body text at a minimum of `--text-sm` in dense dashboard views. Use sentence
 case for headings, labels, buttons, and navigation.
@@ -77,10 +77,10 @@ values are defined centrally but should not be referenced from feature CSS.
 
 The two brand colors are:
 
-| Token | Value | Role |
-| --- | --- | --- |
-| `--brand-cyan` | `#07bbc7` | Primary actions, selected controls, brand presence |
-| `--brand-orange` | `#ff6f00` | Secondary accent, focus, and key visual markers |
+| Token            | Value     | Role                                               |
+| ---------------- | --------- | -------------------------------------------------- |
+| `--brand-cyan`   | `#07bbc7` | Primary actions, selected controls, brand presence |
+| `--brand-orange` | `#ff6f00` | Secondary accent, focus, and key visual markers    |
 
 Both colors require a dark foreground when used as a background. Components
 must consume `--color-brand-contrast` or `--color-accent-contrast` rather than
@@ -88,13 +88,13 @@ assuming white text.
 
 Status meanings are fixed:
 
-| Meaning | Token family | Examples |
-| --- | --- | --- |
-| Success | `--color-success*` | Complete, healthy, on target |
-| Warning | `--color-warning*` | Needs review, approaching deadline |
-| Danger | `--color-danger*` | Blocked, failed, destructive action |
-| Information | `--color-info*` | In progress, informational state |
-| Neutral | Neutral tokens | Draft, inactive, unavailable |
+| Meaning     | Token family       | Examples                            |
+| ----------- | ------------------ | ----------------------------------- |
+| Success     | `--color-success*` | Complete, healthy, on target        |
+| Warning     | `--color-warning*` | Needs review, approaching deadline  |
+| Danger      | `--color-danger*`  | Blocked, failed, destructive action |
+| Information | `--color-info*`    | In progress, informational state    |
+| Neutral     | Neutral tokens     | Draft, inactive, unavailable        |
 
 ### Light and dark themes
 
@@ -180,6 +180,26 @@ Location: `web/src/components/ui/status-badge/`
 
 Badges pair color, text, and a marker so status is not color-only. Use the same
 tone for the same status across every product.
+
+### Asynchronous feedback
+
+Location: `web/src/components/ui/feedback/`
+
+- Use `Skeleton` inside `LoadingRegion` for structural route or region loading.
+- Use `Spinner` for a contained operation; a standalone spinner requires a
+  Spanish accessible label.
+- Use `SubmitButton` inside Server Action forms and provide a specific Spanish
+  `pendingLabel`.
+- Use `ProgressBar` only when progress is meaningfully determinate or a
+  contained long-running task needs an indeterminate indicator.
+- Trigger notifications through the project feedback API, never by importing
+  Sonner in a feature. Server code returns or redirects with an allow-listed
+  English key, and the shared catalog supplies safe Spanish text.
+
+Success and informational notifications dismiss automatically. Warnings remain
+longer, and actionable errors remain until dismissed. Notifications never
+replace inline validation, destructive confirmation, or permanent critical
+information.
 
 ## Contribution rules
 

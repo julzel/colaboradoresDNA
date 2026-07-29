@@ -1,5 +1,6 @@
 .placeholder {
   width: min(100%, 40rem);
+  margin: auto;
   padding: clamp(var(--space-8), 7vw, var(--space-16));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);

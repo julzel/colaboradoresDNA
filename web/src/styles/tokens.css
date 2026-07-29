@@ -77,6 +77,10 @@
   --color-sidebar-surface-hover: rgb(255 255 255 / 34%);
   --color-sidebar-border: rgb(4 47 50 / 20%);
   --color-topbar: rgb(255 255 255 / 88%);
+  --color-skeleton: var(--neutral-100);
+  --color-skeleton-highlight: rgb(255 255 255 / 72%);
+  --color-progress-track: var(--neutral-100);
+  --color-progress-value: var(--brand-cyan);
 
   /* Spacing: four-pixel base scale */
   --space-1: 0.25rem;
@@ -143,6 +147,10 @@
   --color-sidebar-surface-hover: rgb(7 187 199 / 22%);
   --color-sidebar-border: rgb(7 187 199 / 24%);
   --color-topbar: rgb(13 28 31 / 88%);
+  --color-skeleton: #1b3438;
+  --color-skeleton-highlight: rgb(104 148 152 / 24%);
+  --color-progress-track: #1b3438;
+  --color-progress-value: var(--brand-cyan);
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
   --shadow-md: 0 0.75rem 2rem rgb(0 0 0 / 34%);
   --focus-ring: 0 0 0 0.2rem rgb(255 111 0 / 38%);
@@ -182,6 +190,10 @@
     --color-sidebar-surface-hover: rgb(7 187 199 / 22%);
     --color-sidebar-border: rgb(7 187 199 / 24%);
     --color-topbar: rgb(13 28 31 / 88%);
+    --color-skeleton: #1b3438;
+    --color-skeleton-highlight: rgb(104 148 152 / 24%);
+    --color-progress-track: #1b3438;
+    --color-progress-value: var(--brand-cyan);
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
     --shadow-md: 0 0.75rem 2rem rgb(0 0 0 / 34%);
     --focus-ring: 0 0 0 0.2rem rgb(255 111 0 / 38%);

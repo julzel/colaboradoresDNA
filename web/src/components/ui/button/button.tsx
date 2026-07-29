@@ -13,7 +13,7 @@ type SharedButtonProps = {
   variant?: ButtonVariant;
 };
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & SharedButtonProps;
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & SharedButtonProps;
 
 type ButtonLinkProps = LinkProps &
   Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> &

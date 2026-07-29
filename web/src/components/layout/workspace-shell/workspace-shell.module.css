@@ -55,9 +55,9 @@
 }
 
 .content {
-  display: grid;
+  display: flex;
   min-height: calc(100vh - 4.25rem);
-  place-items: center;
+  flex-direction: column;
   padding: clamp(var(--space-6), 6vw, var(--space-16));
 }
 

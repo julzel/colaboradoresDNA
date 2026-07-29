@@ -1,8 +1,6 @@
 .shell {
-  width: min(100% - 2rem, var(--content-max));
-  min-height: 100vh;
+  width: min(100%, var(--content-max));
   margin-inline: auto;
-  padding-block: clamp(var(--space-6), 5vw, var(--space-12));
 }
 
 .pageHeader {
@@ -39,24 +37,6 @@
   color: var(--color-brand-text);
   font-size: var(--text-sm);
   font-weight: 700;
-}
-
-.notice,
-.error {
-  margin: 0 0 var(--space-5);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-}
-
-.notice {
-  border: 1px solid var(--color-success);
-  background: var(--color-success-soft);
-}
-
-.error {
-  border: 1px solid var(--color-danger);
-  background: var(--color-danger-soft);
 }
 
 .grid {

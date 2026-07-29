@@ -19,3 +19,38 @@ export function getWorkspaceNavigation(role: PlatformRole): readonly NavigationI
     ? [...baseNavigationItems, administratorNavigationItem]
     : baseNavigationItems;
 }
+
+export function getActiveNavigationHref(
+  pathname: string,
+  items: readonly NavigationItem[],
+) {
+  const activeItem = items
+    .filter(
+      (item) =>
+        item.href === pathname ||
+        (item.href !== "/" && pathname.startsWith(`${item.href}/`)),
+    )
+    .sort((first, second) => second.href.length - first.href.length)[0];
+
+  return activeItem?.href ?? "/";
+}
+
+export function getWorkspaceBreadcrumbs(pathname: string) {
+  if (pathname === "/calendario") {
+    return [{ href: "/", label: "Inicio" }, { label: "Calendario" }] as const;
+  }
+
+  if (pathname.startsWith("/admin/accounts")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Cuentas y acceso" },
+    ] as const;
+  }
+
+  if (pathname.startsWith("/admin")) {
+    return [{ href: "/", label: "Inicio" }, { label: "Administración" }] as const;
+  }
+
+  return [{ label: "Inicio" }] as const;
+}

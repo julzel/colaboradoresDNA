@@ -3,6 +3,8 @@ import { esCR } from "@clerk/localizations";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { ToastProvider } from "@/components/ui/feedback/toast-provider";
+
 import "@/styles/tokens.css";
 import "@/styles/globals.css";
 
@@ -110,6 +112,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
             Ir al contenido principal
           </a>
           {children}
+          <ToastProvider />
         </ClerkProvider>
       </body>
     </html>
