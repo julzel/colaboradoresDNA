@@ -65,6 +65,21 @@ See [Authentication and account lifecycle](./authentication.md) for Clerk
 configuration, administrator bootstrap, invitation handling, MFA enforcement,
 session revocation, and operational verification.
 
+### Employee model bootstrap
+
+After configuring the development Atlas database, initialize the employee
+indexes and editable departments:
+
+```bash
+cd web
+pnpm bootstrap:employee-model
+```
+
+The command is idempotent. It creates the employee-domain indexes and inserts
+Gerencia, Nutrición, Producción, and Servicio al cliente only when they do not
+already exist. It does not create employees, platform accounts, credentials, or
+invitations.
+
 ## Daily workflow
 
 1. Create or update a focused feature under `src/features/`.

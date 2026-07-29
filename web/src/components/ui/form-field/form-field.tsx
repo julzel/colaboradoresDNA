@@ -60,8 +60,8 @@ function getDescribedBy(
 }
 
 type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
-  description?: string;
-  error?: string;
+  description?: string | undefined;
+  error?: string | undefined;
   id: string;
   label: string;
   optional?: boolean;
@@ -99,8 +99,8 @@ export function TextField({
 }
 
 type SelectFieldProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, "id"> & {
-  description?: string;
-  error?: string;
+  description?: string | undefined;
+  error?: string | undefined;
   id: string;
   label: string;
   optional?: boolean;
@@ -138,8 +138,8 @@ export function SelectField({
 }
 
 type TextAreaFieldProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "id"> & {
-  description?: string;
-  error?: string;
+  description?: string | undefined;
+  error?: string | undefined;
   id: string;
   label: string;
   optional?: boolean;

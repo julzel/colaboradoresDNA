@@ -2,31 +2,17 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-header";
-import {
-  SideNavigation,
-  type NavigationItem,
-} from "@/components/ui/navigation/side-navigation";
+import { WorkspaceNavigation } from "@/components/layout/workspace-navigation/workspace-navigation";
+import type { PlatformRole } from "@/features/auth/domain/platform-user";
 
 import styles from "./workspace-shell.module.css";
 
-type BreadcrumbItem = {
-  href?: string;
-  label: string;
-};
-
 type WorkspaceShellProps = {
-  breadcrumbs: readonly BreadcrumbItem[];
   children: ReactNode;
-  currentHref: string;
-  navigationItems: readonly NavigationItem[];
+  role: PlatformRole;
 };
 
-export function WorkspaceShell({
-  breadcrumbs,
-  children,
-  currentHref,
-  navigationItems,
-}: WorkspaceShellProps) {
+export function WorkspaceShell({ children, role }: WorkspaceShellProps) {
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -42,15 +28,11 @@ export function WorkspaceShell({
         </Link>
 
         <p className={styles.navLabel}>Navegación</p>
-        <SideNavigation currentHref={currentHref} items={navigationItems} />
+        <WorkspaceNavigation role={role} />
       </aside>
 
       <div className={styles.mainColumn}>
-        <WorkspaceHeader
-          breadcrumbs={breadcrumbs}
-          currentHref={currentHref}
-          navigationItems={navigationItems}
-        />
+        <WorkspaceHeader role={role} />
         <main className={styles.content} id="main-content">
           {children}
         </main>

@@ -1,0 +1,58 @@
+.root {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.track {
+  position: relative;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--color-progress-track);
+}
+
+.value {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-progress-value);
+  transition: width 180ms ease;
+}
+
+.indeterminate {
+  position: absolute;
+  width: 42%;
+  animation: progress-indeterminate 1.25s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  from {
+    transform: translateX(-110%);
+  }
+
+  to {
+    transform: translateX(340%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .value {
+    transition: none;
+  }
+
+  .indeterminate {
+    width: 100%;
+    animation: none;
+    opacity: 0.65;
+  }
+}

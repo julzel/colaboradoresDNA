@@ -3,13 +3,13 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
 import {
   invitePlatformUserSchema,
   platformUserIdSchema,
 } from "@/features/auth/domain/platform-user";
 import { recordAuthAudit } from "@/features/auth/server/auth-audit-repository";
+import { sendPlatformInvitation } from "@/features/auth/server/invitation-service";
 import {
   createInvitedPlatformUser,
   deactivatePlatformUserRecord,
@@ -18,53 +18,9 @@ import {
   markPlatformUserInvitationFailed,
   reactivatePlatformUserRecord,
   setPlatformUserClerkSyncStatus,
-  setPlatformUserInvitation,
 } from "@/features/auth/server/platform-user-repository";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
-
-const invitationExpirationDays = 14;
-
-function getApplicationBaseUrl() {
-  const configuredUrl = process.env.APP_BASE_URL;
-
-  if (configuredUrl) {
-    return z.string().url().parse(configuredUrl);
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    return "http://localhost:3000";
-  }
-
-  throw new Error("APP_BASE_URL is required in production.");
-}
-
-async function sendInvitation({
-  email,
-  platformUserId,
-}: {
-  email: string;
-  platformUserId: string;
-}) {
-  const client = await clerkClient();
-  const invitation = await client.invitations.createInvitation({
-    emailAddress: email,
-    expiresInDays: invitationExpirationDays,
-    ignoreExisting: true,
-    redirectUrl: new URL("/sign-up", getApplicationBaseUrl()).toString(),
-  });
-
-  const expiresAt = new Date(
-    Date.now() + invitationExpirationDays * 24 * 60 * 60 * 1000,
-  );
-
-  await setPlatformUserInvitation({
-    clerkInvitationId: invitation.id,
-    expiresAt,
-    id: platformUserId,
-  });
-
-  return invitation;
-}
+import { createFeedbackUrl } from "@/lib/actions/feedback-messages";
 
 export async function invitePlatformUser(formData: FormData) {
   const actor = await requirePlatformUser({ roles: ["administrator"] });
@@ -75,20 +31,20 @@ export async function invitePlatformUser(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect("/admin/accounts?error=invalid_invitation");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_invitation"));
   }
 
   const existing = await findPlatformUserByEmail(parsed.data.email);
 
   if (existing) {
-    redirect("/admin/accounts?error=account_exists");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "account_exists"));
   }
 
   let target;
 
   try {
     target = await createInvitedPlatformUser(parsed.data);
-    await sendInvitation({
+    await sendPlatformInvitation({
       email: target.normalizedEmail,
       platformUserId: target.id,
     });
@@ -111,11 +67,11 @@ export async function invitePlatformUser(formData: FormData) {
       });
     }
 
-    redirect("/admin/accounts?error=invitation_failed");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "invitation_failed"));
   }
 
   revalidatePath("/admin/accounts");
-  redirect("/admin/accounts?notice=invitation_sent");
+  redirect(createFeedbackUrl("/admin/accounts", "notice", "invitation_sent"));
 }
 
 export async function resendPlatformInvitation(formData: FormData) {
@@ -123,13 +79,13 @@ export async function resendPlatformInvitation(formData: FormData) {
   const parsedId = platformUserIdSchema.safeParse(formData.get("platformUserId"));
 
   if (!parsedId.success) {
-    redirect("/admin/accounts?error=invalid_account");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_account"));
   }
 
   const target = await findPlatformUserById(parsedId.data);
 
   if (!target || target.status !== "invited") {
-    redirect("/admin/accounts?error=invitation_not_pending");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "invitation_not_pending"));
   }
 
   if (target.invitation.clerkInvitationId) {
@@ -142,7 +98,7 @@ export async function resendPlatformInvitation(formData: FormData) {
   }
 
   try {
-    await sendInvitation({
+    await sendPlatformInvitation({
       email: target.normalizedEmail,
       platformUserId: target.id,
     });
@@ -154,11 +110,11 @@ export async function resendPlatformInvitation(formData: FormData) {
     });
   } catch {
     await markPlatformUserInvitationFailed(target.id);
-    redirect("/admin/accounts?error=invitation_failed");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "invitation_failed"));
   }
 
   revalidatePath("/admin/accounts");
-  redirect("/admin/accounts?notice=invitation_resent");
+  redirect(createFeedbackUrl("/admin/accounts", "notice", "invitation_resent"));
 }
 
 export async function deactivatePlatformUser(formData: FormData) {
@@ -166,13 +122,13 @@ export async function deactivatePlatformUser(formData: FormData) {
   const parsedId = platformUserIdSchema.safeParse(formData.get("platformUserId"));
 
   if (!parsedId.success || parsedId.data === actor.platformUser.id) {
-    redirect("/admin/accounts?error=invalid_deactivation");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_deactivation"));
   }
 
   const existing = await findPlatformUserById(parsedId.data);
 
   if (!existing) {
-    redirect("/admin/accounts?error=invalid_account");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_account"));
   }
 
   const target =
@@ -181,7 +137,7 @@ export async function deactivatePlatformUser(formData: FormData) {
       : await deactivatePlatformUserRecord(existing.id);
 
   if (!target) {
-    redirect("/admin/accounts?error=deactivation_failed");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "deactivation_failed"));
   }
 
   let clerkSyncFailed = false;
@@ -216,8 +172,8 @@ export async function deactivatePlatformUser(formData: FormData) {
   revalidatePath("/admin/accounts");
   redirect(
     clerkSyncFailed
-      ? "/admin/accounts?error=deactivated_sync_pending"
-      : "/admin/accounts?notice=account_deactivated",
+      ? createFeedbackUrl("/admin/accounts", "error", "deactivated_sync_pending")
+      : createFeedbackUrl("/admin/accounts", "notice", "account_deactivated"),
   );
 }
 
@@ -226,13 +182,13 @@ export async function reactivatePlatformUser(formData: FormData) {
   const parsedId = platformUserIdSchema.safeParse(formData.get("platformUserId"));
 
   if (!parsedId.success) {
-    redirect("/admin/accounts?error=invalid_account");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_account"));
   }
 
   const target = await findPlatformUserById(parsedId.data);
 
   if (!target || target.status !== "deactivated") {
-    redirect("/admin/accounts?error=reactivation_failed");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "reactivation_failed"));
   }
 
   if (target.clerkUserId) {
@@ -244,7 +200,9 @@ export async function reactivatePlatformUser(formData: FormData) {
       const client = await clerkClient();
       await client.users.unbanUser(target.clerkUserId);
     } catch {
-      redirect("/admin/accounts?error=reactivation_sync_failed");
+      redirect(
+        createFeedbackUrl("/admin/accounts", "error", "reactivation_sync_failed"),
+      );
     }
   }
 
@@ -254,7 +212,7 @@ export async function reactivatePlatformUser(formData: FormData) {
   });
 
   if (!reactivated) {
-    redirect("/admin/accounts?error=reactivation_failed");
+    redirect(createFeedbackUrl("/admin/accounts", "error", "reactivation_failed"));
   }
 
   await recordAuthAudit({
@@ -266,5 +224,5 @@ export async function reactivatePlatformUser(formData: FormData) {
   });
 
   revalidatePath("/admin/accounts");
-  redirect("/admin/accounts?notice=account_reactivated");
+  redirect(createFeedbackUrl("/admin/accounts", "notice", "account_reactivated"));
 }

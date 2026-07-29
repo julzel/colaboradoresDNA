@@ -1,4 +1,4 @@
-import { CalendarDays, House, Settings } from "lucide-react";
+import { CalendarDays, House, Settings, Users } from "lucide-react";
 
 import type { NavigationItem } from "@/components/ui/navigation/side-navigation";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
@@ -14,8 +14,57 @@ const administratorNavigationItem: NavigationItem = {
   label: "Administración",
 };
 
+const employeeNavigationItem: NavigationItem = {
+  href: "/admin/colaboradores",
+  icon: Users,
+  label: "Colaboradores",
+};
+
 export function getWorkspaceNavigation(role: PlatformRole): readonly NavigationItem[] {
   return role === "administrator"
-    ? [...baseNavigationItems, administratorNavigationItem]
+    ? [...baseNavigationItems, administratorNavigationItem, employeeNavigationItem]
     : baseNavigationItems;
+}
+
+export function getActiveNavigationHref(
+  pathname: string,
+  items: readonly NavigationItem[],
+) {
+  const activeItem = items
+    .filter(
+      (item) =>
+        item.href === pathname ||
+        (item.href !== "/" && pathname.startsWith(`${item.href}/`)),
+    )
+    .sort((first, second) => second.href.length - first.href.length)[0];
+
+  return activeItem?.href ?? "/";
+}
+
+export function getWorkspaceBreadcrumbs(pathname: string) {
+  if (pathname === "/calendario") {
+    return [{ href: "/", label: "Inicio" }, { label: "Calendario" }] as const;
+  }
+
+  if (pathname.startsWith("/admin/accounts")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Cuentas y acceso" },
+    ] as const;
+  }
+
+  if (pathname.startsWith("/admin/colaboradores")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Colaboradores" },
+    ] as const;
+  }
+
+  if (pathname.startsWith("/admin")) {
+    return [{ href: "/", label: "Inicio" }, { label: "Administración" }] as const;
+  }
+
+  return [{ label: "Inicio" }] as const;
 }
