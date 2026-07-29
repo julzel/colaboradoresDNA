@@ -1,3 +1,5 @@
+import { Clock3 } from "lucide-react";
+
 import {
   calculateWeeklySchedule,
   dayOfWeekOrder,
@@ -5,15 +7,14 @@ import {
 } from "@/features/employees/domain/schedule";
 
 import styles from "./employee-management.module.css";
-
 const dayLabels = {
-  friday: "Viernes",
-  monday: "Lunes",
-  saturday: "Sábado",
-  sunday: "Domingo",
-  thursday: "Jueves",
-  tuesday: "Martes",
-  wednesday: "Miércoles",
+  friday: "Vie",
+  monday: "Lun",
+  saturday: "Sáb",
+  sunday: "Dom",
+  thursday: "Jue",
+  tuesday: "Mar",
+  wednesday: "Mié",
 } as const;
 
 type ScheduleSummaryProps = {
@@ -26,26 +27,32 @@ export function ScheduleSummary({ schedule }: ScheduleSummaryProps) {
 
   return (
     <>
-      <dl className={styles.summary}>
+      <dl className={styles.scheduleSummaryGrid}>
         {dayOfWeekOrder.map((day) => {
           const scheduledDay = schedule.days.find((item) => item.dayOfWeek === day);
-          const value =
-            scheduledDay?.workFraction === 1
-              ? "Día completo"
-              : scheduledDay?.workFraction === 0.5
-                ? `Medio día · ${
-                    scheduledDay.halfDayPeriod === "morning" ? "Mañana" : "Tarde"
-                  }`
-                : "No trabaja";
+          const isNotWorking = scheduledDay?.workFraction === 0;
+          const value = isNotWorking
+            ? "No trabaja"
+            : scheduledDay?.workFraction === 0.5
+              ? `Medio día · ${
+                  scheduledDay.halfDayPeriod === "morning" ? "Mañana" : "Tarde"
+                }`
+              : "Día completo";
           return (
-            <div key={day}>
+            <div className={styles.scheduleSummaryItem} key={day}>
               <dt>{dayLabels[day]}</dt>
-              <dd>{value}</dd>
+              <dd className={isNotWorking ? styles.notWorking : styles.workingDay}>
+                {!isNotWorking && (
+                  <span aria-hidden="true" className={styles.statusDot} />
+                )}
+                {value}
+              </dd>
             </div>
           );
         })}
       </dl>
-      <p>
+      <p className={styles.scheduleTotals}>
+        <Clock3 aria-hidden="true" size={22} strokeWidth={2} />
         <strong>{totals.weeklyScheduledDays} días</strong> ·{" "}
         {totals.weeklyScheduledHours} horas por semana
       </p>
