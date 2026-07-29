@@ -2,6 +2,7 @@ import { SignIn } from "@clerk/nextjs";
 import Link from "next/link";
 
 import styles from "@/app/auth.module.css";
+import { Logo } from "@/components/brand/logo/logo";
 
 export default function SignInPage() {
   return (
@@ -12,9 +13,7 @@ export default function SignInPage() {
           href="/"
           aria-label="Ir al inicio de Colaboradores DNA"
         >
-          <span className={styles.brandMark} aria-hidden="true">
-            DNA
-          </span>
+          <Logo priority />
           <span>Colaboradores</span>
         </Link>
         <div className={styles.brandCopy}>

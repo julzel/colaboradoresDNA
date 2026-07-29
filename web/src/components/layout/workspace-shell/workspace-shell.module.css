@@ -11,33 +11,19 @@
   width: var(--sidebar-width);
   flex-direction: column;
   padding: var(--space-5);
-  background: var(--color-sidebar);
+  background: var(--background-navigation);
   color: var(--color-sidebar-text);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin-bottom: var(--space-8);
   color: var(--color-sidebar-text);
   font-weight: 800;
   letter-spacing: -0.025em;
   text-decoration: none;
-}
-
-.brandMark {
-  display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
-  place-items: center;
-  border-radius: var(--radius-md);
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
 }
 
 .navLabel {

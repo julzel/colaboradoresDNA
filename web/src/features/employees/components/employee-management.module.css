@@ -39,9 +39,6 @@
 .toolbar {
   align-items: end;
   padding: var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
 }
 
 .toolbar > * {
@@ -57,9 +54,6 @@
 
 .tableWrap {
   overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
 }
 
 .table {
@@ -102,10 +96,6 @@
 .empty,
 .formCard {
   padding: var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
 }
 
 .mobileItem {
@@ -154,6 +144,181 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+.detailCard {
+  overflow: hidden;
+}
+
+.detailCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailCardTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.detailCardTitle h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  letter-spacing: -0.025em;
+}
+
+.detailCardIcon,
+.detailItemIcon {
+  display: grid;
+  flex: 0 0 auto;
+  color: var(--color-brand-text);
+  place-items: center;
+}
+
+.detailCardIcon {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-brand-soft);
+}
+
+.detailCardBody {
+  padding: var(--space-6);
+}
+
+.detailItemGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.detailItem {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-4);
+  align-items: center;
+  min-width: 0;
+  padding: var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailItem:nth-child(odd) {
+  border-right: 1px solid var(--color-border);
+}
+
+.detailItem:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.detailItem dt {
+  display: contents;
+  font-size: var(--text-sm);
+}
+
+.detailItemLabel {
+  color: var(--color-text-muted);
+}
+
+.detailItemIcon {
+  grid-row: span 2;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-md);
+  background: var(--color-brand-soft);
+}
+
+.detailItem dd {
+  min-width: 0;
+  margin: var(--space-1) 0 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: 750;
+}
+
+.scheduleSummaryGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-8);
+  margin: 0;
+}
+
+.scheduleSummaryGrid::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--color-border);
+  content: "";
+}
+
+.scheduleSummaryItem {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.scheduleSummaryItem dt {
+  display: grid;
+  min-width: 4.75rem;
+  min-height: 3.5rem;
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  place-items: center;
+  text-transform: uppercase;
+}
+
+.scheduleSummaryItem dd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.statusDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+}
+
+.scheduleSummaryItem dd.notWorking {
+  color: var(--brand-orange);
+}
+
+.scheduleTotals {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-brand-soft);
+  border-radius: var(--radius-md);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+
+.scheduleTotals strong {
+  font-weight: 650;
 }
 
 .summary {
@@ -308,8 +473,46 @@
   .detailGrid,
   .formGrid,
   .scheduleGrid,
-  .summary {
+  .summary,
+  .detailItemGrid {
     grid-template-columns: 1fr;
+  }
+
+  .scheduleSummaryGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .scheduleSummaryGrid::before {
+    display: none;
+  }
+
+  .detailCardHeader,
+  .detailCardTitle {
+    align-items: flex-start;
+  }
+
+  .detailCardHeader {
+    padding: var(--space-4);
+  }
+
+  .detailCardBody {
+    padding: 0;
+  }
+
+  .detailCardTitle h2 {
+    font-size: var(--text-lg);
+  }
+
+  .detailItem,
+  .detailItem:nth-child(odd),
+  .detailItem:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .detailItem:last-child {
+    border-bottom: 0;
   }
 
   .stepList {

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button/button";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { SelectField, TextField } from "@/components/ui/form-field/form-field";
 import { updateEmployeeAssignmentAction } from "@/features/employees/actions/employee-actions";
@@ -40,8 +41,9 @@ export function AssignmentForm({
   );
 
   return (
-    <form
+    <ElevatedSurface
       action={action}
+      as="form"
       className={styles.formCard}
       onChange={handleChange}
       onSubmit={handleSubmit}
@@ -108,6 +110,6 @@ export function AssignmentForm({
           Cancelar
         </Button>
       </div>
-    </form>
+    </ElevatedSurface>
   );
 }

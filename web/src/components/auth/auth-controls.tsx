@@ -6,7 +6,16 @@ export function AuthControls() {
   return (
     <div className={styles.controls}>
       <Show when="signed-in">
-        <UserButton showName userProfileMode="navigation" userProfileUrl="/account" />
+        <UserButton
+          appearance={{
+            elements: {
+              userButtonOuterIdentifier: styles.userName,
+            },
+          }}
+          showName
+          userProfileMode="navigation"
+          userProfileUrl="/account"
+        />
       </Show>
     </div>
   );

@@ -1,11 +1,33 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import {
+  Badge,
+  Building,
+  CalendarCheck2,
+  CalendarClock,
+  CalendarX2,
+  Cake,
+  Clock3,
+  History,
+  IdCard,
+  KeyRound,
+  Mail,
+  PenLine,
+  Phone,
+  ShieldCheck,
+  UserCheck,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { resendEmployeeInvitation } from "@/features/employees/actions/employee-actions";
+import { EmployeeDetailCard } from "@/features/employees/components/employee-detail-card";
+import { EmployeeDetailItem } from "@/features/employees/components/employee-detail-item";
 import { IdentificationReveal } from "@/features/employees/components/identification-reveal";
 import { ScheduleSummary } from "@/features/employees/components/schedule-summary";
 import styles from "@/features/employees/components/employee-management.module.css";
@@ -49,7 +71,10 @@ export default async function EmployeeDetailPage({
         <ButtonLink href="/admin/colaboradores" size="small" variant="quiet">
           ← Volver a colaboradores
         </ButtonLink>
-        <header className={`${styles.section} ${styles.detailHeader}`}>
+        <ElevatedSurface
+          as="header"
+          className={`${styles.section} ${styles.detailHeader}`}
+        >
           <span aria-hidden="true" className={styles.avatar}>
             {detail.employee.initials}
           </span>
@@ -93,124 +118,121 @@ export default async function EmployeeDetailPage({
           >
             Editar información
           </ButtonLink>
-        </header>
+        </ElevatedSurface>
 
         <div className={styles.detailGrid}>
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h2>Información personal</h2>
+          <EmployeeDetailCard
+            action={
               <ButtonLink
                 href={`/admin/colaboradores/${employeeId}/editar/informacion-personal`}
                 size="small"
                 variant="quiet"
               >
-                Editar
+                <PenLine aria-hidden="true" size={18} /> Editar
               </ButtonLink>
-            </div>
-            <dl className={styles.summary}>
-              <div>
-                <dt>Fecha de cumpleaños</dt>
-                <dd>{detail.employee.birthday}</dd>
-              </div>
-              <div>
-                <dt>Visible en calendario</dt>
-                <dd>{detail.employee.shareBirthdayOnCalendar ? "Sí" : "No"}</dd>
-              </div>
-              <div>
-                <dt>Teléfono</dt>
-                <dd>{detail.employee.phoneDisplayValue ?? "No indicado"}</dd>
-              </div>
-              <div>
-                <dt>{identificationLabels[detail.employee.identification.type]}</dt>
-                <dd>
-                  <IdentificationReveal
-                    employeeId={employeeId}
-                    maskedValue={detail.employee.identification.maskedValue}
-                  />
-                </dd>
-              </div>
+            }
+            icon={UserRound}
+            title="Información personal"
+          >
+            <dl className={styles.detailItemGrid}>
+              <EmployeeDetailItem icon={Cake} label="Fecha de cumpleaños">
+                {detail.employee.birthday}
+              </EmployeeDetailItem>
+              <EmployeeDetailItem icon={CalendarCheck2} label="Visible en calendario">
+                {detail.employee.shareBirthdayOnCalendar ? "Sí" : "No"}
+              </EmployeeDetailItem>
+              <EmployeeDetailItem icon={Phone} label="Teléfono">
+                {detail.employee.phoneDisplayValue ?? "No indicado"}
+              </EmployeeDetailItem>
+              <EmployeeDetailItem
+                icon={IdCard}
+                label={identificationLabels[detail.employee.identification.type]}
+              >
+                <IdentificationReveal
+                  employeeId={employeeId}
+                  maskedValue={detail.employee.identification.maskedValue}
+                />
+              </EmployeeDetailItem>
             </dl>
-          </section>
+          </EmployeeDetailCard>
 
-          <section className={styles.section}>
-            <h2>Información laboral</h2>
-            <dl className={styles.summary}>
-              <div>
-                <dt>Fecha de ingreso</dt>
-                <dd>{detail.employee.employmentStartedOn}</dd>
-              </div>
-              <div>
-                <dt>Fecha de salida</dt>
-                <dd>{detail.employee.employmentEndedOn ?? "No aplica"}</dd>
-              </div>
+          <EmployeeDetailCard icon={Building} title="Información laboral">
+            <dl className={styles.detailItemGrid}>
+              <EmployeeDetailItem icon={CalendarClock} label="Fecha de ingreso">
+                {detail.employee.employmentStartedOn}
+              </EmployeeDetailItem>
+              <EmployeeDetailItem icon={CalendarX2} label="Fecha de salida">
+                {detail.employee.employmentEndedOn ?? "No aplica"}
+              </EmployeeDetailItem>
             </dl>
-          </section>
+          </EmployeeDetailCard>
 
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h2>Asignación actual</h2>
-              {detail.employee.employmentStatus === "active" && (
+          <EmployeeDetailCard
+            action={
+              detail.employee.employmentStatus === "active" ? (
                 <ButtonLink
                   href={`/admin/colaboradores/${employeeId}/editar/asignacion`}
                   size="small"
                   variant="quiet"
                 >
-                  Cambiar
+                  <PenLine aria-hidden="true" size={18} /> Editar
                 </ButtonLink>
-              )}
-            </div>
-            <dl className={styles.summary}>
-              <div>
-                <dt>Departamento</dt>
-                <dd>{detail.currentAssignment?.departmentName ?? "Sin asignar"}</dd>
-              </div>
-              <div>
-                <dt>Puesto</dt>
-                <dd>{detail.currentAssignment?.positionTitle ?? "Sin asignar"}</dd>
-              </div>
-              <div>
-                <dt>Jefatura directa</dt>
-                <dd>{detail.currentAssignment?.managerName ?? "Sin asignar"}</dd>
-              </div>
+              ) : undefined
+            }
+            icon={UsersRound}
+            title="Asignación actual"
+          >
+            <dl className={styles.detailItemGrid}>
+              <EmployeeDetailItem icon={Building} label="Departamento">
+                {detail.currentAssignment?.departmentName ?? "Sin asignar"}
+              </EmployeeDetailItem>
+              <EmployeeDetailItem icon={Badge} label="Puesto">
+                {detail.currentAssignment?.positionTitle ?? "Sin asignar"}
+              </EmployeeDetailItem>
+              <EmployeeDetailItem icon={UserCheck} label="Jefatura directa">
+                {detail.currentAssignment?.managerName ?? "Sin asignar"}
+              </EmployeeDetailItem>
             </dl>
-          </section>
+          </EmployeeDetailCard>
 
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h2>Horario actual</h2>
-              {detail.employee.employmentStatus === "active" && (
+          <EmployeeDetailCard
+            action={
+              detail.employee.employmentStatus === "active" ? (
                 <ButtonLink
                   href={`/admin/colaboradores/${employeeId}/editar/horario`}
                   size="small"
                   variant="quiet"
                 >
-                  Cambiar
+                  <PenLine aria-hidden="true" size={18} /> Editar
                 </ButtonLink>
-              )}
-            </div>
+              ) : undefined
+            }
+            icon={Clock3}
+            title="Horario actual"
+          >
             <ScheduleSummary schedule={detail.currentSchedule} />
-          </section>
+          </EmployeeDetailCard>
 
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h2>Acceso a la plataforma</h2>
+          <EmployeeDetailCard
+            action={
               <ButtonLink
                 href={`/admin/colaboradores/${employeeId}/editar/acceso`}
                 size="small"
                 variant="quiet"
               >
-                Gestionar
+                <PenLine aria-hidden="true" size={18} /> Editar
               </ButtonLink>
-            </div>
-            <dl className={styles.summary}>
-              <div>
-                <dt>Correo personal</dt>
-                <dd>{detail.access.email}</dd>
-              </div>
-              <div>
-                <dt>Rol</dt>
-                <dd>{roleLabels[detail.access.role]}</dd>
-              </div>
+            }
+            icon={ShieldCheck}
+            title="Acceso a la plataforma"
+          >
+            <dl className={styles.detailItemGrid}>
+              <EmployeeDetailItem icon={Mail} label="Correo personal">
+                {detail.access.email}
+              </EmployeeDetailItem>
+              <EmployeeDetailItem icon={KeyRound} label="Rol">
+                {roleLabels[detail.access.role]}
+              </EmployeeDetailItem>
             </dl>
             {detail.access.status === "invited" && (
               <form action={resendEmployeeInvitation}>
@@ -220,11 +242,10 @@ export default async function EmployeeDetailPage({
                 </SubmitButton>
               </form>
             )}
-          </section>
+          </EmployeeDetailCard>
         </div>
 
-        <section className={styles.section}>
-          <h2>Historial de asignaciones</h2>
+        <EmployeeDetailCard icon={History} title="Historial de asignaciones">
           {detail.assignmentHistory.length ? (
             <ol className={styles.historyList}>
               {detail.assignmentHistory.map((assignment) => (
@@ -243,26 +264,7 @@ export default async function EmployeeDetailPage({
           ) : (
             <p className={styles.muted}>Sin historial de asignaciones.</p>
           )}
-        </section>
-
-        <section className={styles.section}>
-          <h2>Historial de horarios</h2>
-          {detail.scheduleHistory.length ? (
-            <ol className={styles.historyList}>
-              {detail.scheduleHistory.map((schedule) => (
-                <li className={styles.historyItem} key={schedule.id}>
-                  <strong>
-                    Vigente desde {schedule.effectiveFrom} hasta{" "}
-                    {schedule.effectiveTo ?? "la actualidad"}
-                  </strong>
-                  <ScheduleSummary schedule={schedule} />
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className={styles.muted}>Sin historial de horarios.</p>
-          )}
-        </section>
+        </EmployeeDetailCard>
       </main>
     </Container>
   );

@@ -76,6 +76,9 @@
   --color-sidebar-surface: rgb(255 255 255 / 24%);
   --color-sidebar-surface-hover: rgb(255 255 255 / 34%);
   --color-sidebar-border: rgb(4 47 50 / 20%);
+  --background-navigation:
+    radial-gradient(circle at 0 0, rgb(255 255 255 / 30%), transparent 34%),
+    linear-gradient(155deg, #079fa9 0%, var(--brand-cyan) 50%, #48cfba 100%);
   --color-topbar: rgb(255 255 255 / 88%);
   --color-skeleton: var(--neutral-100);
   --color-skeleton-highlight: rgb(255 255 255 / 72%);
@@ -99,6 +102,7 @@
   --radius-md: 0.625rem;
   --radius-lg: 0.875rem;
   --radius-full: 999px;
+  --shadow-elevation-1: 0 1px 2px rgb(13 23 24 / 6%), 0 2px 8px rgb(13 23 24 / 5%);
   --shadow-sm: 0 1px 2px rgb(13 23 24 / 9%);
   --shadow-md: 0 0.75rem 2rem rgb(13 23 24 / 12%);
   --focus-ring: 0 0 0 0.2rem rgb(255 111 0 / 32%);
@@ -114,7 +118,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --color-canvas: #071315;
+  --color-canvas: #061113;
   --color-surface: #0d1c1f;
   --color-surface-subtle: #112326;
   --color-surface-muted: #193034;
@@ -146,11 +150,15 @@
   --color-sidebar-surface: rgb(7 187 199 / 14%);
   --color-sidebar-surface-hover: rgb(7 187 199 / 22%);
   --color-sidebar-border: rgb(7 187 199 / 24%);
+  --background-navigation:
+    radial-gradient(circle at 0 0, rgb(7 187 199 / 18%), transparent 38%),
+    linear-gradient(155deg, #041618 0%, #07343a 55%, #084b52 100%);
   --color-topbar: rgb(13 28 31 / 88%);
   --color-skeleton: #1b3438;
   --color-skeleton-highlight: rgb(104 148 152 / 24%);
   --color-progress-track: #1b3438;
   --color-progress-value: var(--brand-cyan);
+  --shadow-elevation-1: 0 1px 2px rgb(0 0 0 / 24%), 0 2px 8px rgb(0 0 0 / 18%);
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
   --shadow-md: 0 0.75rem 2rem rgb(0 0 0 / 34%);
   --focus-ring: 0 0 0 0.2rem rgb(255 111 0 / 38%);
@@ -160,7 +168,7 @@
   :root:not([data-theme]) {
     color-scheme: dark;
 
-    --color-canvas: #071315;
+    --color-canvas: #061113;
     --color-surface: #0d1c1f;
     --color-surface-subtle: #112326;
     --color-surface-muted: #193034;
@@ -189,11 +197,15 @@
     --color-sidebar-surface: rgb(7 187 199 / 14%);
     --color-sidebar-surface-hover: rgb(7 187 199 / 22%);
     --color-sidebar-border: rgb(7 187 199 / 24%);
+    --background-navigation:
+      radial-gradient(circle at 0 0, rgb(7 187 199 / 18%), transparent 38%),
+      linear-gradient(155deg, #041618 0%, #07343a 55%, #084b52 100%);
     --color-topbar: rgb(13 28 31 / 88%);
     --color-skeleton: #1b3438;
     --color-skeleton-highlight: rgb(104 148 152 / 24%);
     --color-progress-track: #1b3438;
     --color-progress-value: var(--brand-cyan);
+    --shadow-elevation-1: 0 1px 2px rgb(0 0 0 / 24%), 0 2px 8px rgb(0 0 0 / 18%);
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
     --shadow-md: 0 0.75rem 2rem rgb(0 0 0 / 34%);
     --focus-ring: 0 0 0 0.2rem rgb(255 111 0 / 38%);

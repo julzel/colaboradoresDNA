@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button/button";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import {
   CheckboxField,
@@ -55,8 +56,9 @@ export function AccessManagementForm({
 
   return (
     <>
-      <form
+      <ElevatedSurface
         action={accessAction}
+        as="form"
         className={styles.formCard}
         onChange={handleAccessChange}
         onSubmit={handleAccessSubmit}
@@ -80,11 +82,12 @@ export function AccessManagementForm({
             Cancelar
           </Button>
         </div>
-      </form>
+      </ElevatedSurface>
 
       {employmentActive && (
-        <form
+        <ElevatedSurface
           action={employmentAction}
+          as="form"
           className={`${styles.formCard} ${styles.dangerZone}`}
           data-confirmation="¿Finalizar la relación laboral? El acceso se desactivará y las sesiones activas se revocarán. Los registros históricos se conservarán."
           onChange={handleEmploymentChange}
@@ -121,7 +124,7 @@ export function AccessManagementForm({
               Cancelar
             </Button>
           </div>
-        </form>
+        </ElevatedSurface>
       )}
     </>
   );

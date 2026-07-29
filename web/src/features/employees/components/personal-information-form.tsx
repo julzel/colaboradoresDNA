@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button/button";
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import {
   CheckboxField,
@@ -47,8 +48,9 @@ export function PersonalInformationForm({ employee }: PersonalInformationFormPro
     useGuardedForm(cancelHref);
 
   return (
-    <form
+    <ElevatedSurface
       action={action}
+      as="form"
       className={styles.formCard}
       onChange={handleChange}
       onSubmit={handleSubmit}
@@ -157,6 +159,6 @@ export function PersonalInformationForm({ employee }: PersonalInformationFormPro
           Cancelar
         </Button>
       </div>
-    </form>
+    </ElevatedSurface>
   );
 }

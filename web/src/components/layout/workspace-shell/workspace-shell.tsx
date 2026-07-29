@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Logo } from "@/components/brand/logo/logo";
 import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-header";
 import { WorkspaceNavigation } from "@/components/layout/workspace-navigation/workspace-navigation";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
@@ -21,9 +22,7 @@ export function WorkspaceShell({ children, role }: WorkspaceShellProps) {
           className={styles.brand}
           href="/"
         >
-          <span aria-hidden="true" className={styles.brandMark}>
-            DNA
-          </span>
+          <Logo priority />
           <span>Colaboradores</span>
         </Link>
 

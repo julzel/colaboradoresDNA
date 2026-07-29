@@ -1,5 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
+import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+
 import styles from "./card.module.css";
 
 type CardProps = HTMLAttributes<HTMLElement> & {
@@ -14,9 +16,13 @@ type CardHeaderProps = {
 
 export function Card({ children, className = "", ...props }: CardProps) {
   return (
-    <section className={`${styles.card} ${className}`.trim()} {...props}>
+    <ElevatedSurface
+      as="section"
+      className={`${styles.card} ${className}`.trim()}
+      {...props}
+    >
       {children}
-    </section>
+    </ElevatedSurface>
   );
 }
 
