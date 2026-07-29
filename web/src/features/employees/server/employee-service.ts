@@ -2,6 +2,11 @@ import "server-only";
 
 import { ObjectId, type ClientSession } from "mongodb";
 
+import {
+  createInvitedPlatformUser,
+  ensureAuthIndexes,
+} from "@/features/auth/server/platform-user-repository";
+import type { PlatformRole } from "@/features/auth/domain/platform-user";
 import type { EmployeeAssignmentInput } from "@/features/employees/domain/assignment";
 import {
   formatEmployeeDisplayName,
@@ -28,6 +33,7 @@ import {
   listBirthdayCalendarEntries,
   listEmployeeDirectory,
   updateEmployeeSelfServiceProfile,
+  updateEmployeePersonalInformation,
 } from "@/features/employees/server/employee-repository";
 import {
   createEmployeeScheduleInSession,
@@ -40,6 +46,14 @@ export type CreateEmployeeModelInput = {
   assignment: Omit<EmployeeAssignmentInput, "createdByPlatformUserId" | "employeeId">;
   employee: EmployeeInput;
   schedule: Omit<EmployeeScheduleInput, "createdByPlatformUserId" | "employeeId">;
+};
+
+export type CreateEmployeeWithAccessInput = Omit<
+  CreateEmployeeModelInput,
+  "employee"
+> & {
+  access: { email: string; role: PlatformRole };
+  employee: Omit<EmployeeInput, "platformUserId">;
 };
 
 async function synchronizePlatformDisplayName({
@@ -131,6 +145,77 @@ export async function createEmployeeModel(input: CreateEmployeeModelInput) {
   });
 }
 
+export async function createEmployeeWithAccess(input: CreateEmployeeWithAccessInput) {
+  const { platformUser: actor } = await requirePlatformUser({
+    roles: ["administrator"],
+  });
+  await Promise.all([ensureAuthIndexes(), ensureEmployeeDomainIndexes()]);
+  const client = await getMongoClient();
+
+  return client.withSession(async (session) => {
+    let result:
+      | {
+          employee: Awaited<ReturnType<typeof createEmployee>>;
+          platformUser: Awaited<ReturnType<typeof createInvitedPlatformUser>>;
+        }
+      | undefined;
+
+    await session.withTransaction(async () => {
+      const displayName = formatEmployeeDisplayName(input.employee as never);
+      const platformUser = await createInvitedPlatformUser(
+        {
+          displayName,
+          email: input.access.email,
+          role: input.access.role,
+        },
+        { session },
+      );
+      const employee = await createEmployee(
+        { ...input.employee, platformUserId: platformUser.id },
+        { session },
+      );
+      await createEmployeeAssignmentInSession(
+        {
+          ...input.assignment,
+          createdByPlatformUserId: actor.id,
+          employeeId: employee.id,
+        },
+        session,
+      );
+      await createEmployeeScheduleInSession(
+        {
+          ...input.schedule,
+          createdByPlatformUserId: actor.id,
+          employeeId: employee.id,
+        },
+        session,
+      );
+      await recordEmployeeAudit({
+        action: "employee_created",
+        actorPlatformUserId: actor.id,
+        changedFields: [
+          "birthDay",
+          "birthMonth",
+          "employmentStartedOn",
+          "employmentStatus",
+          "firstSurname",
+          "givenNames",
+          "identification",
+          "phoneNumber",
+          "secondSurname",
+          "shareBirthdayOnCalendar",
+        ],
+        session,
+        targetEmployeeId: employee.id,
+      });
+      result = { employee, platformUser };
+    });
+
+    if (!result) throw new Error("Employee creation did not return a result.");
+    return { ...result, actor };
+  });
+}
+
 export async function createDepartmentAsAdministrator(input: DepartmentInput) {
   await requirePlatformUser({ roles: ["administrator"] });
   return createDepartment(input);
@@ -173,6 +258,21 @@ export async function getOwnEmployeeProfile() {
 export async function getEmployeeProfileAsAdministrator(employeeId: string) {
   await requirePlatformUser({ roles: ["administrator"] });
   return findEmployeeById(employeeId);
+}
+
+export async function updateEmployeePersonalInformationAsAdministrator(
+  employeeId: string,
+  input: EmployeeInput,
+) {
+  const { platformUser } = await requirePlatformUser({
+    roles: ["administrator"],
+  });
+
+  return updateEmployeePersonalInformation({
+    actorPlatformUserId: platformUser.id,
+    employeeId,
+    input,
+  });
 }
 
 export async function updateOwnEmployeeProfile(

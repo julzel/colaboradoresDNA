@@ -10,6 +10,7 @@ export type AuthAuditAction =
   | "invitation_created"
   | "invitation_failed"
   | "invitation_resent"
+  | "role_updated"
   | "session_revocation_failed";
 
 type AuthAuditDocument = {

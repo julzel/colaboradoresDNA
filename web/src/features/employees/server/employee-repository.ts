@@ -128,6 +128,175 @@ export async function findEmployeeByPlatformUserId(
   return document ? toEmployee(document) : null;
 }
 
+export async function updateEmployeePersonalInformation({
+  actorPlatformUserId,
+  employeeId,
+  input,
+}: {
+  actorPlatformUserId: string;
+  employeeId: string;
+  input: EmployeeInput;
+}) {
+  objectIdStringSchema.parse(employeeId);
+  const employee = employeeInputSchema.parse(input);
+  const client = await getMongoClient();
+  const database = await getDatabase();
+
+  return client.withSession(async (session) => {
+    let updated: Employee | null = null;
+
+    await session.withTransaction(async () => {
+      const collection = database.collection<EmployeeDocument>("employees");
+      const existing = await collection.findOne(
+        { _id: new ObjectId(employeeId) },
+        { session },
+      );
+
+      if (!existing) throw new EmployeeDomainError("employee_not_found");
+
+      try {
+        const document = await collection.findOneAndUpdate(
+          { _id: existing._id },
+          {
+            $set: {
+              birthDay: employee.birthDay,
+              birthMonth: employee.birthMonth,
+              firstSurname: employee.firstSurname,
+              givenNames: employee.givenNames,
+              identification: employee.identification,
+              phoneNumber: employee.phoneNumber,
+              secondSurname: employee.secondSurname,
+              shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
+              updatedAt: new Date(),
+            },
+          },
+          { returnDocument: "after", session },
+        );
+
+        if (!document) throw new EmployeeDomainError("employee_not_found");
+        updated = toEmployee(document);
+        await database.collection("platform_users").updateOne(
+          { _id: document.platformUserId },
+          {
+            $set: {
+              displayName: formatEmployeeDisplayName(document),
+              updatedAt: new Date(),
+            },
+          },
+          { session },
+        );
+        await recordEmployeeAudit({
+          action: "personal_profile_updated",
+          actorPlatformUserId,
+          changedFields: [
+            "birthDay",
+            "birthMonth",
+            "firstSurname",
+            "givenNames",
+            "identification",
+            "phoneNumber",
+            "secondSurname",
+            "shareBirthdayOnCalendar",
+          ],
+          session,
+          targetEmployeeId: employeeId,
+        });
+      } catch (error) {
+        if (error instanceof MongoServerError && error.code === 11000) {
+          throw new EmployeeDomainError("employee_exists");
+        }
+
+        throw error;
+      }
+    });
+
+    return updated;
+  });
+}
+
+export async function endEmployeeEmployment({
+  actorPlatformUserId,
+  employeeId,
+  endedOn,
+}: {
+  actorPlatformUserId: string;
+  employeeId: string;
+  endedOn: string;
+}) {
+  objectIdStringSchema.parse(employeeId);
+  const client = await getMongoClient();
+  const database = await getDatabase();
+
+  return client.withSession(async (session) => {
+    let platformUserId: string | null = null;
+
+    await session.withTransaction(async () => {
+      const employee = await database
+        .collection<EmployeeDocument>("employees")
+        .findOne({ _id: new ObjectId(employeeId) }, { session });
+
+      if (!employee) throw new EmployeeDomainError("employee_not_found");
+      if (endedOn < employee.employmentStartedOn) {
+        throw new EmployeeDomainError("employment_date_invalid");
+      }
+
+      platformUserId = employee.platformUserId.toHexString();
+      await database.collection<EmployeeDocument>("employees").updateOne(
+        { _id: employee._id },
+        {
+          $set: {
+            employmentEndedOn: endedOn,
+            employmentStatus: "inactive",
+            updatedAt: new Date(),
+          },
+        },
+        { session },
+      );
+      await Promise.all([
+        database.collection("employee_assignments").updateMany(
+          {
+            effectiveFrom: { $lte: endedOn },
+            effectiveTo: null,
+            employeeId: employee._id,
+          },
+          { $set: { effectiveTo: endedOn } },
+          { session },
+        ),
+        database.collection("employee_schedules").updateMany(
+          {
+            effectiveFrom: { $lte: endedOn },
+            effectiveTo: null,
+            employeeId: employee._id,
+          },
+          { $set: { effectiveTo: endedOn } },
+          { session },
+        ),
+        database.collection("platform_users").updateOne(
+          { _id: employee.platformUserId },
+          {
+            $set: {
+              clerkSyncStatus: "pending_deactivation",
+              deactivatedAt: new Date(),
+              status: "deactivated",
+              updatedAt: new Date(),
+            },
+          },
+          { session },
+        ),
+      ]);
+      await recordEmployeeAudit({
+        action: "employment_status_updated",
+        actorPlatformUserId,
+        changedFields: ["employmentEndedOn", "employmentStatus"],
+        session,
+        targetEmployeeId: employeeId,
+      });
+    });
+
+    return platformUserId;
+  });
+}
+
 export async function listEmployeeDirectory(): Promise<EmployeeDirectoryEntry[]> {
   await ensureEmployeeDomainIndexes();
   const collection = await getEmployeesCollection();

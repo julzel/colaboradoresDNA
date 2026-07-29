@@ -1,6 +1,12 @@
 import "server-only";
 
-import { ObjectId, type Collection, type Filter, type IndexDescription } from "mongodb";
+import {
+  ObjectId,
+  type ClientSession,
+  type Collection,
+  type Filter,
+  type IndexDescription,
+} from "mongodb";
 
 import {
   normalizeEmail,
@@ -136,15 +142,18 @@ export async function claimInvitedPlatformUser({
   return document ? toPlatformUser(document) : null;
 }
 
-export async function createInvitedPlatformUser({
-  displayName,
-  email,
-  role,
-}: {
-  displayName: string;
-  email: string;
-  role: PlatformRole;
-}): Promise<PlatformUser> {
+export async function createInvitedPlatformUser(
+  {
+    displayName,
+    email,
+    role,
+  }: {
+    displayName: string;
+    email: string;
+    role: PlatformRole;
+  },
+  { session }: { session?: ClientSession } = {},
+): Promise<PlatformUser> {
   await ensureAuthIndexes();
   const collection = await getPlatformUsersCollection();
   const now = new Date();
@@ -168,8 +177,25 @@ export async function createInvitedPlatformUser({
     updatedAt: now,
   };
 
-  await collection.insertOne(document);
+  await collection.insertOne(document, session ? { session } : undefined);
   return toPlatformUser(document);
+}
+
+export async function updatePlatformUserRole({
+  id,
+  role,
+}: {
+  id: string;
+  role: PlatformRole;
+}) {
+  const collection = await getPlatformUsersCollection();
+  const document = await collection.findOneAndUpdate(
+    { _id: new ObjectId(id), status: { $ne: "deactivated" } },
+    { $set: { role, updatedAt: new Date() } },
+    { returnDocument: "after" },
+  );
+
+  return document ? toPlatformUser(document) : null;
 }
 
 export async function setPlatformUserInvitation({

@@ -1,4 +1,38 @@
 export const feedbackMessages = {
+  employee_access_updated: {
+    message: "El rol de plataforma fue actualizado.",
+    tone: "success",
+  },
+  employee_assignment_updated: {
+    message: "La nueva asignación fue guardada.",
+    tone: "success",
+  },
+  employee_created: {
+    message: "El colaborador fue creado y la invitación fue enviada.",
+    tone: "success",
+  },
+  employee_created_invitation_pending: {
+    message:
+      "El colaborador fue creado, pero la invitación quedó pendiente para reenviar.",
+    tone: "warning",
+  },
+  employee_ended: {
+    message: "La relación laboral finalizó y el acceso fue revocado.",
+    tone: "success",
+  },
+  employee_ended_sync_pending: {
+    message:
+      "La persona ya no puede entrar. La revocación en Clerk quedó pendiente para reintentar.",
+    tone: "warning",
+  },
+  employee_personal_updated: {
+    message: "La información personal fue actualizada.",
+    tone: "success",
+  },
+  employee_schedule_updated: {
+    message: "El nuevo horario fue guardado.",
+    tone: "success",
+  },
   account_deactivated: {
     message: "La cuenta fue desactivada y sus sesiones se revocaron.",
     tone: "success",

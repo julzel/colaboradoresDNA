@@ -3,13 +3,13 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
 import {
   invitePlatformUserSchema,
   platformUserIdSchema,
 } from "@/features/auth/domain/platform-user";
 import { recordAuthAudit } from "@/features/auth/server/auth-audit-repository";
+import { sendPlatformInvitation } from "@/features/auth/server/invitation-service";
 import {
   createInvitedPlatformUser,
   deactivatePlatformUserRecord,
@@ -18,54 +18,9 @@ import {
   markPlatformUserInvitationFailed,
   reactivatePlatformUserRecord,
   setPlatformUserClerkSyncStatus,
-  setPlatformUserInvitation,
 } from "@/features/auth/server/platform-user-repository";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import { createFeedbackUrl } from "@/lib/actions/feedback-messages";
-
-const invitationExpirationDays = 14;
-
-function getApplicationBaseUrl() {
-  const configuredUrl = process.env.APP_BASE_URL;
-
-  if (configuredUrl) {
-    return z.string().url().parse(configuredUrl);
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    return "http://localhost:3000";
-  }
-
-  throw new Error("APP_BASE_URL is required in production.");
-}
-
-async function sendInvitation({
-  email,
-  platformUserId,
-}: {
-  email: string;
-  platformUserId: string;
-}) {
-  const client = await clerkClient();
-  const invitation = await client.invitations.createInvitation({
-    emailAddress: email,
-    expiresInDays: invitationExpirationDays,
-    ignoreExisting: true,
-    redirectUrl: new URL("/sign-up", getApplicationBaseUrl()).toString(),
-  });
-
-  const expiresAt = new Date(
-    Date.now() + invitationExpirationDays * 24 * 60 * 60 * 1000,
-  );
-
-  await setPlatformUserInvitation({
-    clerkInvitationId: invitation.id,
-    expiresAt,
-    id: platformUserId,
-  });
-
-  return invitation;
-}
 
 export async function invitePlatformUser(formData: FormData) {
   const actor = await requirePlatformUser({ roles: ["administrator"] });
@@ -89,7 +44,7 @@ export async function invitePlatformUser(formData: FormData) {
 
   try {
     target = await createInvitedPlatformUser(parsed.data);
-    await sendInvitation({
+    await sendPlatformInvitation({
       email: target.normalizedEmail,
       platformUserId: target.id,
     });
@@ -143,7 +98,7 @@ export async function resendPlatformInvitation(formData: FormData) {
   }
 
   try {
-    await sendInvitation({
+    await sendPlatformInvitation({
       email: target.normalizedEmail,
       platformUserId: target.id,
     });

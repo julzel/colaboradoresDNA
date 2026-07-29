@@ -1,0 +1,424 @@
+import "server-only";
+
+import { ObjectId } from "mongodb";
+
+import type {
+  PlatformRole,
+  PlatformUserStatus,
+} from "@/features/auth/domain/platform-user";
+import type { EmployeeAssignment } from "@/features/employees/domain/assignment";
+import type { EmployeeDirectoryQuery } from "@/features/employees/domain/employee-directory-query";
+import {
+  formatEmployeeBirthday,
+  formatEmployeeDisplayName,
+  getEmployeeInitials,
+  maskIdentification,
+  type EmploymentStatus,
+  type IdentificationType,
+} from "@/features/employees/domain/employee";
+import type { EmployeeSchedule } from "@/features/employees/domain/schedule";
+import { objectIdStringSchema } from "@/features/employees/domain/shared";
+import { listEmployeeAssignmentHistory } from "@/features/employees/server/assignment-repository";
+import { listEmployeeScheduleHistory } from "@/features/employees/server/schedule-repository";
+import { getDatabase } from "@/lib/server/mongodb";
+
+const pageSize = 20;
+
+type DirectoryAggregationRow = {
+  _id: ObjectId;
+  accessStatus: PlatformUserStatus;
+  departmentId: ObjectId | null;
+  departmentName: string | null;
+  displayName: string;
+  employmentStartedOn: string;
+  employmentStatus: EmploymentStatus;
+  managerName: string | null;
+  platformRole: PlatformRole;
+  positionTitle: string | null;
+};
+
+export type EmployeeDirectoryItem = {
+  accessStatus: PlatformUserStatus;
+  departmentName: string | null;
+  displayName: string;
+  employmentStartedOn: string;
+  employmentStatus: EmploymentStatus;
+  id: string;
+  managerName: string | null;
+  platformRole: PlatformRole;
+  positionTitle: string | null;
+};
+
+export type EmployeeDirectoryResult = {
+  items: EmployeeDirectoryItem[];
+  page: number;
+  pageCount: number;
+  total: number;
+};
+
+export type EmployeeManagerOption = {
+  displayName: string;
+  id: string;
+};
+
+export type EmployeeDetail = {
+  access: {
+    email: string;
+    invitationStatus: "pending" | "accepted" | "failed";
+    role: PlatformRole;
+    status: PlatformUserStatus;
+  };
+  assignmentHistory: Array<
+    EmployeeAssignment & {
+      departmentName: string;
+      managerName: string | null;
+    }
+  >;
+  currentAssignment: {
+    departmentId: string;
+    departmentName: string;
+    managerEmployeeId: string | null;
+    managerName: string | null;
+    positionTitle: string;
+  } | null;
+  currentSchedule: EmployeeSchedule | null;
+  employee: {
+    birthday: string;
+    employmentEndedOn: string | null;
+    employmentStartedOn: string;
+    employmentStatus: EmploymentStatus;
+    firstSurname: string;
+    givenNames: string;
+    id: string;
+    identification: {
+      maskedValue: string;
+      type: IdentificationType;
+    };
+    initials: string;
+    phoneDisplayValue: string | null;
+    secondSurname: string | null;
+    shareBirthdayOnCalendar: boolean;
+  };
+  scheduleHistory: EmployeeSchedule[];
+};
+
+function todayInCostaRica() {
+  return new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Costa_Rica",
+    year: "numeric",
+  }).format(new Date());
+}
+
+export async function listEmployeeDirectoryForAdministration(
+  query: EmployeeDirectoryQuery,
+): Promise<EmployeeDirectoryResult> {
+  const database = await getDatabase();
+  const today = todayInCostaRica();
+  const match: Record<string, unknown> = {};
+
+  if (query.employment) match.employmentStatus = query.employment;
+  if (query.search) {
+    const escaped = query.search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    match.$or = [
+      { givenNames: { $regex: escaped, $options: "i" } },
+      { firstSurname: { $regex: escaped, $options: "i" } },
+      { secondSurname: { $regex: escaped, $options: "i" } },
+    ];
+  }
+
+  const sort =
+    query.sort === "name_desc"
+      ? { displayName: -1 as const }
+      : query.sort === "start_desc"
+        ? { employmentStartedOn: -1 as const, displayName: 1 as const }
+        : query.sort === "start_asc"
+          ? { employmentStartedOn: 1 as const, displayName: 1 as const }
+          : { displayName: 1 as const };
+
+  const rows = await database
+    .collection("employees")
+    .aggregate<DirectoryAggregationRow>([
+      { $match: match },
+      {
+        $addFields: {
+          displayName: {
+            $trim: {
+              input: {
+                $concat: [
+                  "$givenNames",
+                  " ",
+                  "$firstSurname",
+                  " ",
+                  { $ifNull: ["$secondSurname", ""] },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          as: "access",
+          foreignField: "_id",
+          from: "platform_users",
+          localField: "platformUserId",
+        },
+      },
+      { $unwind: "$access" },
+      ...(query.access ? [{ $match: { "access.status": query.access } }] : []),
+      ...(query.role ? [{ $match: { "access.role": query.role } }] : []),
+      {
+        $lookup: {
+          as: "assignment",
+          from: "employee_assignments",
+          let: { employeeId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$employeeId", "$$employeeId"] },
+                    { $lte: ["$effectiveFrom", today] },
+                    {
+                      $or: [
+                        { $eq: ["$effectiveTo", null] },
+                        { $gte: ["$effectiveTo", today] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            { $sort: { effectiveFrom: -1 } },
+            { $limit: 1 },
+          ],
+        },
+      },
+      { $unwind: { path: "$assignment", preserveNullAndEmptyArrays: true } },
+      ...(query.department
+        ? [{ $match: { "assignment.departmentId": new ObjectId(query.department) } }]
+        : []),
+      {
+        $lookup: {
+          as: "department",
+          foreignField: "_id",
+          from: "departments",
+          localField: "assignment.departmentId",
+        },
+      },
+      {
+        $lookup: {
+          as: "manager",
+          foreignField: "_id",
+          from: "employees",
+          localField: "assignment.managerEmployeeId",
+        },
+      },
+      {
+        $project: {
+          accessStatus: "$access.status",
+          departmentId: "$assignment.departmentId",
+          departmentName: { $arrayElemAt: ["$department.name", 0] },
+          displayName: 1,
+          employmentStartedOn: 1,
+          employmentStatus: 1,
+          managerName: {
+            $trim: {
+              input: {
+                $concat: [
+                  { $ifNull: [{ $arrayElemAt: ["$manager.givenNames", 0] }, ""] },
+                  " ",
+                  { $ifNull: [{ $arrayElemAt: ["$manager.firstSurname", 0] }, ""] },
+                ],
+              },
+            },
+          },
+          platformRole: "$access.role",
+          positionTitle: "$assignment.positionTitle",
+        },
+      },
+      { $sort: sort },
+    ])
+    .toArray();
+
+  const total = rows.length;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(query.page, pageCount);
+
+  return {
+    items: rows.slice((page - 1) * pageSize, page * pageSize).map((row) => ({
+      accessStatus: row.accessStatus,
+      departmentName: row.departmentName || null,
+      displayName: row.displayName,
+      employmentStartedOn: row.employmentStartedOn,
+      employmentStatus: row.employmentStatus,
+      id: row._id.toHexString(),
+      managerName: row.managerName || null,
+      platformRole: row.platformRole,
+      positionTitle: row.positionTitle || null,
+    })),
+    page,
+    pageCount,
+    total,
+  };
+}
+
+export async function listEligibleManagerOptions(
+  excludedEmployeeId?: string,
+): Promise<EmployeeManagerOption[]> {
+  const database = await getDatabase();
+  const documents = await database
+    .collection("employees")
+    .aggregate<{ _id: ObjectId; displayName: string }>([
+      {
+        $match: {
+          employmentStatus: "active",
+          ...(excludedEmployeeId
+            ? { _id: { $ne: new ObjectId(excludedEmployeeId) } }
+            : {}),
+        },
+      },
+      {
+        $lookup: {
+          as: "access",
+          foreignField: "_id",
+          from: "platform_users",
+          localField: "platformUserId",
+        },
+      },
+      {
+        $match: {
+          "access.role": { $in: ["administrator", "supervisor"] },
+          "access.status": "active",
+        },
+      },
+      {
+        $project: {
+          displayName: {
+            $concat: ["$givenNames", " ", "$firstSurname"],
+          },
+        },
+      },
+      { $sort: { displayName: 1 } },
+    ])
+    .toArray();
+
+  return documents.map((document) => ({
+    displayName: document.displayName,
+    id: document._id.toHexString(),
+  }));
+}
+
+export async function getEmployeeDetailForAdministration(
+  employeeId: string,
+): Promise<EmployeeDetail | null> {
+  objectIdStringSchema.parse(employeeId);
+  const database = await getDatabase();
+  const employee = await database
+    .collection("employees")
+    .findOne({ _id: new ObjectId(employeeId) });
+
+  if (!employee) return null;
+
+  const [access, assignments, schedules, departments, employees] = await Promise.all([
+    database.collection("platform_users").findOne({ _id: employee.platformUserId }),
+    listEmployeeAssignmentHistory(employeeId),
+    listEmployeeScheduleHistory(employeeId),
+    database.collection("departments").find({}).toArray(),
+    database
+      .collection("employees")
+      .find({}, { projection: { firstSurname: 1, givenNames: 1 } })
+      .toArray(),
+  ]);
+
+  if (!access) return null;
+
+  const departmentNames = new Map(
+    departments.map((department) => [
+      department._id.toHexString(),
+      String(department.name),
+    ]),
+  );
+  const employeeNames = new Map(
+    employees.map((person) => [
+      person._id.toHexString(),
+      formatEmployeeDisplayName(person as never),
+    ]),
+  );
+  const currentAssignment =
+    assignments.find(
+      (assignment) =>
+        assignment.effectiveFrom <= todayInCostaRica() &&
+        (!assignment.effectiveTo || assignment.effectiveTo >= todayInCostaRica()),
+    ) ?? null;
+  const currentSchedule =
+    schedules.find(
+      (schedule) =>
+        schedule.effectiveFrom <= todayInCostaRica() &&
+        (!schedule.effectiveTo || schedule.effectiveTo >= todayInCostaRica()),
+    ) ?? null;
+
+  return {
+    access: {
+      email: String(access.normalizedEmail),
+      invitationStatus: access.invitation.status,
+      role: access.role,
+      status: access.status,
+    },
+    assignmentHistory: assignments.map((assignment) => ({
+      ...assignment,
+      departmentName:
+        departmentNames.get(assignment.departmentId) ?? "Departamento desconocido",
+      managerName: assignment.managerEmployeeId
+        ? (employeeNames.get(assignment.managerEmployeeId) ?? null)
+        : null,
+    })),
+    currentAssignment: currentAssignment
+      ? {
+          departmentId: currentAssignment.departmentId,
+          departmentName:
+            departmentNames.get(currentAssignment.departmentId) ??
+            "Departamento desconocido",
+          managerEmployeeId: currentAssignment.managerEmployeeId,
+          managerName: currentAssignment.managerEmployeeId
+            ? (employeeNames.get(currentAssignment.managerEmployeeId) ?? null)
+            : null,
+          positionTitle: currentAssignment.positionTitle,
+        }
+      : null,
+    currentSchedule,
+    employee: {
+      birthday: formatEmployeeBirthday(employee as never),
+      employmentEndedOn: employee.employmentEndedOn,
+      employmentStartedOn: employee.employmentStartedOn,
+      employmentStatus: employee.employmentStatus,
+      firstSurname: employee.firstSurname,
+      givenNames: employee.givenNames,
+      id: employee._id.toHexString(),
+      identification: {
+        maskedValue: maskIdentification(employee.identification),
+        type: employee.identification.type,
+      },
+      initials: getEmployeeInitials(employee as never),
+      phoneDisplayValue: employee.phoneNumber?.displayValue ?? null,
+      secondSurname: employee.secondSurname,
+      shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
+    },
+    scheduleHistory: schedules,
+  };
+}
+
+export async function revealEmployeeIdentificationValue(employeeId: string) {
+  objectIdStringSchema.parse(employeeId);
+  const database = await getDatabase();
+  const employee = await database
+    .collection("employees")
+    .findOne(
+      { _id: new ObjectId(employeeId) },
+      { projection: { "identification.value": 1 } },
+    );
+
+  return employee?.identification?.value ?? null;
+}
