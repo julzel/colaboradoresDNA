@@ -1,0 +1,6 @@
+{
+  "name": "Cuenta bloqueada",
+  "subject": "Tu cuenta de {{app.name}} fue bloqueada",
+  "markup": "<re-html><re-head><re-title>Tu cuenta fue bloqueada</re-title></re-head><re-body background-color=\"#ffffff\" padding=\"48px 24px\"><re-main background-color=\"#ffffff\"><re-heading level=\"h1\" color=\"#0d1718\">Protegimos tu cuenta</re-heading><re-text color=\"#4c5c5d\">El acceso fue bloqueado temporalmente después de {{failed_attempts}} intentos fallidos.</re-text><re-text color=\"#4c5c5d\">La cuenta se desbloqueará después de {{lockout_duration}}. También podés contactar a una persona administradora.</re-text><re-text color=\"#657676\">Si no reconocés esta actividad, reportala de inmediato.</re-text></re-main><re-text color=\"#657676\">© {{current_year}} {{app.name}}</re-text></re-body></re-html>",
+  "body": "<!doctype html><html lang=\"es\"><body><h1>Protegimos tu cuenta</h1><p>El acceso fue bloqueado temporalmente después de {{failed_attempts}} intentos fallidos.</p><p>La cuenta se desbloqueará después de {{lockout_duration}}. También podés contactar a una persona administradora.</p><p>Si no reconocés esta actividad, reportala de inmediato.</p></body></html>"
+}
