@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { esCR } from "@clerk/localizations";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
@@ -76,21 +78,38 @@ export const metadata: Metadata = {
     default: "Colaboradores DNA",
     template: "%s · Colaboradores DNA",
   },
-  description:
-    "The internal workspace for managing collaborators and operational processes.",
+  description: "El espacio interno para gestionar colaboradores y procesos operativos.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es-CR" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <a className="skip-link" href="#main-content">
-          Skip to main content
-        </a>
-        {children}
+        <ClerkProvider
+          appearance={{
+            variables: {
+              borderRadius: "0.625rem",
+              colorBackground: "var(--color-surface)",
+              colorForeground: "var(--color-text)",
+              colorInput: "var(--color-surface)",
+              colorInputForeground: "var(--color-text)",
+              colorMutedForeground: "var(--color-text-muted)",
+              colorPrimary: "#07bbc7",
+              fontFamily: "var(--font-sans)",
+            },
+          }}
+          localization={esCR}
+          signInFallbackRedirectUrl="/"
+          signUpFallbackRedirectUrl="/"
+        >
+          <a className="skip-link" href="#main-content">
+            Ir al contenido principal
+          </a>
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );

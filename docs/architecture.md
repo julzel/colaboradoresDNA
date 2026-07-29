@@ -3,14 +3,16 @@
 ## Overview
 
 Colaboradores DNA is a single full-stack Next.js application. It uses the App
-Router and React Server Components by default, with MongoDB Atlas as the
-document database and Netlify as the hosting platform.
+Router and React Server Components by default, with Clerk as the identity and
+session provider, MongoDB Atlas as the document database, and Netlify as the
+hosting platform.
 
 ```text
 Browser
   │
   ▼
 Next.js App Router
+  ├── Clerk proxy and provider: identity and session lifecycle
   ├── Server Components: read and render data
   ├── Server Actions: first-party mutations
   └── Route Handlers: public HTTP and webhook endpoints
@@ -64,6 +66,11 @@ Every Server Action and Route Handler must:
 3. Authorize the requested action.
 4. Return only data appropriate for that caller.
 
+Clerk owns identity and session lifecycle. MongoDB owns application roles,
+employment status, teams, and business data. Authorization must run on the
+server and use the stable Clerk user identifier to resolve the corresponding
+MongoDB user; client-visible metadata is not an authorization boundary.
+
 For persistence changes, define indexes deliberately and add a repeatable
 migration under `web/scripts/` when existing data needs to change.
 
@@ -80,9 +87,9 @@ The UI uses native CSS:
 
 ## Testing layers
 
-| Layer | Tool | Purpose |
-| --- | --- | --- |
-| Unit | Vitest | Pure logic, validation, and data mapping |
-| Component | Vitest + Testing Library | Isolated interactive Client Components |
-| End-to-end | Playwright | Critical journeys and server-rendered flows |
-| Accessibility | Playwright + axe | Automatically detectable WCAG A/AA issues |
+| Layer         | Tool                     | Purpose                                     |
+| ------------- | ------------------------ | ------------------------------------------- |
+| Unit          | Vitest                   | Pure logic, validation, and data mapping    |
+| Component     | Vitest + Testing Library | Isolated interactive Client Components      |
+| End-to-end    | Playwright               | Critical journeys and server-rendered flows |
+| Accessibility | Playwright + axe         | Automatically detectable WCAG A/AA issues   |

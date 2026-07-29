@@ -1,6 +1,7 @@
 # Colaboradores DNA web
 
-Full-stack Next.js application for Colaboradores DNA.
+Full-stack Next.js application for Colaboradores DNA with Clerk authentication and
+MongoDB Atlas persistence.
 
 ## Start locally
 
@@ -11,9 +12,19 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-MongoDB is optional for the starter homepage. To enable database-backed features, copy
-`.env.example` to `.env.local` and replace the placeholders with the MongoDB Atlas
-connection values.
+Clerk development credentials are required. The Clerk CLI can link this repository and
+populate `.env.local` without exposing the values:
+
+```bash
+clerk auth login
+clerk init --app app_3H9dgW0N38YwjuOrBRUcLfe2mzL
+clerk doctor
+```
+
+Do not commit `.env.local` or copy development credentials to Netlify.
+
+MongoDB is optional for the current homepage. To enable database-backed features, add
+the MongoDB Atlas values documented in `.env.example` to `.env.local`.
 
 ## Quality checks
 
@@ -24,6 +35,6 @@ pnpm test:e2e
 
 ## Netlify
 
-Set the Netlify base directory to `web`. Store `MONGODB_URI` and `MONGODB_DB` in Netlify
-environment variables for both Builds and Functions, using separate values for Deploy
-Previews and Production.
+Set the Netlify base directory to `web`. Configure Clerk production credentials and the
+MongoDB values as Netlify environment variables for Builds and Functions. Use separate
+credentials for Deploy Previews and Production.

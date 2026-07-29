@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AuthControls } from "@/components/auth/auth-controls";
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card/card";
 import {
@@ -19,40 +20,40 @@ import { ThemeToggle } from "@/components/ui/theme-toggle/theme-toggle";
 import styles from "./page.module.css";
 
 const navigationItems: readonly NavigationItem[] = [
-  { href: "/", label: "Overview", marker: "OV" },
-  { href: "#collaborators", label: "Collaborators", marker: "CO" },
-  { href: "#processes", label: "Processes", marker: "PR", badge: "8" },
-  { href: "#documents", label: "Documents", marker: "DO" },
-  { href: "#reports", label: "Reports", marker: "RE" },
-  { href: "#design-system", label: "Design system", marker: "DS" },
+  { href: "/", label: "Inicio", marker: "IN" },
+  { href: "#collaborators", label: "Colaboradores", marker: "CO" },
+  { href: "#processes", label: "Procesos", marker: "PR", badge: "8" },
+  { href: "#documents", label: "Documentos", marker: "DO" },
+  { href: "#reports", label: "Reportes", marker: "RE" },
+  { href: "#design-system", label: "Sistema de diseño", marker: "SD" },
 ];
 
 const metrics = [
   {
-    detail: "4 joined this month",
-    label: "Active collaborators",
-    status: "Healthy",
+    detail: "4 se incorporaron este mes",
+    label: "Colaboradores activos",
+    status: "Saludable",
     tone: "success" as const,
     value: "128",
   },
   {
-    detail: "Across 5 operating areas",
-    label: "Open processes",
-    status: "In progress",
+    detail: "En 5 áreas operativas",
+    label: "Procesos abiertos",
+    status: "En curso",
     tone: "info" as const,
     value: "24",
   },
   {
-    detail: "Needs an owner this week",
-    label: "Pending reviews",
-    status: "Attention",
+    detail: "Necesitan responsable esta semana",
+    label: "Revisiones pendientes",
+    status: "Atención",
     tone: "warning" as const,
     value: "8",
   },
   {
-    detail: "Up 6 points from June",
-    label: "On-time completion",
-    status: "On target",
+    detail: "Subió 6 puntos desde junio",
+    label: "Finalización a tiempo",
+    status: "En meta",
     tone: "success" as const,
     value: "92%",
   },
@@ -62,38 +63,38 @@ const recentProcesses = [
   {
     initials: "AM",
     name: "Ana Mora",
-    owner: "People Operations",
-    process: "Onboarding",
-    status: "In progress",
+    owner: "Operaciones de personas",
+    process: "Incorporación",
+    status: "En curso",
     tone: "info" as const,
-    updated: "12 min ago",
+    updated: "Hace 12 min",
   },
   {
     initials: "DL",
     name: "Diego López",
     owner: "Legal",
-    process: "Contract renewal",
-    status: "Needs review",
+    process: "Renovación de contrato",
+    status: "Requiere revisión",
     tone: "warning" as const,
-    updated: "1 hr ago",
+    updated: "Hace 1 h",
   },
   {
     initials: "SR",
     name: "Sofía Rojas",
-    owner: "Finance",
-    process: "Expense setup",
-    status: "Complete",
+    owner: "Finanzas",
+    process: "Configuración de gastos",
+    status: "Completado",
     tone: "success" as const,
-    updated: "Yesterday",
+    updated: "Ayer",
   },
   {
     initials: "JC",
     name: "José Castro",
-    owner: "People Operations",
-    process: "Role change",
-    status: "Blocked",
+    owner: "Operaciones de personas",
+    process: "Cambio de puesto",
+    status: "Bloqueado",
     tone: "danger" as const,
-    updated: "2 days ago",
+    updated: "Hace 2 días",
   },
 ];
 
@@ -101,28 +102,26 @@ export default function HomePage() {
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
-        <Link className={styles.brand} href="/" aria-label="Colaboradores DNA home">
+        <Link
+          className={styles.brand}
+          href="/"
+          aria-label="Inicio de Colaboradores DNA"
+        >
           <span className={styles.brandMark} aria-hidden="true">
             DNA
           </span>
           <span>Colaboradores</span>
         </Link>
 
-        <p className={styles.navLabel}>Workspace</p>
+        <p className={styles.navLabel}>Espacio de trabajo</p>
         <SideNavigation currentHref="/" items={navigationItems} />
 
         <div className={styles.sidebarFooter}>
           <div className={styles.helpCard}>
-            <strong>Need help?</strong>
-            <span>Find process guides and team support in the knowledge base.</span>
-          </div>
-          <div className={styles.profile}>
-            <span className={styles.avatar} aria-hidden="true">
-              MP
-            </span>
+            <strong>¿Necesitás ayuda?</strong>
             <span>
-              <strong>María Pérez</strong>
-              <span>Product owner</span>
+              Consultá las guías de procesos y el apoyo del equipo en la base de
+              conocimiento.
             </span>
           </div>
         </div>
@@ -131,50 +130,54 @@ export default function HomePage() {
       <div className={styles.mainColumn}>
         <header className={styles.topbar}>
           <details className={styles.mobileNav}>
-            <summary>Open navigation</summary>
+            <summary>Abrir navegación</summary>
             <SideNavigation
               currentHref="/"
               items={navigationItems}
-              label="Mobile navigation"
+              label="Navegación móvil"
             />
           </details>
           <Breadcrumbs
-            items={[{ label: "Workspace", href: "/" }, { label: "Overview" }]}
+            items={[{ label: "Espacio de trabajo", href: "/" }, { label: "Inicio" }]}
           />
           <div className={styles.topbarTools}>
             <div className={styles.searchField}>
               <TextField
                 id="workspace-search"
-                label="Search workspace"
-                placeholder="Search people or processes"
+                label="Buscar en el espacio de trabajo"
+                placeholder="Buscar personas o procesos"
                 type="search"
                 visuallyHiddenLabel
               />
             </div>
             <span className={styles.topbarStatus}>
-              <StatusBadge tone="success">Systems online</StatusBadge>
+              <StatusBadge tone="success">Sistemas disponibles</StatusBadge>
             </span>
             <ThemeToggle />
+            <AuthControls />
           </div>
         </header>
 
         <main className={styles.content} id="main-content">
           <section className={styles.pageHeading} aria-labelledby="page-title">
             <div>
-              <p className={styles.eyebrow}>Tuesday · Operations pulse</p>
-              <h1 id="page-title">Good morning, María.</h1>
+              <p className={styles.eyebrow}>Martes · Pulso operativo</p>
+              <h1 id="page-title">Buenos días.</h1>
               <p>
-                Here is what needs the team&apos;s attention across collaborator
-                processes today.
+                Esto es lo que requiere la atención del equipo en los procesos de
+                colaboradores para hoy.
               </p>
             </div>
             <div className={styles.headingActions}>
-              <Button variant="secondary">Export report</Button>
-              <ButtonLink href="#new-request">Add collaborator</ButtonLink>
+              <Button variant="secondary">Exportar reporte</Button>
+              <ButtonLink href="#new-request">Agregar colaborador</ButtonLink>
             </div>
           </section>
 
-          <section className={styles.metrics} aria-label="Workspace metrics">
+          <section
+            className={styles.metrics}
+            aria-label="Métricas del espacio de trabajo"
+          >
             {metrics.map((metric) => (
               <article className={styles.metric} key={metric.label}>
                 <div className={styles.metricTopline}>
@@ -192,21 +195,28 @@ export default function HomePage() {
               <CardHeader
                 action={
                   <Button size="small" variant="quiet">
-                    View all
+                    Ver todos
                   </Button>
                 }
-                description="The most recently updated team workflows."
-                title="Active processes"
+                description="Los flujos del equipo actualizados más recientemente."
+                title="Procesos activos"
               />
-              <div className={styles.tableWrap}>
+              <div
+                aria-label="Tabla de procesos activos"
+                className={styles.tableWrap}
+                role="region"
+                tabIndex={0}
+              >
                 <table className={styles.table}>
-                  <caption>Recently updated collaborator processes</caption>
+                  <caption>
+                    Procesos de colaboradores actualizados recientemente
+                  </caption>
                   <thead>
                     <tr>
-                      <th scope="col">Collaborator</th>
-                      <th scope="col">Process</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Updated</th>
+                      <th scope="col">Colaborador</th>
+                      <th scope="col">Proceso</th>
+                      <th scope="col">Estado</th>
+                      <th scope="col">Actualización</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -237,50 +247,50 @@ export default function HomePage() {
 
             <Card id="new-request">
               <CardHeader
-                description="Capture the minimum information needed to assign an owner."
-                title="Start a process"
+                description="Registrá la información mínima necesaria para asignar una persona responsable."
+                title="Iniciar un proceso"
               />
               <CardBody>
                 <form className={styles.form}>
                   <TextField
                     autoComplete="name"
                     id="collaborator-name"
-                    label="Collaborator"
-                    placeholder="Full name"
+                    label="Colaborador"
+                    placeholder="Nombre completo"
                     required
                   />
                   <div className={styles.formGrid}>
-                    <SelectField id="process-type" label="Process" required>
-                      <option value="">Select one</option>
-                      <option>Onboarding</option>
-                      <option>Role change</option>
-                      <option>Contract renewal</option>
-                      <option>Offboarding</option>
+                    <SelectField id="process-type" label="Proceso" required>
+                      <option value="">Seleccioná una opción</option>
+                      <option>Incorporación</option>
+                      <option>Cambio de puesto</option>
+                      <option>Renovación de contrato</option>
+                      <option>Salida</option>
                     </SelectField>
-                    <SelectField id="process-priority" label="Priority" required>
+                    <SelectField id="process-priority" label="Prioridad" required>
                       <option>Normal</option>
-                      <option>High</option>
-                      <option>Urgent</option>
+                      <option>Alta</option>
+                      <option>Urgente</option>
                     </SelectField>
                   </div>
                   <TextAreaField
                     id="process-notes"
-                    label="Context"
+                    label="Contexto"
                     optional
-                    placeholder="Add details the owner should know"
+                    placeholder="Agregá los detalles que debe conocer la persona responsable"
                     rows={3}
                   />
                   <CheckboxField
-                    description="The selected owner will receive a workspace notification."
+                    description="La persona responsable recibirá una notificación en el espacio de trabajo."
                     id="notify-owner"
-                    label="Notify the owner when assigned"
+                    label="Notificar al asignar la persona responsable"
                   />
                   <div className={styles.formActions}>
                     <Button fullWidth variant="secondary">
-                      Save draft
+                      Guardar borrador
                     </Button>
                     <Button fullWidth type="submit">
-                      Create process
+                      Crear proceso
                     </Button>
                   </div>
                 </form>
@@ -290,33 +300,33 @@ export default function HomePage() {
 
           <Card className={styles.principles} id="design-system">
             <CardHeader
-              description="The rules behind every component and workflow in this workspace."
-              title="Design-system principles"
+              description="Las reglas que orientan cada componente y flujo de este espacio de trabajo."
+              title="Principios del sistema de diseño"
             />
             <CardBody>
               <div className={styles.principleGrid}>
                 <article className={styles.principle}>
                   <span className={styles.principleNumber}>01</span>
-                  <h3>Accessible by default</h3>
+                  <h3>Accesible desde el inicio</h3>
                   <p className={styles.principleText}>
-                    Semantic structure, visible focus, clear labels, and sufficient
-                    contrast are built into the components.
+                    La estructura semántica, el foco visible, las etiquetas claras y el
+                    contraste suficiente forman parte de los componentes.
                   </p>
                 </article>
                 <article className={styles.principle}>
                   <span className={styles.principleNumber}>02</span>
-                  <h3>Useful before decorative</h3>
+                  <h3>Útil antes que decorativo</h3>
                   <p className={styles.principleText}>
-                    Information density, predictable actions, and plain language support
-                    the team&apos;s daily operational work.
+                    La densidad de información, las acciones predecibles y el lenguaje
+                    claro apoyan el trabajo operativo diario del equipo.
                   </p>
                 </article>
                 <article className={styles.principle}>
                   <span className={styles.principleNumber}>03</span>
-                  <h3>Consistent, not rigid</h3>
+                  <h3>Consistente, no rígido</h3>
                   <p className={styles.principleText}>
-                    Shared tokens and patterns keep products familiar while allowing
-                    each workflow to fit its content.
+                    Los patrones y tokens compartidos mantienen la familiaridad sin
+                    impedir que cada flujo se adapte a su contenido.
                   </p>
                 </article>
               </div>

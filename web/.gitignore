@@ -16,3 +16,6 @@ test-results/
 .netlify/
 .DS_Store
 *.tsbuildinfo
+
+# clerk configuration (can include secrets)
+/.clerk/

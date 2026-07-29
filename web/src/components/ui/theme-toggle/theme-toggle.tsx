@@ -2,7 +2,7 @@ import styles from "./theme-toggle.module.css";
 
 export function ThemeToggle() {
   return (
-    <div className={styles.toggle} role="group" aria-label="Color theme">
+    <div className={styles.toggle} role="group" aria-label="Tema de color">
       <button
         aria-pressed="false"
         className={styles.option}
@@ -10,7 +10,7 @@ export function ThemeToggle() {
         suppressHydrationWarning
         type="button"
       >
-        Light
+        Claro
       </button>
       <button
         aria-pressed="false"
@@ -19,7 +19,7 @@ export function ThemeToggle() {
         suppressHydrationWarning
         type="button"
       >
-        Dark
+        Oscuro
       </button>
     </div>
   );
