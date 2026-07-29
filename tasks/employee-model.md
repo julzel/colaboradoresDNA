@@ -2,8 +2,8 @@
 
 ## Document status
 
-**Status:** Product decisions incorporated; ready for CRUD implementation
-planning.
+**Status:** Domain and persistence foundation implemented; administrator CRUD
+interface pending.
 
 **Source reviewed:** `tasks/done/platform-description.md`, the current
 authentication model, and the authentication lifecycle documentation.
@@ -12,6 +12,35 @@ This document refines the product concept of **Colaborador** into an employee
 domain model. It defines the MVP data boundary, recommended entities,
 validation, authorization, history, and approved product decisions. It does not
 implement the CRUD.
+
+## Implementation outcome
+
+The model foundation is implemented under
+`web/src/features/employees/`. It provides:
+
+- Zod schemas and pure normalization for employees, departments, assignments,
+  schedules, Cédula física, DIMEX, birthdays, phone numbers, and effective
+  dates.
+- Derived display names, initials, `dd/MM` birthdays, masked identification,
+  and weekly days/hours.
+- MongoDB repositories and all required indexes.
+- Transaction-serialized assignment and schedule timelines that reject
+  overlaps under concurrent writes.
+- Active-manager role validation and reporting-cycle detection.
+- An administrator-authorized transaction that creates the employee,
+  assignment, and schedule together and synchronizes the platform access
+  display name.
+- Server-authorized directory, birthday calendar, administrator detail, and
+  self-service profile boundaries.
+- Safe employee audit events that record field names but never identification,
+  phone, or birthday values.
+- An idempotent `bootstrap:employee-model` command that creates indexes and the
+  initial editable departments.
+
+The administrator pages, forms, invitation orchestration, employment
+deactivation workflow, and profile screens remain part of the employee CRUD
+milestone. Raw repositories are server-only infrastructure; routes and Server
+Actions must use the authorized service boundary.
 
 ## Main finding
 

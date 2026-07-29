@@ -69,8 +69,8 @@ Every Server Action and Route Handler must:
 4. Return only data appropriate for that caller.
 
 Clerk owns identity and session lifecycle. MongoDB owns application roles,
-employment status, teams, and business data. Authorization must run on the
-server and use the stable Clerk user identifier to resolve the corresponding
+employment status, departments, and business data. Authorization must run on
+the server and use the stable Clerk user identifier to resolve the corresponding
 MongoDB user; client-visible metadata is not an authorization boundary.
 
 `requirePlatformUser()` is the shared server boundary for private resources. It
@@ -80,6 +80,26 @@ Server Action, and Route Handler must still invoke the boundary itself.
 
 For persistence changes, define indexes deliberately and add a repeatable
 migration under `web/scripts/` when existing data needs to change.
+
+## Employee domain
+
+Authentication and employee data use separate records:
+
+- `platform_users` owns login email, Clerk linkage, platform role, invitation,
+  and access status.
+- `employees` owns legal/personal names, birthday day and month, identification,
+  optional phone number, and employment lifecycle.
+- `departments` contains editable organizational departments.
+- `employee_assignments` preserves effective-dated department, position, and
+  reporting relationships.
+- `employee_schedules` preserves effective-dated weekly work patterns.
+- `employee_audit` records safe action names and changed field names without
+  copying sensitive values.
+
+Employee creation and effective-timeline writes use MongoDB transactions.
+Timeline lock documents serialize assignment graph and per-employee schedule
+changes so application-level overlap and reporting-cycle checks remain valid
+under concurrent requests.
 
 ## Styling and accessibility
 
