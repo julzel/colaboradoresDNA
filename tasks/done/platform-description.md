@@ -253,6 +253,8 @@ The authentication provider is Clerk.
 Requirements:
 
 - Registration is restricted and invitation-only.
+- Invitations are sent to each collaborator's personal email; corporate email
+  accounts are not required.
 - Primary authentication uses Google or email verification codes.
 - Administrators and supervisors must use MFA.
 - Only invited, active users can access the application.
@@ -311,8 +313,8 @@ Bootstrap requirements:
 
 Administrators can:
 
-- Invite a user with name, email, position, platform role, team, reporting
-  manager, status, and initial PTO balance.
+- Invite a user with name, personal email, position, platform role, team,
+  reporting manager, status, and initial PTO balance.
 - Edit role, position, team, reporting manager, active status, and PTO balance.
 - Resend an invitation and revoke sessions when appropriate.
 - Search and filter the directory by name, role, team, and status.
@@ -322,6 +324,8 @@ Administrators can:
 Rules:
 
 - Email addresses are normalized and unique.
+- Personal emails are treated as private account-contact data and are not
+  exposed to other collaborators by default.
 - Clerk identifiers are unique when present.
 - Historical records reference stable application user identifiers.
 - A user may have a reporting manager without that relationship being inferred

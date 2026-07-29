@@ -6,6 +6,11 @@ Clerk owns authentication identity, verification methods, invitations, and
 session lifecycle. MongoDB Atlas owns platform authorization: role, active
 status, team membership, reporting relationships, and business history.
 
+Invitations use the collaborator's personal email because corporate email
+accounts are not required. The email is private account-contact data. After
+invitation acceptance, authorization resolves through the stable Clerk user ID
+rather than the mutable email address.
+
 Every protected resource calls `requirePlatformUser()` on the server. A valid
 Clerk session is necessary but not sufficient:
 
