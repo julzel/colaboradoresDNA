@@ -1,0 +1,6 @@
+{
+  "name": "Inicio de sesión desde un dispositivo nuevo",
+  "subject": "Nuevo inicio de sesión en tu cuenta de {{app.name}}",
+  "markup": "<re-html><re-head><re-title>Nuevo inicio de sesión</re-title></re-head><re-body background-color=\"#ffffff\" padding=\"48px 24px\"><re-main background-color=\"#ffffff\"><re-heading level=\"h1\" color=\"#0d1718\">Detectamos un dispositivo nuevo</re-heading><re-text color=\"#4c5c5d\">Se inició sesión en {{app.name}} desde {{device_type}}, usando {{browser_name}} en {{operating_system}}.</re-text><re-text color=\"#4c5c5d\">Ubicación aproximada: {{location}}. Dirección IP: {{ip_address}}.</re-text><re-button href=\"{{revoke_session_url}}\" background-color=\"#ff6f00\" color=\"#301400\" border-radius=\"10px\">Revocar esta sesión</re-button><re-text color=\"#657676\">Si fuiste vos, no necesitás hacer nada.</re-text></re-main><re-text color=\"#657676\">© {{current_year}} {{app.name}}</re-text></re-body></re-html>",
+  "body": "<!doctype html><html lang=\"es\"><body><h1>Detectamos un dispositivo nuevo</h1><p>Se inició sesión en {{app.name}} desde {{device_type}}, usando {{browser_name}} en {{operating_system}}.</p><p>Ubicación aproximada: {{location}}. Dirección IP: {{ip_address}}.</p><p><a href=\"{{revoke_session_url}}\">Revocar esta sesión</a></p><p>Si fuiste vos, no necesitás hacer nada.</p></body></html>"
+}

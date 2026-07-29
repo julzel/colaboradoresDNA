@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "bootstrap:admins": "node --env-file=.env.local scripts/bootstrap-admins.mjs",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -22,6 +23,7 @@
     "verify": "pnpm format:check && pnpm lint && pnpm stylelint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@clerk/backend": "3.13.2",
     "@clerk/localizations": "^4.13.8",
     "@clerk/nextjs": "^7.6.2",
     "mongodb": "7.5.0",

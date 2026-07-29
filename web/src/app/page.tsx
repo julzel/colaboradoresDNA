@@ -16,10 +16,11 @@ import {
 } from "@/components/ui/navigation/side-navigation";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle/theme-toggle";
+import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 
 import styles from "./page.module.css";
 
-const navigationItems: readonly NavigationItem[] = [
+const baseNavigationItems: readonly NavigationItem[] = [
   { href: "/", label: "Inicio", marker: "IN" },
   { href: "#collaborators", label: "Colaboradores", marker: "CO" },
   { href: "#processes", label: "Procesos", marker: "PR", badge: "8" },
@@ -27,6 +28,12 @@ const navigationItems: readonly NavigationItem[] = [
   { href: "#reports", label: "Reportes", marker: "RE" },
   { href: "#design-system", label: "Sistema de diseño", marker: "SD" },
 ];
+
+const administratorNavigationItem: NavigationItem = {
+  href: "/admin/accounts",
+  label: "Administración",
+  marker: "AD",
+};
 
 const metrics = [
   {
@@ -98,7 +105,14 @@ const recentProcesses = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { platformUser } = await requirePlatformUser();
+  const navigationItems =
+    platformUser.role === "administrator"
+      ? [...baseNavigationItems, administratorNavigationItem]
+      : baseNavigationItems;
+  const firstName = platformUser.displayName.split(/\s+/)[0] ?? "";
+
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -162,7 +176,7 @@ export default function HomePage() {
           <section className={styles.pageHeading} aria-labelledby="page-title">
             <div>
               <p className={styles.eyebrow}>Martes · Pulso operativo</p>
-              <h1 id="page-title">Buenos días.</h1>
+              <h1 id="page-title">Buenos días, {firstName}.</h1>
               <p>
                 Esto es lo que requiere la atención del equipo en los procesos de
                 colaboradores para hoy.

@@ -1,0 +1,48 @@
+{
+  "auth_access_control": {
+    "block_disposable_email_domains": true,
+    "sign_up_mode": "restricted"
+  },
+  "auth_email": {
+    "required_for_sign_up": true,
+    "sign_in_strategies": ["email_code"],
+    "used_for_sign_in": true,
+    "used_for_sign_up": true,
+    "verification_strategies": ["email_code"],
+    "verify_at_sign_up": true
+  },
+  "auth_multi_factor": {
+    "authenticator_app": {
+      "enabled": true
+    },
+    "backup_code": {
+      "enabled": true
+    },
+    "required_for_sign_in": false,
+    "required_for_sign_up": false
+  },
+  "auth_password": {
+    "enabled": false,
+    "required": false
+  },
+  "auth_phone": {
+    "required_for_sign_up": false,
+    "second_factor_strategies": [],
+    "sign_in_strategies": [],
+    "used_for_second_factor": false,
+    "used_for_sign_in": false,
+    "used_for_sign_up": false,
+    "verification_strategies": [],
+    "verify_at_sign_up": false
+  },
+  "connection_oauth_google": {
+    "authenticatable": true,
+    "enabled": true
+  },
+  "paths": {
+    "after_sign_out_all": "/sign-in",
+    "home": "/",
+    "sign_in": "/sign-in",
+    "sign_up": "/sign-up"
+  }
+}
