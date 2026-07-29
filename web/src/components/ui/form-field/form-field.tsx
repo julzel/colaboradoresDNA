@@ -32,7 +32,7 @@ function FieldChrome({
         <label className={styles.label} htmlFor={id}>
           {label}
         </label>
-        {optional && <span className={styles.optional}>Optional</span>}
+        {optional && <span className={styles.optional}>Opcional</span>}
       </div>
       {children}
       {description && !error && (

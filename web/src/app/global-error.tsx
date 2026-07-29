@@ -9,13 +9,13 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html lang="en">
+    <html lang="es-CR">
       <body>
         <main className="error-page">
-          <p className="eyebrow">Something went wrong</p>
-          <h1>We could not load this page.</h1>
-          <p>Please try again. If the problem continues, come back in a few minutes.</p>
-          <Button onClick={reset}>Try again</Button>
+          <p className="eyebrow">Ocurrió un error</p>
+          <h1>No pudimos cargar esta página.</h1>
+          <p>Intentá de nuevo. Si el problema continúa, regresá en unos minutos.</p>
+          <Button onClick={reset}>Intentar de nuevo</Button>
         </main>
       </body>
     </html>

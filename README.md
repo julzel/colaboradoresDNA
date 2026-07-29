@@ -1,7 +1,7 @@
 # Colaboradores DNA
 
 Colaboradores DNA is a full-stack web application built with Next.js, React,
-TypeScript, MongoDB Atlas, and Netlify.
+TypeScript, Clerk, MongoDB Atlas, and Netlify.
 
 The repository is intentionally organised around a single application in
 [`web/`](./web). Application code and its tooling configuration live there;
@@ -24,9 +24,10 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The starter page does not require a database connection. To develop a feature
-that uses MongoDB, copy `web/.env.example` to `web/.env.local` and fill in the
-Atlas credentials.
+The application requires Clerk development credentials to render authentication
+controls. The project is already linked to its Clerk development application;
+see the [development guide](./docs/development.md#authentication-with-clerk).
+MongoDB remains optional until a database-backed feature is used.
 
 ## Quality checks
 

@@ -18,7 +18,7 @@ type SideNavigationProps = {
 export function SideNavigation({
   currentHref,
   items,
-  label = "Primary navigation",
+  label = "Navegación principal",
 }: SideNavigationProps) {
   return (
     <nav aria-label={label}>

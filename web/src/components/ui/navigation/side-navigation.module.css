@@ -30,8 +30,7 @@
 
 .link[aria-current="page"] {
   background: var(--color-accent);
-  color: white;
-
+  color: var(--color-accent-contrast);
 }
 
 .marker {

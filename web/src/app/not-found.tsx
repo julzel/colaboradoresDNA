@@ -5,9 +5,9 @@ export default function NotFound() {
     <main className="error-page">
       <div>
         <p className="eyebrow">404</p>
-        <h1>That page is not part of the system.</h1>
-        <p>Check the address or return to the Colaboradores DNA homepage.</p>
-        <ButtonLink href="/">Return home</ButtonLink>
+        <h1>Esta página no forma parte del sistema.</h1>
+        <p>Revisá la dirección o regresá al inicio de Colaboradores DNA.</p>
+        <ButtonLink href="/">Regresar al inicio</ButtonLink>
       </div>
     </main>
   );

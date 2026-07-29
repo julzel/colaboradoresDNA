@@ -1,0 +1,124 @@
+.shell {
+  display: grid;
+  min-height: 100vh;
+  background: var(--color-canvas);
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(22rem, 1.2fr);
+}
+
+.brandPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(var(--space-8), 6vw, var(--space-16));
+  background: var(--color-sidebar);
+  color: var(--color-sidebar-text);
+}
+
+.brand {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: var(--space-3);
+  color: inherit;
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-decoration: none;
+}
+
+.brandMark {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+}
+
+.brandCopy {
+  max-width: 31rem;
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-3);
+  color: var(--color-sidebar-muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.brandCopy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.75rem);
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+}
+
+.brandCopy p:not(.eyebrow) {
+  max-width: 34rem;
+  margin: var(--space-5) 0 0;
+  color: var(--color-sidebar-muted);
+  line-height: var(--line-body);
+}
+
+.support {
+  color: var(--color-sidebar-muted);
+  font-size: var(--text-xs);
+}
+
+.formPanel {
+  display: grid;
+  min-width: 0;
+  place-items: center;
+  padding: clamp(var(--space-6), 7vw, var(--space-16));
+}
+
+.formContent {
+  display: grid;
+  width: min(100%, 30rem);
+  justify-items: center;
+  gap: var(--space-6);
+}
+
+.formIntro {
+  text-align: center;
+}
+
+.formIntro h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--text-xl);
+  letter-spacing: -0.03em;
+}
+
+.formContent .formIntro p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+}
+
+@media (width <= 48rem) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .brandPanel {
+    min-height: 14rem;
+    gap: var(--space-8);
+  }
+
+  .brandCopy h1 {
+    max-width: 18ch;
+    font-size: clamp(1.8rem, 9vw, 2.75rem);
+  }
+
+  .support {
+    display: none;
+  }
+}

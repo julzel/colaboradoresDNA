@@ -5,12 +5,12 @@
 Connect the repository to Netlify and configure the project with these build
 settings:
 
-| Setting | Value |
-| --- | --- |
-| Base directory | `web` |
-| Build command | `pnpm verify` |
-| Publish directory | `.next` |
-| Node version | `24` |
+| Setting           | Value         |
+| ----------------- | ------------- |
+| Base directory    | `web`         |
+| Build command     | `pnpm verify` |
+| Publish directory | `.next`       |
+| Node version      | `24`          |
 
 `web/netlify.toml` records the build command, publish directory, Node version,
 and Next.js skew protection setting. Netlify's managed Next.js/OpenNext support
@@ -22,13 +22,32 @@ image optimisation; do not pin a separate adapter dependency.
 Set secrets in the Netlify UI, CLI, or API rather than committing them to the
 repository.
 
-| Variable | Scopes | Contexts |
-| --- | --- | --- |
-| `MONGODB_URI` | Builds and Functions | Separate Production and Deploy Preview values |
-| `MONGODB_DB` | Builds and Functions | Separate Production and Deploy Preview values |
+| Variable                            | Scopes               | Contexts                                                                  |
+| ----------------------------------- | -------------------- | ------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Builds and Functions | Clerk production key in Production; non-production key in Deploy Previews |
+| `CLERK_SECRET_KEY`                  | Builds and Functions | Matching server-only Clerk secret for each context                        |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`     | Builds and Functions | `/sign-in`                                                                |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL`     | Builds and Functions | `/sign-up`                                                                |
+| `MONGODB_URI`                       | Builds and Functions | Separate Production and Deploy Preview values                             |
+| `MONGODB_DB`                        | Builds and Functions | Separate Production and Deploy Preview values                             |
 
 Variables required while a page is prerendered need the Builds scope. Variables
 used by SSR, Server Actions, and Route Handlers need the Functions scope.
+
+## Clerk checklist
+
+Before the first public deployment:
+
+1. Create the Clerk production instance and configure the Netlify production
+   domain.
+2. Keep the development and production keys in their matching Netlify
+   contexts; never deploy `pk_test_` or `sk_test_` credentials to Production.
+3. Configure the allowed sign-in methods, invitation-only registration, account
+   recovery, and Spanish email templates in the Clerk Dashboard.
+4. Confirm that `/sign-in`, `/sign-up`, sign-out, session persistence, and
+   unauthorized states work in a Deploy Preview.
+5. Run `clerk doctor` locally before release and confirm that it reaches the
+   expected application and environment.
 
 ## MongoDB Atlas checklist
 
@@ -51,6 +70,7 @@ networking option is available for the selected plans.
 - `pnpm test:e2e` passes locally.
 - A Deploy Preview completes successfully.
 - The preview uses non-production credentials.
+- Clerk authentication and account recovery have been exercised in the preview.
 - Critical flows, keyboard interaction, and key responsive breakpoints have
   been checked.
 - No secret is present in source control or browser output.
