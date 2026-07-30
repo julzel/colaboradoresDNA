@@ -1,6 +1,7 @@
 import "server-only";
 
 import { clerkClient } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 import {
@@ -10,7 +11,7 @@ import {
 
 const invitationExpirationDays = 14;
 
-function getApplicationBaseUrl() {
+async function getApplicationBaseUrl() {
   const configuredUrl = process.env.APP_BASE_URL;
 
   if (configuredUrl) {
@@ -21,7 +22,22 @@ function getApplicationBaseUrl() {
     return "http://localhost:3000";
   }
 
-  throw new Error("APP_BASE_URL is required in production.");
+  const requestHeaders = await headers();
+  const forwardedHost =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
+  const host = forwardedHost?.split(",")[0]?.trim();
+  const protocol = forwardedProtocol?.split(",")[0]?.trim();
+
+  if (host && protocol === "https") {
+    const requestOrigin = new URL(`${protocol}://${host}`);
+
+    if (requestOrigin.hostname.endsWith(".netlify.app")) {
+      return requestOrigin.origin;
+    }
+  }
+
+  throw new Error("APP_BASE_URL is required outside an HTTPS Netlify Deploy Preview.");
 }
 
 export async function sendPlatformInvitation({
@@ -36,7 +52,7 @@ export async function sendPlatformInvitation({
     emailAddress: email,
     expiresInDays: invitationExpirationDays,
     ignoreExisting: true,
-    redirectUrl: new URL("/sign-up", getApplicationBaseUrl()).toString(),
+    redirectUrl: new URL("/sign-up", await getApplicationBaseUrl()).toString(),
   });
 
   await setPlatformUserInvitation({

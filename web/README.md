@@ -35,6 +35,10 @@ pnpm test:e2e
 
 ## Netlify
 
-Set the Netlify base directory to `web`. Configure Clerk production credentials and the
-MongoDB values as Netlify environment variables for Builds and Functions. Use separate
-credentials for Deploy Previews and Production.
+Select `web` as the site/package and base directory. The checked-in Netlify
+configuration permits Deploy Previews only; production and branch deploys are blocked.
+
+Configure Clerk development credentials and an isolated non-production MongoDB database
+as Netlify environment variables for the Deploy Previews context with Builds and
+Functions scopes. See the [deployment guide](../docs/deployment.md) for the complete
+setup checklist.
