@@ -78,8 +78,8 @@
 }
 
 .viewSelector [aria-current="page"] {
-  background: var(--color-brand);
-  color: var(--color-brand-contrast);
+  background: var(--background-navigation);
+  color: var(--neutral-0);
 }
 
 .agenda {
