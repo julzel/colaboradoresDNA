@@ -12,6 +12,7 @@
     "bootstrap:admins": "node --env-file=.env.local scripts/bootstrap-admins.mjs",
     "bootstrap:employee-model": "node --env-file=.env.local scripts/bootstrap-employee-model.mjs",
     "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
+    "netlify:preview": "node scripts/verify-netlify-preview.mjs && pnpm verify",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
