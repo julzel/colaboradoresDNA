@@ -1,11 +1,9 @@
 import Image from "next/image";
 
-import dnatureLogo from "../../../../assets/images/dnature-logo.svg";
-
 import styles from "./logo.module.css";
 
 const logoWidth = 40;
-const logoHeight = Math.round((dnatureLogo.height / dnatureLogo.width) * logoWidth);
+const logoHeight = Math.round((42 / 108) * logoWidth);
 
 type LogoProps = {
   className?: string;
@@ -19,7 +17,7 @@ export function Logo({ className = "", priority = false }: LogoProps) {
       className={`${styles.logo} ${className}`.trim()}
       height={logoHeight}
       priority={priority}
-      src={dnatureLogo}
+      src="/images/dna.svg"
       width={logoWidth}
     />
   );
