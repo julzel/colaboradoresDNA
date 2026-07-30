@@ -3,11 +3,17 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { CalendarAgenda } from "@/features/calendar/components/calendar-agenda";
+import { CalendarCreateEventTrigger } from "@/features/calendar/components/calendar-create-event-trigger";
 import { CalendarEventForm } from "@/features/calendar/components/calendar-event-form";
 import { CalendarMonth } from "@/features/calendar/components/calendar-month";
 
+const navigationMocks = vi.hoisted(() => ({
+  back: vi.fn(),
+  push: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => navigationMocks,
 }));
 
 vi.mock("@/features/calendar/actions/calendar-event-actions", () => ({
@@ -40,6 +46,29 @@ describe("calendar views", () => {
 });
 
 describe("calendar event form", () => {
+  it("opens and closes event creation without navigating", async () => {
+    const user = userEvent.setup();
+    render(<CalendarCreateEventTrigger options={{ departments: [], people: [] }} />);
+
+    expect(
+      screen.queryByRole("dialog", { name: "Nuevo evento" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Nuevo evento" }));
+
+    expect(screen.getByRole("dialog", { name: "Nuevo evento" })).toBeInTheDocument();
+    expect(navigationMocks.back).not.toHaveBeenCalled();
+    expect(navigationMocks.push).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(
+      screen.queryByRole("dialog", { name: "Nuevo evento" }),
+    ).not.toBeInTheDocument();
+    expect(navigationMocks.back).not.toHaveBeenCalled();
+    expect(navigationMocks.push).not.toHaveBeenCalled();
+  });
+
   it("switches between all-day and timed inputs", async () => {
     const user = userEvent.setup();
     render(
@@ -88,5 +117,23 @@ describe("calendar event form", () => {
     );
 
     expect(screen.getByRole("checkbox", { name: "Ana Mora" })).toBeEnabled();
+  });
+
+  it("closes a modal form through browser history", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarEventForm
+        cancelBehavior="back"
+        cancelHref="/calendario"
+        mode="create"
+        options={{ departments: [], people: [] }}
+        presentation="modal"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(navigationMocks.back).toHaveBeenCalledOnce();
+    expect(navigationMocks.push).not.toHaveBeenCalled();
   });
 });

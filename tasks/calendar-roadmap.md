@@ -36,7 +36,10 @@ mobile-first experience that offers exactly two views:
 The calendar combines birthdays already supported by the employee model with
 organization events managed by administrators and supervisors. Authorized
 users can open event details, while authorized managers can create, edit, and
-delete events without changing either calendar view.
+delete events without changing either calendar view. Creation is part of the
+calendar component and opens immediately as a local responsive modal without a
+route change. Editing uses a routed modal and keeps its canonical page as a safe
+fallback for direct links and reloads.
 
 ## Scope decisions
 
@@ -228,7 +231,7 @@ Timed form values are interpreted in Costa Rica time and persisted in UTC.
 
 ### 10. Event CRUD and authorization
 
-1. Only administrators and supervisors can access the new-event route or invoke
+1. Only administrators and supervisors can see the new-event control or invoke
    event mutations.
 2. Administrators can create company, department, or invited-user events and
    manage any active event.
@@ -250,18 +253,32 @@ Timed form values are interpreted in Costa Rica time and persisted in UTC.
     errors remain inline and preserve entered values.
 12. Forms prevent duplicate submission, display pending state, and guard
     unsaved changes.
+13. Creating an event opens an accessible local modal without navigation,
+    preserves the current calendar URL, and is ready on the first interaction.
+14. Client-side navigation to edit opens an accessible routed modal while
+    preserving the page behind it, the URL, and browser back/forward behavior.
+15. Closing a modal with its close control, the backdrop, Escape, or Cancel
+    returns to the previous context and requests confirmation when the form has
+    unsaved changes.
+16. Opening or reloading an edit URL directly renders its full-page fallback
+    instead of depending on intercepted-route state.
 
 ## Suggested structure
 
 ```text
 web/src/
-├── app/(workspace)/calendario/
+├── app/(workspace)/
+│   ├── @modal/
+│   │   ├── (.)calendario/
+│   │   │   └── eventos/[eventId]/editar/page.tsx
+│   │   ├── [...catchAll]/page.tsx
+│   │   └── default.tsx
+│   └── calendario/
 │   ├── eventos/[eventId]/
 │   │   ├── editar/page.tsx
 │   │   └── page.tsx
 │   ├── error.tsx
 │   ├── loading.tsx
-│   ├── nuevo/page.tsx
 │   └── page.tsx
 └── features/calendar/
     ├── actions/
@@ -270,6 +287,7 @@ web/src/
     │   ├── calendar-agenda.tsx
     │   ├── calendar-controls.tsx
     │   ├── calendar-entry-item.tsx
+    │   ├── calendar-create-event-trigger.tsx
     │   ├── calendar-event-form.tsx
     │   ├── calendar-month.tsx
     │   ├── calendar-month-day.tsx
@@ -314,7 +332,7 @@ skeletons, and error states before introducing new primitives.
 ### Slice 4: Event CRUD
 
 - Add the calendar event model, indexes, visibility query, and audit timeline.
-- Add authorized create, detail, edit, and soft-delete routes.
+- Add local creation plus authorized detail, edit, and soft-delete routes.
 - Aggregate visible organization events with birthdays.
 - Test role, organizer, department, and invited-user boundaries.
 

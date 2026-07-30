@@ -130,13 +130,15 @@ function birthdayToEntry({
 export async function getCalendarEntries(month: string) {
   const actor = await requireCalendarActor();
   const range = getCalendarMonthRange(month);
-  const [events, birthdays] = await Promise.all([
+  const canCreateEvents = actor.role === "administrator" || actor.role === "supervisor";
+  const [events, birthdays, eventFormOptions] = await Promise.all([
     listVisibleCalendarEvents({
       actor,
       endsAt: range.endAt,
       startsAt: range.startAt,
     }),
     listBirthdayCalendarEntries({ viewerRole: actor.role }),
+    canCreateEvents ? listCalendarEventTargetOptions(actor) : Promise.resolve(null),
   ]);
   const [year = 0, monthNumber = 0] = month.split("-").map(Number);
   const birthdayEntries = birthdays
@@ -144,8 +146,9 @@ export async function getCalendarEntries(month: string) {
     .map((entry) => birthdayToEntry({ ...entry, year }));
 
   return {
-    canCreateEvents: actor.role === "administrator" || actor.role === "supervisor",
+    canCreateEvents,
     entries: [...events.map((event) => eventToEntry(actor, event)), ...birthdayEntries],
+    eventFormOptions,
   };
 }
 

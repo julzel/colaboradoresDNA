@@ -1,7 +1,8 @@
-import { CalendarPlus, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { CalendarCreateEventTrigger } from "@/features/calendar/components/calendar-create-event-trigger";
 import {
   createCalendarUrl,
   getAdjacentCalendarMonth,
@@ -11,15 +12,21 @@ import {
   formatCalendarMonth,
   getCurrentCalendarMonth,
 } from "@/features/calendar/domain/calendar-utils";
+import type { CalendarEventTargetOptions } from "@/features/calendar/server/calendar-event-repository";
 
 import styles from "./calendar.module.css";
 
 type CalendarControlsProps = {
   canCreateEvents: boolean;
+  eventFormOptions: CalendarEventTargetOptions | null;
   query: CalendarQuery;
 };
 
-export function CalendarControls({ canCreateEvents, query }: CalendarControlsProps) {
+export function CalendarControls({
+  canCreateEvents,
+  eventFormOptions,
+  query,
+}: CalendarControlsProps) {
   const currentMonth = getCurrentCalendarMonth();
 
   return (
@@ -30,11 +37,8 @@ export function CalendarControls({ canCreateEvents, query }: CalendarControlsPro
         <p>Consultá cumpleaños y eventos importantes de la organización.</p>
       </div>
 
-      {canCreateEvents && (
-        <ButtonLink href="/calendario/nuevo">
-          <CalendarPlus aria-hidden="true" size={18} />
-          Nuevo evento
-        </ButtonLink>
+      {canCreateEvents && eventFormOptions && (
+        <CalendarCreateEventTrigger options={eventFormOptions} />
       )}
 
       <ElevatedSurface as="section" className={styles.controls}>

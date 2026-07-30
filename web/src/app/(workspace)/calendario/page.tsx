@@ -15,11 +15,17 @@ export default async function CalendarPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = parseCalendarQuery(await searchParams);
-  const { canCreateEvents, entries } = await getCalendarEntries(query.month);
+  const { canCreateEvents, entries, eventFormOptions } = await getCalendarEntries(
+    query.month,
+  );
 
   return (
     <div className={styles.page}>
-      <CalendarControls canCreateEvents={canCreateEvents} query={query} />
+      <CalendarControls
+        canCreateEvents={canCreateEvents}
+        eventFormOptions={eventFormOptions}
+        query={query}
+      />
       {query.view === "month" ? (
         <CalendarMonth entries={entries} query={query} />
       ) : (

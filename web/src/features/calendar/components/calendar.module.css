@@ -344,6 +344,11 @@
   padding: clamp(var(--space-4), 5vw, var(--space-8));
 }
 
+.eventForm[data-presentation="modal"] {
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .formSection,
 .peopleFieldset {
   display: grid;

@@ -25,25 +25,34 @@ import { CalendarFormErrorSummary } from "./calendar-form-error-summary";
 import styles from "./calendar.module.css";
 
 type CalendarEventFormProps = {
+  cancelBehavior?: "back" | "callback" | "push";
   cancelHref: string;
   event?: CalendarEvent;
   mode: "create" | "edit";
+  onCancel?: () => void;
   options: CalendarEventTargetOptions;
+  presentation?: "modal" | "page";
 };
 
 export function CalendarEventForm({
+  cancelBehavior = "push",
   cancelHref,
   event,
   mode,
+  onCancel,
   options,
+  presentation = "page",
 }: CalendarEventFormProps) {
   const action =
     mode === "create" ? createCalendarEventAction : updateCalendarEventAction;
   const [state, formAction] = useActionState(action, initialCalendarActionState);
   const [allDay, setAllDay] = useState(event?.allDay ?? true);
   const [visibility, setVisibility] = useState(event?.visibility ?? "company");
-  const { formRef, handleCancel, handleChange, handleSubmit } =
-    useGuardedForm(cancelHref);
+  const { dirty, formRef, handleCancel, handleChange, handleSubmit } = useGuardedForm(
+    cancelHref,
+    cancelBehavior,
+    onCancel,
+  );
   const today = getTodayInCostaRica();
   const selectedInvitees = new Set(event?.inviteePlatformUserIds ?? []);
 
@@ -67,6 +76,8 @@ export function CalendarEventForm({
       action={formAction}
       as="form"
       className={styles.eventForm}
+      data-presentation={presentation}
+      data-unsaved-changes={dirty ? "true" : undefined}
       onChange={handleChange}
       onSubmit={handleSubmit}
       ref={formRef}

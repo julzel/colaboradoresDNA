@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   findEffectiveEmployeeAssignment: vi.fn(),
   findEmployeeByPlatformUserId: vi.fn(),
   listBirthdayCalendarEntries: vi.fn(),
+  listCalendarEventTargetOptions: vi.fn(),
   listVisibleCalendarEvents: vi.fn(),
   requirePlatformUser: vi.fn(),
 }));
@@ -33,7 +34,7 @@ vi.mock("@/features/calendar/server/calendar-event-repository", () => ({
   createCalendarEvent: mocks.createCalendarEvent,
   deleteCalendarEvent: vi.fn(),
   getCalendarEventDetail: vi.fn(),
-  listCalendarEventTargetOptions: vi.fn(),
+  listCalendarEventTargetOptions: mocks.listCalendarEventTargetOptions,
   listVisibleCalendarEvents: mocks.listVisibleCalendarEvents,
   updateCalendarEvent: vi.fn(),
 }));
@@ -54,6 +55,10 @@ describe("calendar service authorization and aggregation", () => {
       departmentId: "507f1f77bcf86cd799439013",
     });
     mocks.listVisibleCalendarEvents.mockResolvedValue([]);
+    mocks.listCalendarEventTargetOptions.mockResolvedValue({
+      departments: [],
+      people: [],
+    });
     mocks.listBirthdayCalendarEntries.mockResolvedValue([
       {
         birthday: "06/07",
@@ -79,6 +84,12 @@ describe("calendar service authorization and aggregation", () => {
       viewerRole: "supervisor",
     });
     expect(result.canCreateEvents).toBe(true);
+    expect(result.eventFormOptions).toEqual({ departments: [], people: [] });
+    expect(mocks.listCalendarEventTargetOptions).toHaveBeenCalledWith({
+      departmentId: "507f1f77bcf86cd799439013",
+      platformUserId: "507f1f77bcf86cd799439011",
+      role: "supervisor",
+    });
     expect(result.entries[0]).toMatchObject({
       kind: "birthday",
       startDate: "2026-07-06",
