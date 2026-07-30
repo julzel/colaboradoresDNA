@@ -1,8 +1,9 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { esCR } from "@clerk/localizations";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
+import { PwaRegistration } from "@/components/pwa/pwa-registration";
 import { ToastProvider } from "@/components/ui/feedback/toast-provider";
 
 import "@/styles/tokens.css";
@@ -80,11 +81,46 @@ const themeScript = `
 `;
 
 export const metadata: Metadata = {
+  applicationName: "Colaboradores DNA",
   title: {
     default: "Colaboradores DNA",
     template: "%s · Colaboradores DNA",
   },
   description: "El espacio interno para gestionar colaboradores y procesos operativos.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      {
+        url: "/icons/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Colaboradores DNA",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { color: "#07bbc7", media: "(prefers-color-scheme: light)" },
+    { color: "#041618", media: "(prefers-color-scheme: dark)" },
+  ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -116,6 +152,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
             Ir al contenido principal
           </a>
           {children}
+          <PwaRegistration />
           <ToastProvider />
         </ClerkProvider>
       </body>
