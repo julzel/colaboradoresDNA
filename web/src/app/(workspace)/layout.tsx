@@ -5,8 +5,14 @@ import { requirePlatformUser } from "@/features/auth/server/require-platform-use
 
 export default async function WorkspaceLayout({
   children,
-}: Readonly<{ children: ReactNode }>) {
+  modal,
+}: Readonly<{ children: ReactNode; modal?: ReactNode }>) {
   const { platformUser } = await requirePlatformUser();
 
-  return <WorkspaceShell role={platformUser.role}>{children}</WorkspaceShell>;
+  return (
+    <>
+      <WorkspaceShell role={platformUser.role}>{children}</WorkspaceShell>
+      {modal}
+    </>
+  );
 }

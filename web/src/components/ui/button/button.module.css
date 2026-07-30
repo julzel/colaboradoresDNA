@@ -43,12 +43,13 @@
 }
 
 .primary {
-  background: var(--color-brand);
-  color: var(--color-brand-contrast);
+  background: var(--background-navigation);
+  color: var(--neutral-0);
 }
 
 .primary:hover:not(:disabled) {
-  background: var(--color-brand-hover);
+  background: var(--background-navigation);
+  box-shadow: var(--shadow-md);
 }
 
 .secondary {

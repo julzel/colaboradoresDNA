@@ -1,4 +1,20 @@
 export const feedbackMessages = {
+  calendar_event_created: {
+    message: "El evento fue creado.",
+    tone: "success",
+  },
+  calendar_event_delete_failed: {
+    message: "No fue posible eliminar el evento.",
+    tone: "error",
+  },
+  calendar_event_deleted: {
+    message: "El evento fue eliminado.",
+    tone: "success",
+  },
+  calendar_event_updated: {
+    message: "Los cambios del evento fueron guardados.",
+    tone: "success",
+  },
   employee_access_updated: {
     message: "El rol de plataforma fue actualizado.",
     tone: "success",
@@ -108,6 +124,8 @@ export function createFeedbackUrl(
   kind: "error" | "notice",
   messageKey: FeedbackMessageKey,
 ) {
-  const params = new URLSearchParams({ [kind]: messageKey });
-  return `${pathname}?${params.toString()}`;
+  const [path = pathname, query = ""] = pathname.split("?");
+  const params = new URLSearchParams(query);
+  params.set(kind, messageKey);
+  return `${path}?${params.toString()}`;
 }

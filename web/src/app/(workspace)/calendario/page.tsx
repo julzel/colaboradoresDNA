@@ -1,11 +1,36 @@
-import { ConstructionPlaceholder } from "@/components/layout/construction-placeholder/construction-placeholder";
+import type { Metadata } from "next";
 
-export default function CalendarPage() {
+import { CalendarAgenda } from "@/features/calendar/components/calendar-agenda";
+import { CalendarControls } from "@/features/calendar/components/calendar-controls";
+import { CalendarMonth } from "@/features/calendar/components/calendar-month";
+import styles from "@/features/calendar/components/calendar.module.css";
+import { parseCalendarQuery } from "@/features/calendar/domain/calendar-query";
+import { getCalendarEntries } from "@/features/calendar/server/calendar-service";
+
+export const metadata: Metadata = { title: "Calendario" };
+
+export default async function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const query = parseCalendarQuery(await searchParams);
+  const { canCreateEvents, entries, eventFormOptions } = await getCalendarEntries(
+    query.month,
+  );
+
   return (
-    <ConstructionPlaceholder
-      description="Pronto podrás consultar y organizar los eventos relevantes para tu equipo."
-      eyebrow="Planificación"
-      title="Calendario en construcción"
-    />
+    <div className={styles.page}>
+      <CalendarControls
+        canCreateEvents={canCreateEvents}
+        eventFormOptions={eventFormOptions}
+        query={query}
+      />
+      {query.view === "month" ? (
+        <CalendarMonth entries={entries} query={query} />
+      ) : (
+        <CalendarAgenda entries={entries} month={query.month} />
+      )}
+    </div>
   );
 }

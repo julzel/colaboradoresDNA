@@ -3,7 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
-export function useGuardedForm(cancelHref: string) {
+type CancelBehavior = "back" | "callback" | "push";
+
+export function useGuardedForm(
+  cancelHref: string,
+  cancelBehavior: CancelBehavior = "push",
+  onCancel?: () => void,
+) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [dirty, setDirty] = useState(false);
@@ -17,9 +23,19 @@ export function useGuardedForm(cancelHref: string) {
       !dirty ||
       window.confirm("¿Querés descartar los cambios que todavía no guardaste?")
     ) {
+      if (cancelBehavior === "back") {
+        router.back();
+        return;
+      }
+
+      if (cancelBehavior === "callback") {
+        onCancel?.();
+        return;
+      }
+
       router.push(cancelHref);
     }
-  }, [cancelHref, dirty, router]);
+  }, [cancelBehavior, cancelHref, dirty, onCancel, router]);
 
   const handleSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
     const confirmation = event.currentTarget.dataset.confirmation;
@@ -41,5 +57,5 @@ export function useGuardedForm(cancelHref: string) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [dirty]);
 
-  return { formRef, handleCancel, handleChange, handleSubmit };
+  return { dirty, formRef, handleCancel, handleChange, handleSubmit };
 }

@@ -42,7 +42,7 @@ export function getActiveNavigationHref(
 }
 
 export function getWorkspaceBreadcrumbs(pathname: string) {
-  if (pathname === "/calendario") {
+  if (pathname.startsWith("/calendario")) {
     return [{ href: "/", label: "Inicio" }, { label: "Calendario" }] as const;
   }
 
