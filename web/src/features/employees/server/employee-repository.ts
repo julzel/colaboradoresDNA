@@ -12,6 +12,7 @@ import {
   employeeInputSchema,
   formatEmployeeBirthday,
   formatEmployeeDisplayName,
+  formatEmployeePreferredDisplayName,
   maskIdentification,
   toEmployee,
   type Employee,
@@ -63,6 +64,7 @@ function createEmployeeDocument(
     identification: employee.identification,
     phoneNumber: employee.phoneNumber,
     platformUserId: new ObjectId(employee.platformUserId),
+    preferredName: null,
     secondSurname: employee.secondSurname,
     shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
     updatedAt: now,
@@ -343,6 +345,7 @@ export async function listBirthdayCalendarEntries({
           birthMonth: 1,
           firstSurname: 1,
           givenNames: 1,
+          preferredName: 1,
           secondSurname: 1,
         },
       },
@@ -352,7 +355,7 @@ export async function listBirthdayCalendarEntries({
 
   return documents.map((document) => ({
     birthday: formatEmployeeBirthday(document),
-    displayName: formatEmployeeDisplayName(document),
+    displayName: formatEmployeePreferredDisplayName(document),
     employeeId: document._id.toHexString(),
   }));
 }
@@ -389,6 +392,7 @@ export async function updateEmployeeSelfServiceProfile({
         {
           $set: {
             phoneNumber: profile.phoneNumber,
+            preferredName: profile.preferredName,
             shareBirthdayOnCalendar: profile.shareBirthdayOnCalendar,
             updatedAt: new Date(),
           },
@@ -401,6 +405,16 @@ export async function updateEmployeeSelfServiceProfile({
       }
 
       employee = toEmployee(document);
+
+      if ((existing.preferredName ?? null) !== profile.preferredName) {
+        await recordEmployeeAudit({
+          action: "preferred_name_updated",
+          actorPlatformUserId,
+          changedFields: ["preferredName"],
+          session,
+          targetEmployeeId: document._id.toHexString(),
+        });
+      }
 
       if (
         existing.phoneNumber?.normalizedValue !== profile.phoneNumber?.normalizedValue

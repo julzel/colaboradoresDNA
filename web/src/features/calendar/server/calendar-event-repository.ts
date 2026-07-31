@@ -14,6 +14,10 @@ import {
   type NormalizedCalendarEventInput,
 } from "@/features/calendar/domain/calendar-event";
 import type { DepartmentDocument } from "@/features/employees/domain/department";
+import {
+  formatEmployeePreferredDisplayName,
+  type EmployeeDocument,
+} from "@/features/employees/domain/employee";
 import { ensureCalendarIndexes } from "@/features/calendar/server/calendar-indexes";
 import { recordCalendarAudit } from "@/features/calendar/server/calendar-audit-repository";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
@@ -41,6 +45,7 @@ async function getCalendarCollections() {
   const database = await getDatabase();
   return {
     departments: database.collection<DepartmentDocument>("departments"),
+    employees: database.collection<EmployeeDocument>("employees"),
     events: database.collection<CalendarEventDocument>("calendar_events"),
     platformUsers: database.collection<PlatformUserDocument>("platform_users"),
   };
@@ -133,14 +138,28 @@ export async function getCalendarEventDetail({
 }): Promise<CalendarEventDetail | null> {
   const event = await findVisibleCalendarEventById({ actor, eventId });
   if (!event) return null;
-  const { departments, platformUsers } = await getCalendarCollections();
+  const { departments, employees, platformUsers } = await getCalendarCollections();
   const peopleIds = [
     event.organizerPlatformUserId,
     ...event.inviteePlatformUserIds,
   ].map((id) => new ObjectId(id));
-  const [people, department] = await Promise.all([
+  const [people, employeeProfiles, department] = await Promise.all([
     platformUsers
       .find({ _id: { $in: peopleIds } }, { projection: { displayName: 1 } })
+      .toArray(),
+    employees
+      .find(
+        { platformUserId: { $in: peopleIds } },
+        {
+          projection: {
+            firstSurname: 1,
+            givenNames: 1,
+            platformUserId: 1,
+            preferredName: 1,
+            secondSurname: 1,
+          },
+        },
+      )
       .toArray(),
     event.departmentId
       ? departments.findOne(
@@ -152,6 +171,12 @@ export async function getCalendarEventDetail({
   const names = new Map(
     people.map((person) => [person._id.toHexString(), person.displayName]),
   );
+  for (const employee of employeeProfiles) {
+    names.set(
+      employee.platformUserId.toHexString(),
+      formatEmployeePreferredDisplayName(employee),
+    );
+  }
 
   return {
     canManage: canManageCalendarEvent(actor, event),
@@ -380,7 +405,7 @@ export async function listCalendarEventTargetOptions(
   actor: CalendarActor,
 ): Promise<CalendarEventTargetOptions> {
   await ensureCalendarIndexes();
-  const { departments, platformUsers } = await getCalendarCollections();
+  const { departments, employees, platformUsers } = await getCalendarCollections();
   const [departmentDocuments, people] = await Promise.all([
     departments
       .find({
@@ -401,15 +426,41 @@ export async function listCalendarEventTargetOptions(
       .sort({ displayName: 1 })
       .toArray(),
   ]);
+  const employeeProfiles = await employees
+    .find(
+      { platformUserId: { $in: people.map((person) => person._id) } },
+      {
+        projection: {
+          firstSurname: 1,
+          givenNames: 1,
+          platformUserId: 1,
+          preferredName: 1,
+          secondSurname: 1,
+        },
+      },
+    )
+    .toArray();
+  const preferredNames = new Map(
+    employeeProfiles.map((employee) => [
+      employee.platformUserId.toHexString(),
+      formatEmployeePreferredDisplayName(employee),
+    ]),
+  );
 
   return {
     departments: departmentDocuments.map((department) => ({
       id: department._id.toHexString(),
       name: department.name,
     })),
-    people: people.map((person) => ({
-      displayName: person.displayName,
-      id: person._id.toHexString(),
-    })),
+    people: people
+      .map((person) => ({
+        displayName: preferredNames.get(person._id.toHexString()) ?? person.displayName,
+        id: person._id.toHexString(),
+      }))
+      .sort((left, right) =>
+        left.displayName.localeCompare(right.displayName, "es", {
+          sensitivity: "base",
+        }),
+      ),
   };
 }

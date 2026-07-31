@@ -15,6 +15,9 @@ export type EmployeeAuditAction =
   | "identification_updated"
   | "personal_profile_updated"
   | "phone_number_updated"
+  | "preferred_name_updated"
+  | "profile_image_removed"
+  | "profile_image_updated"
   | "schedule_closed"
   | "schedule_created";
 
@@ -31,6 +34,8 @@ export type EmployeeAuditField =
   | "managerEmployeeId"
   | "phoneNumber"
   | "positionTitle"
+  | "preferredName"
+  | "profileImage"
   | "schedule"
   | "secondSurname"
   | "shareBirthdayOnCalendar";

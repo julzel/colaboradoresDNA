@@ -29,12 +29,12 @@ import { ensureEmployeeDomainIndexes } from "@/features/employees/server/employe
 import {
   createEmployee,
   findEmployeeById,
-  findEmployeeByPlatformUserId,
   listBirthdayCalendarEntries,
   listEmployeeDirectory,
   updateEmployeeSelfServiceProfile,
   updateEmployeePersonalInformation,
 } from "@/features/employees/server/employee-repository";
+import { getEmployeeSelfServiceProfileDetail } from "@/features/employees/server/employee-read-repository";
 import {
   createEmployeeScheduleInSession,
   replaceEmployeeSchedule,
@@ -251,8 +251,18 @@ export async function getBirthdayCalendarEntries() {
 }
 
 export async function getOwnEmployeeProfile() {
-  const { platformUser } = await requirePlatformUser();
-  return findEmployeeByPlatformUserId(platformUser.id);
+  const { clerkHasImage, clerkImageUrl, platformUser } = await requirePlatformUser();
+  const profile = await getEmployeeSelfServiceProfileDetail(platformUser.id);
+
+  return profile
+    ? {
+        ...profile,
+        image: {
+          hasImage: clerkHasImage,
+          url: clerkImageUrl,
+        },
+      }
+    : null;
 }
 
 export async function getEmployeeProfileAsAdministrator(employeeId: string) {

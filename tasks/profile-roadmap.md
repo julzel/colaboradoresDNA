@@ -2,7 +2,8 @@
 
 ## Document status
 
-**Status:** Investigation complete; recommended flow ready for implementation.
+**Status:** Implemented. The Clerk Dashboard email-change restriction remains an
+environment configuration step documented in `docs/authentication.md`.
 
 **Date:** 2026-07-31
 
@@ -11,6 +12,34 @@ record, edit the small set of employee-owned fields, choose a preferred display
 name, and upload or remove a profile picture. This document also refines the
 existing Clerk `/account` experience so profile data and account security have
 clear, non-overlapping responsibilities.
+
+## Implementation outcome
+
+The roadmap is implemented across the employee, authentication, calendar, and
+workspace modules:
+
+- `/perfil` is an authenticated workspace route with preferred-name, phone,
+  birthday-sharing, profile-image, personal, employment, schedule, and access
+  sections.
+- Self-service reads and writes derive the employee and Clerk targets from the
+  authenticated platform user and never accept a target ID from the browser.
+- `employees.preferredName` is normalized, nullable, employee-owned, audited
+  without its value, and kept separate from canonical names and
+  `platform_users.displayName`.
+- Forbidden self-service keys are rejected by a strict Zod schema.
+- Profile images are client-compressed, server-decoded and re-encoded with
+  `sharp`, limited to 1,000,000 bytes, stripped of metadata, stored only in
+  Clerk, and removable.
+- Preferred names appear in the workspace identity, birthdays, and calendar
+  people labels. Administrator employee records retain the canonical name and
+  show the preferred name only as read-only context.
+- `/account` remains the Clerk security/MFA route, while the user menu now
+  exposes `Mi perfil` separately.
+- The employee bootstrap performs the repeatable `preferredName: null`
+  backfill, and `sharp` is a production dependency for Netlify functions.
+- Unit coverage includes strict profile validation, preferred-name behavior,
+  actor-bound service composition, image normalization, and Clerk target
+  binding.
 
 ## Executive recommendation
 

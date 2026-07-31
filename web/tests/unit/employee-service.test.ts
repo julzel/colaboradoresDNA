@@ -3,11 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createDepartmentAsAdministrator,
   getBirthdayCalendarEntries,
+  getOwnEmployeeProfile,
   updateOwnEmployeeProfile,
 } from "@/features/employees/server/employee-service";
 
 const mocks = vi.hoisted(() => ({
   createDepartment: vi.fn(),
+  getEmployeeSelfServiceProfileDetail: vi.fn(),
   listBirthdayCalendarEntries: vi.fn(),
   requirePlatformUser: vi.fn(),
   updateEmployeeSelfServiceProfile: vi.fn(),
@@ -33,6 +35,10 @@ vi.mock("@/features/employees/server/employee-repository", () => ({
   listBirthdayCalendarEntries: mocks.listBirthdayCalendarEntries,
   listEmployeeDirectory: vi.fn(),
   updateEmployeeSelfServiceProfile: mocks.updateEmployeeSelfServiceProfile,
+}));
+
+vi.mock("@/features/employees/server/employee-read-repository", () => ({
+  getEmployeeSelfServiceProfileDetail: mocks.getEmployeeSelfServiceProfileDetail,
 }));
 
 vi.mock("@/features/employees/server/assignment-repository", () => ({
@@ -62,6 +68,8 @@ describe("employee service authorization boundaries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requirePlatformUser.mockResolvedValue({
+      clerkHasImage: true,
+      clerkImageUrl: "https://img.clerk.com/user",
       platformUser: {
         id: "507f1f77bcf86cd799439011",
         role: "collaborator",
@@ -100,6 +108,7 @@ describe("employee service authorization boundaries", () => {
   it("binds self-service profile changes to the authenticated platform user", async () => {
     const input = {
       phoneNumber: "8888-7777",
+      preferredName: "Julio",
       shareBirthdayOnCalendar: false,
     };
 
@@ -108,6 +117,25 @@ describe("employee service authorization boundaries", () => {
     expect(mocks.updateEmployeeSelfServiceProfile).toHaveBeenCalledWith({
       actorPlatformUserId: "507f1f77bcf86cd799439011",
       input,
+    });
+  });
+
+  it("composes the profile with the authenticated Clerk image", async () => {
+    mocks.getEmployeeSelfServiceProfileDetail.mockResolvedValue({
+      employee: { displayName: "Julio" },
+    });
+
+    const profile = await getOwnEmployeeProfile();
+
+    expect(mocks.getEmployeeSelfServiceProfileDetail).toHaveBeenCalledWith(
+      "507f1f77bcf86cd799439011",
+    );
+    expect(profile).toEqual({
+      employee: { displayName: "Julio" },
+      image: {
+        hasImage: true,
+        url: "https://img.clerk.com/user",
+      },
     });
   });
 });

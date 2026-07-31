@@ -92,6 +92,33 @@ Configured slugs:
 - `primary_email_address_changed`
 - `verification_code`
 
+The employee profile keeps canonical names and the login email in MongoDB, so
+the Clerk development and deployment instances must also restrict conflicting
+self-service changes:
+
+1. Open **User & authentication → User model → User permissions** in the Clerk
+   Dashboard.
+2. Turn off **Allow users to change their email address**. Users can still view
+   the address in `<UserProfile />`; administrators retain provider-level
+   correction access.
+3. Keep Clerk first and last names disabled as user-editable attributes. The
+   application-owned `employees` record is the canonical identity source, and
+   employees use `Nombre preferido` under `/perfil` for display-only naming.
+4. Verify `/account?requirement=mfa` still exposes Security, authenticator-app
+   enrollment, backup codes, and session management.
+
+The application does not enable self-service email changes until a verified
+Clerk-to-`platform_users.normalizedEmail` synchronization flow exists. Hiding a
+field with CSS is not an authorization control; use the Clerk instance
+permission above.
+
+The application route redirects `/account` and non-security account subroutes
+to `/account/security`. This keeps the prebuilt Clerk component available for
+MFA, backup codes, and sessions without exposing its separate profile-image and
+name editor as a second profile flow. Provider-level identifier permissions
+still remain required because route composition is not a substitute for Clerk
+instance policy.
+
 The same desired state must be applied explicitly to the production instance.
 Production Google OAuth also requires production Google credentials and
 authorized Netlify domains; Clerk's shared development credentials must not be
@@ -104,6 +131,7 @@ Official references:
 - [Protecting Next.js resources](https://clerk.com/docs/nextjs/guides/secure/protect-content)
 - [Clerk session tasks and MFA](https://clerk.com/docs/guides/configure/session-tasks)
 - [Clerk UserProfile](https://clerk.com/components/user-profile)
+- [Restricting user identifier changes](https://clerk.com/docs/guides/configure/auth-strategies/sign-up-sign-in-options#restrict-changes)
 
 ## Initial administrator bootstrap
 

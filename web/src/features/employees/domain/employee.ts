@@ -41,6 +41,7 @@ export type EmployeeDocument = {
   identification: EmployeeIdentification;
   phoneNumber: EmployeePhoneNumber | null;
   platformUserId: ObjectId;
+  preferredName: string | null;
   secondSurname: string | null;
   shareBirthdayOnCalendar: boolean;
   updatedAt: Date;
@@ -199,10 +200,34 @@ export const phoneNumberInputSchema = z
     return { displayValue, normalizedValue };
   });
 
-export const employeeSelfServiceProfileInputSchema = z.object({
-  phoneNumber: phoneNumberInputSchema,
-  shareBirthdayOnCalendar: z.boolean(),
-});
+export const preferredNameInputSchema = z
+  .string()
+  .nullable()
+  .optional()
+  .transform((value) => {
+    if (value === null || value === undefined) return null;
+    const normalized = normalizeHumanText(value).normalize("NFC");
+    return normalized.length ? normalized : null;
+  })
+  .pipe(
+    z
+      .string()
+      .min(1)
+      .max(60, "El nombre preferido no puede superar 60 caracteres.")
+      .regex(
+        /^[^\p{Cc}\p{Cf}]+$/u,
+        "El nombre preferido contiene caracteres no permitidos.",
+      )
+      .nullable(),
+  );
+
+export const employeeSelfServiceProfileInputSchema = z
+  .object({
+    phoneNumber: phoneNumberInputSchema,
+    preferredName: preferredNameInputSchema,
+    shareBirthdayOnCalendar: z.boolean(),
+  })
+  .strict();
 
 export const employeeInputSchema = z
   .object({
@@ -276,6 +301,23 @@ export function formatEmployeeDisplayName(
     .join(" ");
 }
 
+export function formatEmployeePreferredDisplayName(
+  employee: Pick<
+    EmployeeDocument,
+    "firstSurname" | "givenNames" | "preferredName" | "secondSurname"
+  >,
+) {
+  return employee.preferredName?.trim() || formatEmployeeDisplayName(employee);
+}
+
+export function getDisplayNameInitials(displayName: string) {
+  const parts = normalizeHumanText(displayName).split(" ").filter(Boolean);
+  const first = parts[0] ?? "";
+  const last = parts.length > 1 ? (parts.at(-1) ?? "") : "";
+
+  return `${first.charAt(0)}${last.charAt(0)}`.toLocaleUpperCase("es-CR").slice(0, 2);
+}
+
 export function formatEmployeeBirthday(
   employee: Pick<EmployeeDocument, "birthDay" | "birthMonth">,
 ) {
@@ -305,5 +347,6 @@ export function toEmployee(document: EmployeeDocument): Employee {
     ...employee,
     id: _id.toHexString(),
     platformUserId: platformUserId.toHexString(),
+    preferredName: employee.preferredName ?? null,
   };
 }

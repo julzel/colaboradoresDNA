@@ -15,10 +15,11 @@ import { getWorkspaceBreadcrumbs } from "@/features/navigation/workspace-navigat
 import styles from "./workspace-header.module.css";
 
 type WorkspaceHeaderProps = {
+  displayName: string;
   role: PlatformRole;
 };
 
-export function WorkspaceHeader({ role }: WorkspaceHeaderProps) {
+export function WorkspaceHeader({ displayName, role }: WorkspaceHeaderProps) {
   const pathname = usePathname();
 
   return (
@@ -47,7 +48,7 @@ export function WorkspaceHeader({ role }: WorkspaceHeaderProps) {
       </div>
       <div className={styles.tools}>
         <ThemeToggle />
-        <AuthControls />
+        <AuthControls displayName={displayName} />
       </div>
     </header>
   );
