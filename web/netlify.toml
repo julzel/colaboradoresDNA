@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm netlify:preview"
+  command = "pnpm build"
   publish = ".next"
 
 [build.environment]
@@ -15,4 +15,4 @@
   ignore = "exit 0"
 
 [context.deploy-preview]
-  command = "pnpm netlify:preview"
+  command = "pnpm build"
