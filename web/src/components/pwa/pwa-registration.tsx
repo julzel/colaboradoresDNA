@@ -1,4 +1,5 @@
 "use client";
+// pwa-registration.tsx
 
 import { useEffect } from "react";
 
