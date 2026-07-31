@@ -1,12 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
-
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
   BriefcaseBusiness,
   CalendarDays,
   ContactRound,
-  Image as ImageIcon,
   KeyRound,
   LockKeyhole,
   UserRound,
@@ -89,16 +86,12 @@ export default async function ProfilePage() {
         </header>
 
         <ElevatedSurface as="section" className={styles.hero}>
-          <span className={styles.heroAvatar}>
-            {profile.image.hasImage ? (
-              <img
-                alt={`Foto de perfil de ${profile.employee.displayName}`}
-                src={imageUrl}
-              />
-            ) : (
-              profile.employee.initials
-            )}
-          </span>
+          <ProfileImageForm
+            displayName={profile.employee.displayName}
+            hasImage={profile.image.hasImage}
+            imageUrl={imageUrl}
+            initials={profile.employee.initials}
+          />
           <div className={styles.heroContent}>
             <p className="eyebrow">Colaborador</p>
             <h2>{profile.employee.displayName}</h2>
@@ -141,19 +134,6 @@ export default async function ProfilePage() {
               phoneDisplayValue={profile.employee.phoneDisplayValue}
               preferredName={profile.employee.preferredName}
               shareBirthdayOnCalendar={profile.employee.shareBirthdayOnCalendar}
-            />
-          </ElevatedSurface>
-
-          <ElevatedSurface as="section" className={`${styles.card} ${styles.wideCard}`}>
-            <header className={styles.cardHeader}>
-              <ImageIcon aria-hidden="true" size={24} />
-              <h2>Foto de perfil</h2>
-            </header>
-            <ProfileImageForm
-              displayName={profile.employee.displayName}
-              hasImage={profile.image.hasImage}
-              imageUrl={imageUrl}
-              initials={profile.employee.initials}
             />
           </ElevatedSurface>
 
