@@ -77,6 +77,14 @@ MONGODB_URI=mongodb+srv://...
 MONGODB_DB=colaboradores_dna_dev
 ```
 
+For the **Production** context, also set:
+
+```text
+APP_BASE_URL=https://colaboradoresdna.netlify.app
+```
+
+Do not set `APP_BASE_URL` to `http://localhost:3000` in Netlify.
+
 Use Clerk development keys and a non-production MongoDB database. The build
 rejects Clerk live keys. The local development database can also be used when
 it is remotely reachable and sharing test data is intentional.

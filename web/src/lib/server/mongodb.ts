@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const databaseEnvironmentSchema = z.object({
   MONGODB_DB: z.string().min(1),
-  MONGODB_URI: z.string().url().startsWith("mongodb"),
+  MONGODB_URI: z.url().startsWith("mongodb"),
 });
 
 const clientOptions: MongoClientOptions = {
