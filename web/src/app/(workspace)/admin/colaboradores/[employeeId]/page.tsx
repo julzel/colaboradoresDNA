@@ -135,10 +135,10 @@ export default async function EmployeeDetailPage({
             title="Información personal"
           >
             <dl className={styles.detailItemGrid}>
-              <EmployeeDetailItem icon={Cake} label="Fecha de cumpleaños">
+              <EmployeeDetailItem icon={Cake} label="Cumpleaños">
                 {detail.employee.birthday}
               </EmployeeDetailItem>
-              <EmployeeDetailItem icon={CalendarCheck2} label="Visible en calendario">
+              <EmployeeDetailItem icon={CalendarCheck2} label="Mostrar">
                 {detail.employee.shareBirthdayOnCalendar ? "Sí" : "No"}
               </EmployeeDetailItem>
               <EmployeeDetailItem icon={Phone} label="Teléfono">

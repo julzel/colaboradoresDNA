@@ -27,7 +27,7 @@ export function IdentificationReveal({
         <form action={action}>
           <input name="employeeId" type="hidden" value={employeeId} />
           <SubmitButton pendingLabel="Mostrando…" size="small" variant="quiet">
-            Mostrar identificación completa
+            Mostrar todo
           </SubmitButton>
         </form>
       )}
