@@ -12,13 +12,23 @@ type LogoProps = {
 
 export function Logo({ className = "", priority = false }: LogoProps) {
   return (
-    <Image
-      alt=""
-      className={`${styles.logo} ${className}`.trim()}
-      height={logoHeight}
-      priority={priority}
-      src="/images/dna.svg"
-      width={logoWidth}
-    />
+    <span className={`${styles.logo} ${className}`.trim()}>
+      <Image
+        alt=""
+        className={`${styles.image} ${styles.light}`}
+        height={logoHeight}
+        priority={priority}
+        src="/images/dna.svg"
+        width={logoWidth}
+      />
+      <Image
+        alt=""
+        className={`${styles.image} ${styles.dark}`}
+        height={logoHeight}
+        priority={priority}
+        src="/images/dna_light.svg"
+        width={logoWidth}
+      />
+    </span>
   );
 }

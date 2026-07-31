@@ -79,6 +79,7 @@
   --background-navigation:
     radial-gradient(circle at 0 0, rgb(255 255 255 / 30%), transparent 34%),
     linear-gradient(155deg, #079fa9 0%, var(--brand-cyan) 50%, #48cfba 100%);
+  --background-primary-action: var(--background-navigation);
   --color-topbar: rgb(255 255 255 / 88%);
   --color-skeleton: var(--neutral-100);
   --color-skeleton-highlight: rgb(255 255 255 / 72%);
@@ -153,6 +154,9 @@
   --background-navigation:
     radial-gradient(circle at 0 0, rgb(7 187 199 / 18%), transparent 38%),
     linear-gradient(155deg, #041618 0%, #07343a 55%, #084b52 100%);
+  --background-primary-action:
+    radial-gradient(circle at 0 0, rgb(123 239 242 / 24%), transparent 40%),
+    linear-gradient(155deg, #08717c 0%, #0795a0 52%, #0a927f 100%);
   --color-topbar: rgb(13 28 31 / 88%);
   --color-skeleton: #1b3438;
   --color-skeleton-highlight: rgb(104 148 152 / 24%);
@@ -200,6 +204,9 @@
     --background-navigation:
       radial-gradient(circle at 0 0, rgb(7 187 199 / 18%), transparent 38%),
       linear-gradient(155deg, #041618 0%, #07343a 55%, #084b52 100%);
+    --background-primary-action:
+      radial-gradient(circle at 0 0, rgb(123 239 242 / 24%), transparent 40%),
+      linear-gradient(155deg, #08717c 0%, #0795a0 52%, #0a927f 100%);
     --color-topbar: rgb(13 28 31 / 88%);
     --color-skeleton: #1b3438;
     --color-skeleton-highlight: rgb(104 148 152 / 24%);
