@@ -50,12 +50,12 @@ Production and branch deployments are intentionally blocked.
 2. In Netlify, select **Add new project → Import an existing project**.
 3. Select this repository and configure:
 
-   | Setting           | Value                  |
-   | ----------------- | ---------------------- |
-   | Base directory    | `web`                  |
-   | Build command     | `pnpm netlify:preview` |
-   | Publish directory | `.next`                |
-   | Node version      | `24`                   |
+   | Setting           | Value        |
+   | ----------------- | ------------ |
+   | Base directory    | `web`        |
+   | Build command     | `pnpm build` |
+   | Publish directory | `.next`      |
+   | Node version      | `24`         |
 
 The initial production-context build may be skipped or rejected. This is
 expected while the project remains preview-only.

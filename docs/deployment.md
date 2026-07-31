@@ -5,13 +5,13 @@
 Connect the repository to Netlify and configure the project with these build
 settings:
 
-| Setting           | Value                  |
-| ----------------- | ---------------------- |
-| Site/package      | `web`                  |
-| Base directory    | `web`                  |
-| Build command     | `pnpm netlify:preview` |
-| Publish directory | `.next`                |
-| Node version      | `24`                   |
+| Setting           | Value        |
+| ----------------- | ------------ |
+| Site/package      | `web`        |
+| Base directory    | `web`        |
+| Build command     | `pnpm build` |
+| Publish directory | `.next`      |
+| Node version      | `24`         |
 
 `web/netlify.toml` records these settings and enables Next.js skew protection.
 Netlify's managed Next.js/OpenNext support handles server-rendered pages, Route
