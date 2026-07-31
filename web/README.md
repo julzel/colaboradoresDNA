@@ -21,7 +21,8 @@ clerk init --app app_3H9dgW0N38YwjuOrBRUcLfe2mzL
 clerk doctor
 ```
 
-Do not commit `.env.local` or copy development credentials to Netlify.
+Do not commit `.env.local`. Configure equivalent development credentials in Netlify
+through its environment-variable settings.
 
 MongoDB is optional for the current homepage. To enable database-backed features, add
 the MongoDB Atlas values documented in `.env.example` to `.env.local`.
@@ -36,9 +37,11 @@ pnpm test:e2e
 ## Netlify
 
 Select `web` as the site/package and base directory. The checked-in Netlify
-configuration permits Deploy Previews only; production and branch deploys are blocked.
+configuration uses Netlify's `production` context as the persistent development site for
+`mvp/main`. Pull-request Deploy Previews are supported and other branch deploys are
+blocked.
 
 Configure Clerk development credentials and an isolated non-production MongoDB database
-as Netlify environment variables for the Deploy Previews context with Builds and
-Functions scopes. See the [deployment guide](../docs/deployment.md) for the complete
-setup checklist.
+as Netlify environment variables for both Production and Deploy Previews, with Builds
+and Functions scopes. Live Clerk credentials are rejected by the build. See the
+[deployment guide](../docs/deployment.md) for the complete setup checklist.
