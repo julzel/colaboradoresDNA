@@ -1,5 +1,32 @@
 .logo {
   display: block;
+  width: 2.5rem;
+}
+
+.image {
+  display: block;
   height: auto;
   object-fit: contain;
+}
+
+.dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .light {
+  display: none;
+}
+
+:root[data-theme="dark"] .dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .light {
+    display: none;
+  }
+
+  :root:not([data-theme]) .dark {
+    display: block;
+  }
 }
