@@ -13,10 +13,11 @@ settings:
 | Publish directory | `.next`      |
 | Node version      | `24`         |
 
-`web/netlify.toml` records these settings and enables Next.js skew protection.
-Netlify's managed Next.js/OpenNext support handles server-rendered pages, Route
-Handlers, Server Actions, caching, and image optimisation; do not pin a
-separate adapter dependency.
+`web/netlify.toml` records these settings, enables Next.js skew protection, and
+explicitly enables Netlify's Next.js runtime. The runtime handles
+server-rendered pages, Route Handlers, Server Actions, caching, public assets,
+and image optimisation. Keeping the runtime in `devDependencies` prevents a
+successful build from publishing the raw `.next` directory as a static site.
 
 The repository is configured as a development-only Netlify site:
 

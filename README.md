@@ -60,7 +60,8 @@ can also receive Deploy Preview URLs. Other branch deploys remain blocked.
    | Node version      | `24`         |
 
 Set `mvp/main` as the Netlify production branch. A push or merge to that branch
-updates the stable development URL.
+updates the stable development URL. The checked-in Next.js runtime plugin must
+appear in the deploy log and package the application before the deploy stage.
 
 ### Configure development environment variables
 
