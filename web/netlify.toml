@@ -6,11 +6,8 @@
   NODE_VERSION = "24"
   NETLIFY_NEXT_SKEW_PROTECTION = "true"
 
-# This project is intentionally preview-only until production release work is
-# explicitly approved. Exit code 0 tells Netlify to cancel these Git builds.
-[context.production]
-  ignore = "exit 0"
-
+# The configured production branch hosts the persistent development site.
+# The build guard enforces development-only credentials in that context.
 [context.branch-deploy]
   ignore = "exit 0"
 

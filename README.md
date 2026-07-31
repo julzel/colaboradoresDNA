@@ -41,8 +41,10 @@ pnpm test:coverage   # unit-test coverage report
 
 ## Deploy to Netlify
 
-The project is currently configured for Netlify Deploy Previews only.
-Production and branch deployments are intentionally blocked.
+The Netlify site is configured as a development environment. Netlify's
+`production` context deploys the configured `mvp/main` branch to a stable
+development URL; it is not an application production release. Pull requests
+can also receive Deploy Preview URLs. Other branch deploys remain blocked.
 
 ### Create the Netlify project
 
@@ -57,13 +59,13 @@ Production and branch deployments are intentionally blocked.
    | Publish directory | `.next`      |
    | Node version      | `24`         |
 
-The initial production-context build may be skipped or rejected. This is
-expected while the project remains preview-only.
+Set `mvp/main` as the Netlify production branch. A push or merge to that branch
+updates the stable development URL.
 
-### Configure preview environment variables
+### Configure development environment variables
 
-Add these variables in Netlify for the **Deploy Previews context only**. Make
-them available to Builds and Functions where scope controls are available.
+Add these variables in Netlify to both **Production** and **Deploy Previews**.
+Make them available to Builds and Functions where scope controls are available.
 
 ```text
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
@@ -74,34 +76,33 @@ MONGODB_URI=mongodb+srv://...
 MONGODB_DB=colaboradores_dna_dev
 ```
 
-Use Clerk development keys and a non-production MongoDB database. The local
-development database can also be used for trusted previews when sharing test
-data is intentional.
+Use Clerk development keys and a non-production MongoDB database. The build
+rejects Clerk live keys. The local development database can also be used when
+it is remotely reachable and sharing test data is intentional.
 
 Mark `CLERK_SECRET_KEY` and `MONGODB_URI` as secret. Do not mark
 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` as secret because it is intentionally
 included in browser assets. Require approval before exposing secrets to
 previews created by untrusted contributors.
 
-### Generate a Deploy Preview
+### Deploy the development site
 
-1. Enable Deploy Previews for pull requests in Netlify.
-2. Keep branch deploys disabled.
-3. Push changes to a feature branch.
-4. Open a pull request into the configured main branch.
-5. Confirm the build log contains:
+1. Keep `mvp/main` selected as the production branch and branch deploys disabled.
+2. Enable Deploy Previews for pull requests if per-PR URLs are desired.
+3. Merge or push to `mvp/main` to update the stable development URL, or open a
+   pull request to generate a preview.
+4. Confirm the build log contains one of:
 
    ```text
-   Netlify Deploy Preview environment verified.
+   Netlify development environment verified (production).
+   Netlify development environment verified (deploy-preview).
    ```
 
-6. Test authentication, database-backed operations, invitation links, and the
+5. Test authentication, database-backed operations, invitation links, and the
    PWA resources at `/manifest.webmanifest` and `/sw.js`.
 
-Do not use **Trigger deploy**, **Publish deploy**, or a production CLI deploy
-while the preview-only guard is enabled. See the
-[deployment guide](./docs/deployment.md) for the complete checklist and
-production-readiness considerations.
+Never configure Clerk live keys or a production database on this site. See the
+[deployment guide](./docs/deployment.md) for the complete checklist.
 
 ## Documentation
 
