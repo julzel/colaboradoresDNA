@@ -42,6 +42,10 @@ export function getActiveNavigationHref(
 }
 
 export function getWorkspaceBreadcrumbs(pathname: string) {
+  if (pathname.startsWith("/perfil")) {
+    return [{ href: "/", label: "Inicio" }, { label: "Mi perfil" }] as const;
+  }
+
   if (pathname.startsWith("/calendario")) {
     return [{ href: "/", label: "Inicio" }, { label: "Calendario" }] as const;
   }

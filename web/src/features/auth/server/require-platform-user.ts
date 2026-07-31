@@ -11,6 +11,8 @@ import {
 } from "@/features/auth/server/platform-user-repository";
 
 export type AuthenticatedPlatformUser = {
+  clerkHasImage: boolean;
+  clerkImageUrl: string;
   clerkTwoFactorEnabled: boolean;
   clerkUserId: string;
   platformUser: PlatformUser;
@@ -72,6 +74,8 @@ export async function requirePlatformUser({
 
     if (decision.reason === "mfa_required" && allowMfaSetup && platformUser) {
       return {
+        clerkHasImage: clerkUser.hasImage,
+        clerkImageUrl: clerkUser.imageUrl,
         clerkTwoFactorEnabled: clerkUser.twoFactorEnabled,
         clerkUserId: authState.userId,
         platformUser,
@@ -95,6 +99,8 @@ export async function requirePlatformUser({
   }
 
   return {
+    clerkHasImage: clerkUser.hasImage,
+    clerkImageUrl: clerkUser.imageUrl,
     clerkTwoFactorEnabled: clerkUser.twoFactorEnabled,
     clerkUserId: authState.userId,
     platformUser,

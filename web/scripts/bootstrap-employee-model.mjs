@@ -157,6 +157,12 @@ async function bootstrap() {
       },
       { upsert: true },
     );
+    await database
+      .collection("employees")
+      .updateMany(
+        { preferredName: { $exists: false } },
+        { $set: { preferredName: null } },
+      );
 
     console.info("La inicialización del modelo de colaboradores finalizó.");
   } finally {

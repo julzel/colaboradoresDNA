@@ -1,15 +1,26 @@
 import { UserProfile } from "@clerk/nextjs";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { requiresMfa } from "@/features/auth/domain/platform-user";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 
 import styles from "./account.module.css";
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  params,
+}: {
+  params: Promise<{ account?: string[] }>;
+}) {
   const { clerkTwoFactorEnabled, platformUser } = await requirePlatformUser({
     allowMfaSetup: true,
   });
+  const { account = [] } = await params;
+
+  if (account[0] !== "security") {
+    redirect("/account/security");
+  }
+
   const mfaRequired = requiresMfa(platformUser.role) && !clerkTwoFactorEnabled;
 
   return (
@@ -20,6 +31,10 @@ export default async function AccountPage() {
           <h1>Administrá tu cuenta</h1>
           <p>
             Revisá tus métodos de acceso, verificación en dos pasos y sesiones activas.
+          </p>
+          <p>
+            Tu nombre preferido, teléfono y foto se administran desde{" "}
+            <Link href="/perfil">Mi perfil</Link>.
           </p>
         </div>
         <Link className={styles.backLink} href="/">
@@ -38,7 +53,9 @@ export default async function AccountPage() {
       )}
 
       <div className={styles.profile}>
-        <UserProfile path="/account" routing="path" />
+        <UserProfile path="/account" routing="path">
+          <UserProfile.Page label="security" />
+        </UserProfile>
       </div>
     </main>
   );

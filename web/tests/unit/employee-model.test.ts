@@ -6,7 +6,9 @@ import {
   employeeSelfServiceProfileInputSchema,
   formatEmployeeBirthday,
   formatEmployeeDisplayName,
+  formatEmployeePreferredDisplayName,
   formatNationalId,
+  getDisplayNameInitials,
   getEmployeeInitials,
   identificationInputSchema,
   maskIdentification,
@@ -104,10 +106,10 @@ describe("employee profile model", () => {
     ).toBe(true);
   });
 
-  it("allows self-service changes only for phone and birthday sharing", () => {
+  it("normalizes the employee-owned self-service fields", () => {
     const profile = employeeSelfServiceProfileInputSchema.parse({
-      firstSurname: "No permitido",
       phoneNumber: "8888-7777",
+      preferredName: "  Ani   Sol  ",
       shareBirthdayOnCalendar: false,
     });
 
@@ -116,9 +118,48 @@ describe("employee profile model", () => {
         displayValue: "8888-7777",
         normalizedValue: "+50688887777",
       },
+      preferredName: "Ani Sol",
       shareBirthdayOnCalendar: false,
     });
-    expect(profile).not.toHaveProperty("firstSurname");
+  });
+
+  it("rejects restricted fields in self-service profile input", () => {
+    expect(
+      employeeSelfServiceProfileInputSchema.safeParse({
+        firstSurname: "No permitido",
+        phoneNumber: "8888-7777",
+        preferredName: null,
+        shareBirthdayOnCalendar: false,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("keeps preferred names separate from the canonical display name", () => {
+    const employee = {
+      ...employeeInputSchema.parse(validEmployeeInput()),
+      preferredName: "Ani",
+    };
+
+    expect(formatEmployeeDisplayName(employee)).toBe("Ana María Marín Solís");
+    expect(formatEmployeePreferredDisplayName(employee)).toBe("Ani");
+    expect(getDisplayNameInitials("Ani Sol")).toBe("AS");
+  });
+
+  it("rejects control characters and overlong preferred names", () => {
+    expect(
+      employeeSelfServiceProfileInputSchema.safeParse({
+        phoneNumber: null,
+        preferredName: "Ani\u0000",
+        shareBirthdayOnCalendar: true,
+      }).success,
+    ).toBe(false);
+    expect(
+      employeeSelfServiceProfileInputSchema.safeParse({
+        phoneNumber: null,
+        preferredName: "a".repeat(61),
+        shareBirthdayOnCalendar: true,
+      }).success,
+    ).toBe(false);
   });
 });
 
