@@ -113,6 +113,7 @@ function todayInCostaRica() {
 
 export async function listEmployeeDirectoryForAdministration(
   query: EmployeeDirectoryQuery,
+  options: { paginate?: boolean } = {},
 ): Promise<EmployeeDirectoryResult> {
   const database = await getDatabase();
   const today = todayInCostaRica();
@@ -244,21 +245,32 @@ export async function listEmployeeDirectoryForAdministration(
     .toArray();
 
   const total = rows.length;
+  const items = rows.map((row) => ({
+    accessStatus: row.accessStatus,
+    departmentName: row.departmentName || null,
+    displayName: row.displayName,
+    employmentStartedOn: row.employmentStartedOn,
+    employmentStatus: row.employmentStatus,
+    id: row._id.toHexString(),
+    managerName: row.managerName || null,
+    platformRole: row.platformRole,
+    positionTitle: row.positionTitle || null,
+  }));
+
+  if (options.paginate === false) {
+    return {
+      items,
+      page: 1,
+      pageCount: 1,
+      total,
+    };
+  }
+
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(query.page, pageCount);
 
   return {
-    items: rows.slice((page - 1) * pageSize, page * pageSize).map((row) => ({
-      accessStatus: row.accessStatus,
-      departmentName: row.departmentName || null,
-      displayName: row.displayName,
-      employmentStartedOn: row.employmentStartedOn,
-      employmentStatus: row.employmentStatus,
-      id: row._id.toHexString(),
-      managerName: row.managerName || null,
-      platformRole: row.platformRole,
-      positionTitle: row.positionTitle || null,
-    })),
+    items: items.slice((page - 1) * pageSize, page * pageSize),
     page,
     pageCount,
     total,
