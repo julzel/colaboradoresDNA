@@ -2,16 +2,12 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { ImagePlus, Trash2, Upload } from "lucide-react";
+import { Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useUser } from "@clerk/nextjs";
 
-import { Button } from "@/components/ui/button/button";
-import {
-  removeOwnProfileImageAction,
-  updateOwnProfileImageAction,
-} from "@/features/employees/actions/profile-actions";
+import { updateOwnProfileImageAction } from "@/features/employees/actions/profile-actions";
 
 import styles from "./self-service-profile.module.css";
 
@@ -132,14 +128,12 @@ export function ProfileImageForm({
   imageUrl,
   initials,
 }: ProfileImageFormProps) {
-  const [compressedFile, setCompressedFile] = useState<File | null>(null);
   const [hasImage, setHasImage] = useState(initialHasImage);
   const [message, setMessage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     initialHasImage ? imageUrl : null,
   );
-  const [processing, setProcessing] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [busy, setBusy] = useState(false);
   const objectUrlRef = useRef<string | null>(null);
   const router = useRouter();
   const { user } = useUser();
@@ -161,22 +155,30 @@ export function ProfileImageForm({
     const file = event.target.files?.[0];
     if (!file) return;
     setMessage(null);
-    setProcessing(true);
+    setBusy(true);
 
     try {
       const compressed = await compressProfileImage(file);
-      setCompressedFile(compressed);
       replaceObjectUrl(compressed);
-      setMessage(
-        `Vista previa lista · ${Math.max(1, Math.round(compressed.size / 1000))} KB`,
-      );
+      setMessage("Subiendo foto…");
+
+      const formData = new FormData();
+      formData.set("profileImage", compressed);
+      const result = await updateOwnProfileImageAction(formData);
+      setMessage(result.message ?? null);
+
+      if (result.status === "success") {
+        setHasImage(true);
+        await refreshClerkUser();
+      } else {
+        replaceObjectUrl(null);
+      }
     } catch (error) {
-      setCompressedFile(null);
       replaceObjectUrl(null);
       setMessage(clientErrorMessage(error));
-      event.target.value = "";
     } finally {
-      setProcessing(false);
+      event.target.value = "";
+      setBusy(false);
     }
   }
 
@@ -185,90 +187,32 @@ export function ProfileImageForm({
     router.refresh();
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!compressedFile || submitting) return;
-    setSubmitting(true);
-    setMessage("Subiendo foto…");
-
-    const formData = new FormData();
-    formData.set("profileImage", compressedFile);
-    const result = await updateOwnProfileImageAction(formData);
-    setMessage(result.message ?? null);
-
-    if (result.status === "success") {
-      setHasImage(true);
-      setCompressedFile(null);
-      await refreshClerkUser();
-    }
-    setSubmitting(false);
-  }
-
-  async function handleRemove() {
-    if (submitting) return;
-    setSubmitting(true);
-    setMessage("Eliminando foto…");
-    const result = await removeOwnProfileImageAction();
-    setMessage(result.message ?? null);
-
-    if (result.status === "success") {
-      setHasImage(false);
-      setCompressedFile(null);
-      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = null;
-      setPreviewUrl(null);
-      await refreshClerkUser();
-    }
-    setSubmitting(false);
-  }
-
   return (
-    <form className={styles.imageForm} onSubmit={handleSubmit}>
-      <div className={styles.imagePreview}>
+    <div className={styles.heroImageControl}>
+      <div className={styles.heroAvatar}>
         {previewUrl ? (
           <img alt={`Foto de perfil de ${displayName}`} src={previewUrl} />
         ) : (
           <span aria-label={`Iniciales de ${displayName}`}>{initials}</span>
         )}
       </div>
-      <div className={styles.imageControls}>
-        <p>JPEG, PNG o WebP. Se recorta al centro y se comprime a un máximo de 1 MB.</p>
-        <div className={styles.imageActions}>
-          <label className={styles.fileButton} htmlFor="profileImage">
-            <ImagePlus aria-hidden="true" size={18} />
-            {processing ? "Procesando…" : "Seleccionar foto"}
-          </label>
-          <input
-            accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
-            disabled={processing || submitting}
-            id="profileImage"
-            onChange={handleFileChange}
-            type="file"
-          />
-          {compressedFile && (
-            <Button disabled={submitting} type="submit">
-              <Upload aria-hidden="true" size={18} />
-              {submitting ? "Subiendo…" : "Guardar foto"}
-            </Button>
-          )}
-          {hasImage && !compressedFile && (
-            <Button
-              disabled={submitting}
-              onClick={handleRemove}
-              type="button"
-              variant="quiet"
-            >
-              <Trash2 aria-hidden="true" size={18} /> Eliminar foto
-            </Button>
-          )}
-        </div>
-        {message && (
-          <p aria-live="polite" className={styles.imageMessage}>
-            {message}
-          </p>
-        )}
-      </div>
-    </form>
+      <label className={styles.heroImageButton} htmlFor="profileImage">
+        <Camera aria-hidden="true" size={15} />
+        {busy ? "Subiendo…" : hasImage ? "Cambiar" : "Subir foto"}
+      </label>
+      <input
+        accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        disabled={busy}
+        id="profileImage"
+        onChange={handleFileChange}
+        type="file"
+      />
+      {message && (
+        <p aria-live="polite" className={styles.heroImageMessage}>
+          {message}
+        </p>
+      )}
+    </div>
   );
 }
