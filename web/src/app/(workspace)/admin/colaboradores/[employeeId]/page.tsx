@@ -79,7 +79,7 @@ export default async function EmployeeDetailPage({
             {detail.employee.initials}
           </span>
           <div>
-            <p className="eyebrow">Colaborador</p>
+            <p className={`eyebrow ${styles.detailEyebrow}`}>Colaborador</p>
             <h1>{displayName}</h1>
             <p className={styles.muted}>
               {detail.currentAssignment?.positionTitle ?? "Sin puesto asignado"} ·{" "}
