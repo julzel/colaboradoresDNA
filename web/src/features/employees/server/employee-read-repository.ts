@@ -4,19 +4,31 @@ import { ObjectId } from "mongodb";
 
 import type {
   PlatformRole,
+  PlatformUserDocument,
   PlatformUserStatus,
 } from "@/features/auth/domain/platform-user";
-import type { EmployeeAssignment } from "@/features/employees/domain/assignment";
+import type {
+  EmployeeAssignment,
+  EmployeeAssignmentDocument,
+} from "@/features/employees/domain/assignment";
+import type { DepartmentDocument } from "@/features/employees/domain/department";
 import type { EmployeeDirectoryQuery } from "@/features/employees/domain/employee-directory-query";
 import {
   formatEmployeeBirthday,
   formatEmployeeDisplayName,
+  formatEmployeePreferredDisplayName,
+  getDisplayNameInitials,
   getEmployeeInitials,
   maskIdentification,
+  type EmployeeDocument,
   type EmploymentStatus,
   type IdentificationType,
 } from "@/features/employees/domain/employee";
-import type { EmployeeSchedule } from "@/features/employees/domain/schedule";
+import type {
+  EmployeeSchedule,
+  EmployeeScheduleDocument,
+  ScheduledDay,
+} from "@/features/employees/domain/schedule";
 import { objectIdStringSchema } from "@/features/employees/domain/shared";
 import { listEmployeeAssignmentHistory } from "@/features/employees/server/assignment-repository";
 import { listEmployeeScheduleHistory } from "@/features/employees/server/schedule-repository";
@@ -61,6 +73,36 @@ export type EmployeeManagerOption = {
   id: string;
 };
 
+export type EmployeeSelfServiceProfileDetail = {
+  access: {
+    email: string;
+    role: PlatformRole;
+    status: PlatformUserStatus;
+  };
+  currentAssignment: {
+    departmentName: string;
+    managerName: string | null;
+    positionTitle: string;
+  } | null;
+  currentSchedule: { days: ScheduledDay[] } | null;
+  employee: {
+    birthday: string;
+    canonicalDisplayName: string;
+    displayName: string;
+    employmentEndedOn: string | null;
+    employmentStartedOn: string;
+    employmentStatus: EmploymentStatus;
+    identification: {
+      maskedValue: string;
+      type: IdentificationType;
+    };
+    initials: string;
+    phoneDisplayValue: string | null;
+    preferredName: string | null;
+    shareBirthdayOnCalendar: boolean;
+  };
+};
+
 export type EmployeeDetail = {
   access: {
     email: string;
@@ -96,6 +138,7 @@ export type EmployeeDetail = {
     };
     initials: string;
     phoneDisplayValue: string | null;
+    preferredName: string | null;
     secondSurname: string | null;
     shareBirthdayOnCalendar: boolean;
   };
@@ -111,8 +154,93 @@ function todayInCostaRica() {
   }).format(new Date());
 }
 
+export async function getEmployeeSelfServiceProfileDetail(
+  platformUserId: string,
+): Promise<EmployeeSelfServiceProfileDetail | null> {
+  objectIdStringSchema.parse(platformUserId);
+  const database = await getDatabase();
+  const employee = await database.collection<EmployeeDocument>("employees").findOne({
+    platformUserId: new ObjectId(platformUserId),
+  });
+
+  if (!employee) return null;
+
+  const today = todayInCostaRica();
+  const [access, assignment, schedule] = await Promise.all([
+    database
+      .collection<PlatformUserDocument>("platform_users")
+      .findOne({ _id: employee.platformUserId }),
+    database.collection<EmployeeAssignmentDocument>("employee_assignments").findOne(
+      {
+        effectiveFrom: { $lte: today },
+        employeeId: employee._id,
+        $or: [{ effectiveTo: null }, { effectiveTo: { $gte: today } }],
+      },
+      { sort: { effectiveFrom: -1 } },
+    ),
+    database.collection<EmployeeScheduleDocument>("employee_schedules").findOne(
+      {
+        effectiveFrom: { $lte: today },
+        employeeId: employee._id,
+        $or: [{ effectiveTo: null }, { effectiveTo: { $gte: today } }],
+      },
+      { sort: { effectiveFrom: -1 } },
+    ),
+  ]);
+
+  if (!access) return null;
+
+  const [department, manager] = await Promise.all([
+    assignment
+      ? database
+          .collection<DepartmentDocument>("departments")
+          .findOne({ _id: assignment.departmentId })
+      : null,
+    assignment?.managerEmployeeId
+      ? database
+          .collection<EmployeeDocument>("employees")
+          .findOne({ _id: assignment.managerEmployeeId })
+      : null,
+  ]);
+  const canonicalDisplayName = formatEmployeeDisplayName(employee);
+  const displayName = formatEmployeePreferredDisplayName(employee);
+
+  return {
+    access: {
+      email: access.normalizedEmail,
+      role: access.role,
+      status: access.status,
+    },
+    currentAssignment: assignment
+      ? {
+          departmentName: department?.name ?? "Departamento desconocido",
+          managerName: manager ? formatEmployeePreferredDisplayName(manager) : null,
+          positionTitle: assignment.positionTitle,
+        }
+      : null,
+    currentSchedule: schedule ? { days: schedule.days } : null,
+    employee: {
+      birthday: formatEmployeeBirthday(employee),
+      canonicalDisplayName,
+      displayName,
+      employmentEndedOn: employee.employmentEndedOn,
+      employmentStartedOn: employee.employmentStartedOn,
+      employmentStatus: employee.employmentStatus,
+      identification: {
+        maskedValue: maskIdentification(employee.identification),
+        type: employee.identification.type,
+      },
+      initials: getDisplayNameInitials(displayName),
+      phoneDisplayValue: employee.phoneNumber?.displayValue ?? null,
+      preferredName: employee.preferredName ?? null,
+      shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
+    },
+  };
+}
+
 export async function listEmployeeDirectoryForAdministration(
   query: EmployeeDirectoryQuery,
+  options: { paginate?: boolean } = {},
 ): Promise<EmployeeDirectoryResult> {
   const database = await getDatabase();
   const today = todayInCostaRica();
@@ -244,21 +372,32 @@ export async function listEmployeeDirectoryForAdministration(
     .toArray();
 
   const total = rows.length;
+  const items = rows.map((row) => ({
+    accessStatus: row.accessStatus,
+    departmentName: row.departmentName || null,
+    displayName: row.displayName,
+    employmentStartedOn: row.employmentStartedOn,
+    employmentStatus: row.employmentStatus,
+    id: row._id.toHexString(),
+    managerName: row.managerName || null,
+    platformRole: row.platformRole,
+    positionTitle: row.positionTitle || null,
+  }));
+
+  if (options.paginate === false) {
+    return {
+      items,
+      page: 1,
+      pageCount: 1,
+      total,
+    };
+  }
+
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(query.page, pageCount);
 
   return {
-    items: rows.slice((page - 1) * pageSize, page * pageSize).map((row) => ({
-      accessStatus: row.accessStatus,
-      departmentName: row.departmentName || null,
-      displayName: row.displayName,
-      employmentStartedOn: row.employmentStartedOn,
-      employmentStatus: row.employmentStatus,
-      id: row._id.toHexString(),
-      managerName: row.managerName || null,
-      platformRole: row.platformRole,
-      positionTitle: row.positionTitle || null,
-    })),
+    items: items.slice((page - 1) * pageSize, page * pageSize),
     page,
     pageCount,
     total,
@@ -403,6 +542,7 @@ export async function getEmployeeDetailForAdministration(
       },
       initials: getEmployeeInitials(employee as never),
       phoneDisplayValue: employee.phoneNumber?.displayValue ?? null,
+      preferredName: employee.preferredName ?? null,
       secondSurname: employee.secondSurname,
       shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
     },

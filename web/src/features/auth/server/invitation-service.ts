@@ -11,23 +11,24 @@ import {
 
 const invitationExpirationDays = 14;
 
+function parseHttpsUrl(value: string | undefined) {
+  if (!value) return null;
+
+  const parsed = z.url().safeParse(value);
+
+  if (!parsed.success) return null;
+
+  const url = new URL(parsed.data);
+  return url.protocol === "https:" ? url.origin : null;
+}
+
 async function getApplicationBaseUrl() {
-  const configuredUrl = process.env.APP_BASE_URL;
-
-  if (configuredUrl) {
-    return z.string().url().parse(configuredUrl);
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    return "http://localhost:3000";
-  }
-
   const requestHeaders = await headers();
   const forwardedHost =
     requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
   const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
   const host = forwardedHost?.split(",")[0]?.trim();
-  const protocol = forwardedProtocol?.split(",")[0]?.trim();
+  const protocol = forwardedProtocol?.split(",")[0]?.trim().toLowerCase();
 
   if (host && protocol === "https") {
     const requestOrigin = new URL(`${protocol}://${host}`);
@@ -37,7 +38,23 @@ async function getApplicationBaseUrl() {
     }
   }
 
-  throw new Error("APP_BASE_URL is required outside an HTTPS Netlify Deploy Preview.");
+  const netlifySiteUrl = parseHttpsUrl(process.env.URL);
+
+  if (netlifySiteUrl) {
+    return netlifySiteUrl;
+  }
+
+  const configuredUrl = process.env.APP_BASE_URL;
+
+  if (configuredUrl) {
+    return z.url().parse(configuredUrl);
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return "http://localhost:3000";
+  }
+
+  throw new Error("APP_BASE_URL is required outside Netlify.");
 }
 
 export async function sendPlatformInvitation({

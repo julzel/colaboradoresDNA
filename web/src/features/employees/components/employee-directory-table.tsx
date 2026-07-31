@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
@@ -20,21 +21,64 @@ const accessLabels = {
 
 type EmployeeDirectoryTableProps = {
   items: EmployeeDirectoryItem[];
+  onSort: (key: EmployeeDirectorySortKey) => void;
+  sortDirection: EmployeeDirectorySortDirection;
+  sortKey: EmployeeDirectorySortKey;
 };
 
-export function EmployeeDirectoryTable({ items }: EmployeeDirectoryTableProps) {
+export type EmployeeDirectorySortDirection = "ascending" | "descending";
+
+export type EmployeeDirectorySortKey =
+  | "access"
+  | "department"
+  | "employment"
+  | "manager"
+  | "name"
+  | "position"
+  | "role";
+
+const columns: Array<{ key: EmployeeDirectorySortKey; label: string }> = [
+  { key: "name", label: "Colaborador" },
+  { key: "department", label: "Departamento" },
+  { key: "position", label: "Puesto" },
+  { key: "manager", label: "Jefatura" },
+  { key: "role", label: "Rol" },
+  { key: "employment", label: "Estado laboral" },
+  { key: "access", label: "Acceso" },
+];
+
+export function EmployeeDirectoryTable({
+  items,
+  onSort,
+  sortDirection,
+  sortKey,
+}: EmployeeDirectoryTableProps) {
   return (
     <ElevatedSurface className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
-            <th scope="col">Colaborador</th>
-            <th scope="col">Departamento</th>
-            <th scope="col">Puesto</th>
-            <th scope="col">Jefatura</th>
-            <th scope="col">Rol</th>
-            <th scope="col">Estado laboral</th>
-            <th scope="col">Acceso</th>
+            {columns.map((column) => {
+              const isCurrent = sortKey === column.key;
+              const SortIcon = sortDirection === "ascending" ? ChevronUp : ChevronDown;
+
+              return (
+                <th
+                  aria-sort={isCurrent ? sortDirection : "none"}
+                  key={column.key}
+                  scope="col"
+                >
+                  <button
+                    className={styles.sortButton}
+                    onClick={() => onSort(column.key)}
+                    type="button"
+                  >
+                    {column.label}
+                    {isCurrent && <SortIcon aria-hidden="true" size={16} />}
+                  </button>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>

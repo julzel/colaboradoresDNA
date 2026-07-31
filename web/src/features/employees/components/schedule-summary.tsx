@@ -3,7 +3,7 @@ import { Clock3 } from "lucide-react";
 import {
   calculateWeeklySchedule,
   dayOfWeekOrder,
-  type EmployeeSchedule,
+  type ScheduledDay,
 } from "@/features/employees/domain/schedule";
 
 import styles from "./employee-management.module.css";
@@ -18,7 +18,7 @@ const dayLabels = {
 } as const;
 
 type ScheduleSummaryProps = {
-  schedule: EmployeeSchedule | null;
+  schedule: { days: ScheduledDay[] } | null;
 };
 
 export function ScheduleSummary({ schedule }: ScheduleSummaryProps) {

@@ -75,10 +75,10 @@ cd web
 pnpm bootstrap:employee-model
 ```
 
-The command is idempotent. It creates the employee-domain indexes and inserts
+The command is idempotent. It creates the employee-domain indexes, inserts
 Gerencia, Nutrición, Producción, and Servicio al cliente only when they do not
-already exist. It does not create employees, platform accounts, credentials, or
-invitations.
+already exist, and backfills a missing employee `preferredName` to `null`. It
+does not create employees, platform accounts, credentials, or invitations.
 
 ## Daily workflow
 

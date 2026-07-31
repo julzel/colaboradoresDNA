@@ -78,7 +78,7 @@
 }
 
 .viewSelector [aria-current="page"] {
-  background: var(--background-navigation);
+  background: var(--background-primary-action);
   color: var(--neutral-0);
 }
 

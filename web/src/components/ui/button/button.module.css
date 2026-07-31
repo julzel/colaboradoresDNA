@@ -43,12 +43,12 @@
 }
 
 .primary {
-  background: var(--background-navigation);
+  background: var(--background-primary-action);
   color: var(--neutral-0);
 }
 
 .primary:hover:not(:disabled) {
-  background: var(--background-navigation);
+  background: var(--background-primary-action);
   box-shadow: var(--shadow-md);
 }
 

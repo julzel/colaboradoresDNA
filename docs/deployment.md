@@ -56,9 +56,12 @@ Mark `CLERK_SECRET_KEY` and `MONGODB_URI` as secret. Do not mark
 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` as secret because it is intentionally
 included in browser assets.
 
-`APP_BASE_URL` is optional for standard `*.netlify.app` deployments because the
-invitation flow safely derives the active HTTPS origin. Set it explicitly for a
-custom domain.
+For this site, set `APP_BASE_URL` in the Netlify **Production** context to
+`https://colaboradoresdna.netlify.app` with the Functions scope. Remove any
+Production value that points to `localhost`. The invitation service also uses
+Netlify's HTTPS request and site URL at runtime, so Deploy Preview invitations
+continue to use their preview URL. Set `APP_BASE_URL` explicitly when a custom
+domain becomes the intended invitation destination.
 
 ## Clerk development checklist
 
@@ -70,9 +73,11 @@ Before the first deployment:
    recovery, and Spanish email templates from `web/config/clerk/`.
 3. Confirm that `/sign-in`, `/sign-up`, sign-out, session persistence, and
    unauthorized states work at the stable development URL and in a Deploy Preview.
-4. Run `clerk doctor` locally and confirm that it reaches the development
+4. Create a test invitation and confirm its Clerk redirect URL begins with
+   `https://colaboradoresdna.netlify.app/sign-up`.
+5. Run `clerk doctor` locally and confirm that it reaches the development
    application.
-5. Do not configure production Clerk keys or production domains yet.
+6. Do not configure production Clerk keys or production domains yet.
 
 ## MongoDB Atlas checklist
 

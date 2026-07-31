@@ -12,6 +12,7 @@ import {
   IdCard,
   KeyRound,
   Mail,
+  MessageCircle,
   PenLine,
   Phone,
   ShieldCheck,
@@ -79,7 +80,7 @@ export default async function EmployeeDetailPage({
             {detail.employee.initials}
           </span>
           <div>
-            <p className="eyebrow">Colaborador</p>
+            <p className={`eyebrow ${styles.detailEyebrow}`}>Colaborador</p>
             <h1>{displayName}</h1>
             <p className={styles.muted}>
               {detail.currentAssignment?.positionTitle ?? "Sin puesto asignado"} ·{" "}
@@ -135,15 +136,20 @@ export default async function EmployeeDetailPage({
             title="Información personal"
           >
             <dl className={styles.detailItemGrid}>
-              <EmployeeDetailItem icon={Cake} label="Fecha de cumpleaños">
+              <EmployeeDetailItem icon={Cake} label="Cumpleaños">
                 {detail.employee.birthday}
               </EmployeeDetailItem>
-              <EmployeeDetailItem icon={CalendarCheck2} label="Visible en calendario">
+              <EmployeeDetailItem icon={CalendarCheck2} label="Mostrar">
                 {detail.employee.shareBirthdayOnCalendar ? "Sí" : "No"}
               </EmployeeDetailItem>
               <EmployeeDetailItem icon={Phone} label="Teléfono">
                 {detail.employee.phoneDisplayValue ?? "No indicado"}
               </EmployeeDetailItem>
+              {detail.employee.preferredName && (
+                <EmployeeDetailItem icon={MessageCircle} label="Nombre preferido">
+                  {detail.employee.preferredName}
+                </EmployeeDetailItem>
+              )}
               <EmployeeDetailItem
                 icon={IdCard}
                 label={identificationLabels[detail.employee.identification.type]}

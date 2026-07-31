@@ -10,10 +10,11 @@ import styles from "./workspace-shell.module.css";
 
 type WorkspaceShellProps = {
   children: ReactNode;
+  displayName: string;
   role: PlatformRole;
 };
 
-export function WorkspaceShell({ children, role }: WorkspaceShellProps) {
+export function WorkspaceShell({ children, displayName, role }: WorkspaceShellProps) {
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -31,7 +32,7 @@ export function WorkspaceShell({ children, role }: WorkspaceShellProps) {
       </aside>
 
       <div className={styles.mainColumn}>
-        <WorkspaceHeader role={role} />
+        <WorkspaceHeader displayName={displayName} role={role} />
         <main className={styles.content} id="main-content">
           {children}
         </main>
