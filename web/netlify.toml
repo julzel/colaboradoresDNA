@@ -13,3 +13,9 @@
 
 [context.deploy-preview]
   command = "pnpm build"
+
+# Keep the Next.js runtime explicit so Netlify packages App Router routes,
+# middleware, public assets, and server functions instead of publishing the
+# raw .next directory as a static site.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
