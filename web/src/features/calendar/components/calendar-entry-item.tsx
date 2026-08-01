@@ -1,4 +1,11 @@
-import { CakeSlice, CalendarDays, Clock3, ExternalLink, MapPin } from "lucide-react";
+import {
+  CakeSlice,
+  CalendarDays,
+  Clock3,
+  ExternalLink,
+  MapPin,
+  Umbrella,
+} from "lucide-react";
 import Link from "next/link";
 
 import type { CalendarEntry } from "@/features/calendar/domain/calendar-entry";
@@ -30,7 +37,12 @@ function getTimeLabel(entry: CalendarEntry) {
 }
 
 export function CalendarEntryItem({ entry }: CalendarEntryItemProps) {
-  const Icon = entry.kind === "birthday" ? CakeSlice : CalendarDays;
+  const Icon =
+    entry.kind === "birthday"
+      ? CakeSlice
+      : entry.kind === "pto"
+        ? Umbrella
+        : CalendarDays;
   const title = entry.detailHref ? (
     <Link href={entry.detailHref}>{entry.title}</Link>
   ) : (

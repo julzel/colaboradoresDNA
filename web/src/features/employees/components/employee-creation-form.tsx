@@ -195,6 +195,15 @@ export function EmployeeCreationForm({
             required
             type="date"
           />
+          <TextField
+            defaultValue="0"
+            id="initialPtoBalanceDays"
+            label="Saldo inicial de ausencias (días)"
+            name="initialPtoBalanceDays"
+            required
+            step="0.5"
+            type="number"
+          />
         </div>
       </fieldset>
 
@@ -258,6 +267,10 @@ export function EmployeeCreationForm({
           <div>
             <dt>Fecha de ingreso</dt>
             <dd>{review.employmentStartedOn}</dd>
+          </div>
+          <div>
+            <dt>Saldo inicial de ausencias</dt>
+            <dd>{review.initialPtoBalanceDays} días</dd>
           </div>
         </dl>
         <div className={styles.actions}>

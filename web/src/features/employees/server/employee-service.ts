@@ -40,6 +40,8 @@ import {
   replaceEmployeeSchedule,
 } from "@/features/employees/server/schedule-repository";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { createOpeningPtoBalanceInSession } from "@/features/pto/server/pto-repository";
+import { ensurePtoIndexes } from "@/features/pto/server/pto-indexes";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
 
 export type CreateEmployeeModelInput = {
@@ -54,6 +56,7 @@ export type CreateEmployeeWithAccessInput = Omit<
 > & {
   access: { email: string; role: PlatformRole };
   employee: Omit<EmployeeInput, "platformUserId">;
+  openingPtoBalanceUnits: number;
 };
 
 async function synchronizePlatformDisplayName({
@@ -149,7 +152,11 @@ export async function createEmployeeWithAccess(input: CreateEmployeeWithAccessIn
   const { platformUser: actor } = await requirePlatformUser({
     roles: ["administrator"],
   });
-  await Promise.all([ensureAuthIndexes(), ensureEmployeeDomainIndexes()]);
+  await Promise.all([
+    ensureAuthIndexes(),
+    ensureEmployeeDomainIndexes(),
+    ensurePtoIndexes(),
+  ]);
   const client = await getMongoClient();
 
   return client.withSession(async (session) => {
@@ -190,6 +197,12 @@ export async function createEmployeeWithAccess(input: CreateEmployeeWithAccessIn
         },
         session,
       );
+      await createOpeningPtoBalanceInSession({
+        actorPlatformUserId: actor.id,
+        employeeId: employee.id,
+        openingBalanceUnits: input.openingPtoBalanceUnits,
+        session,
+      });
       await recordEmployeeAudit({
         action: "employee_created",
         actorPlatformUserId: actor.id,

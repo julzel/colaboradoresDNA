@@ -48,6 +48,7 @@ import {
 } from "@/features/employees/server/employee-repository";
 import { revealEmployeeIdentificationValue } from "@/features/employees/server/employee-read-repository";
 import { createFeedbackUrl } from "@/lib/actions/feedback-messages";
+import { PtoDomainError, ptoOpeningBalanceDaysSchema } from "@/features/pto/domain/pto";
 
 function booleanValue(formData: FormData, name: string) {
   return formData.get(name) === "on" || formData.get(name) === "true";
@@ -74,6 +75,16 @@ function zodState(error: z.ZodError): EmployeeActionState {
 }
 
 function domainState(error: unknown): EmployeeActionState {
+  if (error instanceof PtoDomainError) {
+    return {
+      message:
+        error.code === "balance_exists"
+          ? "El colaborador ya tiene un saldo de ausencias."
+          : "No fue posible registrar el saldo inicial de ausencias.",
+      status: "error",
+    };
+  }
+
   if (error instanceof EmployeeDomainError) {
     const messages: Record<string, string> = {
       assignment_overlap:
@@ -165,12 +176,16 @@ export async function createEmployeeAction(
     employeeId: "000000000000000000000002",
     timezone: "America/Costa_Rica",
   });
+  const parsedOpeningPtoBalance = ptoOpeningBalanceDaysSchema.safeParse(
+    formData.get("initialPtoBalanceDays"),
+  );
 
   const failure =
     (!parsedEmployee.success && parsedEmployee.error) ||
     (!parsedAccess.success && parsedAccess.error) ||
     (!parsedAssignment.success && parsedAssignment.error) ||
-    (!parsedSchedule.success && parsedSchedule.error);
+    (!parsedSchedule.success && parsedSchedule.error) ||
+    (!parsedOpeningPtoBalance.success && parsedOpeningPtoBalance.error);
   if (failure) return zodState(failure);
 
   let result;
@@ -195,6 +210,7 @@ export async function createEmployeeAction(
         secondSurname: employee.secondSurname,
         shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
       },
+      openingPtoBalanceUnits: parsedOpeningPtoBalance.data,
       schedule: parsedSchedule.data,
     });
   } catch (error) {

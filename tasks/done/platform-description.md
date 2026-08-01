@@ -209,8 +209,8 @@ Supervisors can:
 - View operational summaries for their authorized teams.
 - Submit and track their own PTO requests.
 
-Supervisors cannot approve their own requests. Yerlin Marquez is the initial
-approver for supervisor PTO requests.
+Supervisors cannot approve their own requests. Supervisor PTO requests enter a
+shared approval pool available to every active administrator.
 
 ### Level 3: Collaborator
 
@@ -446,8 +446,9 @@ Rules:
 - Users can save and edit a draft before submission.
 - Users can cancel their own draft or pending request.
 - Submitted collaborator requests route to their assigned supervisor.
-- Supervisor requests route to Yerlin Marquez.
-- Administrator requests route to another active administrator.
+- Supervisor and administrator requests enter the shared administrator pool.
+- Any active administrator can approve or deny any pending PTO request except
+  their own.
 - No user can approve or deny their own request.
 - Approvers can act only on requests within their authorized scope.
 - The interface warns about overlapping requests and insufficient balances.
@@ -624,8 +625,8 @@ Exit criteria:
 
 - A collaborator can complete the full request journey.
 - A supervisor can decide an authorized direct-report request.
-- Yerlin can decide a supervisor request.
-- An administrator request requires another administrator.
+- Any active administrator can decide a supervisor request.
+- An administrator request requires a different administrator to decide it.
 - Unauthorized and self-approval attempts fail on the server.
 - Balance calculations and status transitions have automated coverage.
 
@@ -735,9 +736,6 @@ schema and calculation work but do not block authentication setup:
    schedules affect requested duration.
 4. Define whether sick, personal, and other categories always affect the PTO
    balance or can be informational only.
-5. Define who approves Yerlin Marquez’s own requests; self-approval remains
-   prohibited.
-
-No allowance amount, accrual schedule, blackout date, carryover rule, or payroll
-behavior should be inferred until it is approved in a separate product
-decision.
+   No allowance amount, accrual schedule, blackout date, carryover rule, or payroll
+   behavior should be inferred until it is approved in a separate product
+   decision.

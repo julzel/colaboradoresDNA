@@ -77,7 +77,7 @@ export function CalendarMonth({ entries, query }: CalendarMonthProps) {
             ))}
           </div>
         ) : (
-          <p className={styles.muted}>No hay eventos para este día.</p>
+          <p className={styles.muted}>No hay actividades para este día.</p>
         )}
       </ElevatedSurface>
     </div>

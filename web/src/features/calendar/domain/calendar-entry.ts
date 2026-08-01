@@ -1,4 +1,4 @@
-export type CalendarEntryKind = "birthday" | "event";
+export type CalendarEntryKind = "birthday" | "event" | "pto";
 
 export type CalendarEntry = {
   allDay: boolean;

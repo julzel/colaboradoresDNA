@@ -11,6 +11,7 @@
     "build": "node scripts/verify-netlify-preview.mjs && next build",
     "bootstrap:admins": "node --env-file=.env.local scripts/bootstrap-admins.mjs",
     "bootstrap:employee-model": "node --env-file=.env.local scripts/bootstrap-employee-model.mjs",
+    "bootstrap:pto-model": "node --env-file=.env.local scripts/bootstrap-pto-model.mjs",
     "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
     "start": "next start",
     "lint": "eslint .",

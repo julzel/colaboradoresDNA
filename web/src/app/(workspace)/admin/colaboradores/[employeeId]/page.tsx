@@ -19,6 +19,7 @@ import {
   UserCheck,
   UserRound,
   UsersRound,
+  Umbrella,
 } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
@@ -122,6 +123,24 @@ export default async function EmployeeDetailPage({
         </ElevatedSurface>
 
         <div className={styles.detailGrid}>
+          <EmployeeDetailCard
+            action={
+              <ButtonLink
+                href={`/admin/colaboradores/${employeeId}/ausencias`}
+                size="small"
+                variant="quiet"
+              >
+                Administrar
+              </ButtonLink>
+            }
+            icon={Umbrella}
+            title="Saldo de ausencias"
+          >
+            <p className={styles.muted}>
+              Consultá el saldo, registrá la apertura o aplicá un ajuste auditable.
+            </p>
+          </EmployeeDetailCard>
+
           <EmployeeDetailCard
             action={
               <ButtonLink

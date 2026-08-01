@@ -1,4 +1,4 @@
-import { CakeSlice, CalendarDays } from "lucide-react";
+import { CakeSlice, CalendarDays, Umbrella } from "lucide-react";
 import Link from "next/link";
 
 import { type CalendarEntry } from "@/features/calendar/domain/calendar-entry";
@@ -59,7 +59,12 @@ export function CalendarMonthDay({
       </Link>
       <div aria-hidden="true" className={styles.mobileIndicators}>
         {visibleEntries.map((entry) => {
-          const Icon = entry.kind === "birthday" ? CakeSlice : CalendarDays;
+          const Icon =
+            entry.kind === "birthday"
+              ? CakeSlice
+              : entry.kind === "pto"
+                ? Umbrella
+                : CalendarDays;
           return <Icon data-kind={entry.kind} key={entry.id} size={12} />;
         })}
       </div>

@@ -138,6 +138,11 @@
   color: var(--color-accent);
 }
 
+.entryIcon[data-kind="pto"] {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
 .entryContent {
   min-width: 0;
 }
@@ -315,6 +320,10 @@
 
 .mobileIndicators [data-kind="birthday"] {
   color: var(--color-accent);
+}
+
+.mobileIndicators [data-kind="pto"] {
+  color: var(--color-info);
 }
 
 .desktopPreviews {
