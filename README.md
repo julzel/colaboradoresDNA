@@ -94,6 +94,26 @@ Mark `CLERK_SECRET_KEY` and `MONGODB_URI` as secret. Do not mark
 included in browser assets. Require approval before exposing secrets to
 previews created by untrusted contributors.
 
+### Initialize PTO for an environment
+
+After pointing `.env.local` at the target development database, create the PTO
+indexes with the idempotent bootstrap command:
+
+```bash
+cd web
+pnpm bootstrap:pto-model
+```
+
+Optionally set `PTO_SUPERVISOR_APPROVER_EMAIL` in `.env.local` to the email of
+Yerlin Marquez's active platform account before running the command. Otherwise,
+an administrator can select that stable account later under **Solicitudes de
+ausencia → Configuración de ausencias**.
+
+New collaborators receive an opening PTO balance during creation. For existing
+collaborators, open their administration detail, select **Saldo de ausencias**,
+and manually register the opening balance once. A missing balance is distinct
+from a zero balance and prevents submission, but not draft creation.
+
 ### Deploy the development site
 
 1. Keep `mvp/main` selected as the production branch and branch deploys disabled.

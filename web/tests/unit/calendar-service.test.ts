@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   listBirthdayCalendarEntries: vi.fn(),
   listCalendarEventTargetOptions: vi.fn(),
   listVisibleCalendarEvents: vi.fn(),
+  listVisibleApprovedPtoForCalendar: vi.fn(),
   requirePlatformUser: vi.fn(),
 }));
 
@@ -39,6 +40,10 @@ vi.mock("@/features/calendar/server/calendar-event-repository", () => ({
   updateCalendarEvent: vi.fn(),
 }));
 
+vi.mock("@/features/pto/server/pto-service", () => ({
+  listVisibleApprovedPtoForCalendar: mocks.listVisibleApprovedPtoForCalendar,
+}));
+
 describe("calendar service authorization and aggregation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -55,6 +60,7 @@ describe("calendar service authorization and aggregation", () => {
       departmentId: "507f1f77bcf86cd799439013",
     });
     mocks.listVisibleCalendarEvents.mockResolvedValue([]);
+    mocks.listVisibleApprovedPtoForCalendar.mockResolvedValue([]);
     mocks.listCalendarEventTargetOptions.mockResolvedValue({
       departments: [],
       people: [],
@@ -82,6 +88,12 @@ describe("calendar service authorization and aggregation", () => {
     });
     expect(mocks.listBirthdayCalendarEntries).toHaveBeenCalledWith({
       viewerRole: "supervisor",
+    });
+    expect(mocks.listVisibleApprovedPtoForCalendar).toHaveBeenCalledWith({
+      endDate: "2026-07-31",
+      platformUserId: "507f1f77bcf86cd799439011",
+      role: "supervisor",
+      startDate: "2026-07-01",
     });
     expect(result.canCreateEvents).toBe(true);
     expect(result.eventFormOptions).toEqual({ departments: [], people: [] });

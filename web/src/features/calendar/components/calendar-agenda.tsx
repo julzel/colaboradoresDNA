@@ -25,9 +25,9 @@ export function CalendarAgenda({ entries, month }: CalendarAgendaProps) {
   if (groups.length === 0) {
     return (
       <ElevatedSurface as="section" className={styles.emptyState}>
-        <h2>No hay eventos para este mes</h2>
+        <h2>No hay actividades para este mes</h2>
         <p className={styles.muted}>
-          Cuando haya cumpleaños o eventos visibles, aparecerán aquí.
+          Cuando haya cumpleaños, ausencias o eventos visibles, aparecerán aquí.
         </p>
       </ElevatedSurface>
     );

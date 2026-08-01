@@ -34,7 +34,7 @@ export function CalendarControls({
       <div className={styles.heading}>
         <p className="eyebrow">Planificación</p>
         <h1>Calendario</h1>
-        <p>Consultá cumpleaños y eventos importantes de la organización.</p>
+        <p>Consultá cumpleaños, ausencias y eventos importantes de la organización.</p>
       </div>
 
       {canCreateEvents && eventFormOptions && (

@@ -30,6 +30,8 @@ import {
   findEmployeeByPlatformUserId,
   listBirthdayCalendarEntries,
 } from "@/features/employees/server/employee-repository";
+import { formatPtoDays } from "@/features/pto/domain/pto";
+import { listVisibleApprovedPtoForCalendar } from "@/features/pto/server/pto-service";
 
 async function resolveCalendarActor(
   platformUser: PlatformUser,
@@ -127,17 +129,49 @@ function birthdayToEntry({
   };
 }
 
+function ptoToEntry(pto: {
+  durationUnits: number;
+  endDate: string;
+  id: string;
+  requesterName: string;
+  startDate: string;
+}): CalendarEntry {
+  return {
+    allDay: true,
+    canManage: false,
+    description: null,
+    detailHref: `/ausencias/${pto.id}`,
+    endAt: calendarDateToUtc(addCalendarDays(pto.endDate, 1)).toISOString(),
+    endDate: pto.endDate,
+    id: `pto:${pto.id}`,
+    kind: "pto",
+    label: `Ausencia · ${formatPtoDays(pto.durationUnits)} días`,
+    location: null,
+    meetingUrl: null,
+    note: null,
+    startAt: calendarDateToUtc(pto.startDate).toISOString(),
+    startDate: pto.startDate,
+    title: pto.requesterName,
+  };
+}
+
 export async function getCalendarEntries(month: string) {
   const actor = await requireCalendarActor();
   const range = getCalendarMonthRange(month);
   const canCreateEvents = actor.role === "administrator" || actor.role === "supervisor";
-  const [events, birthdays, eventFormOptions] = await Promise.all([
+  const [events, birthdays, ptoEntries, eventFormOptions] = await Promise.all([
     listVisibleCalendarEvents({
       actor,
       endsAt: range.endAt,
       startsAt: range.startAt,
     }),
     listBirthdayCalendarEntries({ viewerRole: actor.role }),
+    listVisibleApprovedPtoForCalendar({
+      endDate: addCalendarDays(range.endDate, -1),
+      platformUserId: actor.platformUserId,
+      role: actor.role,
+      startDate: range.startDate,
+    }),
     canCreateEvents ? listCalendarEventTargetOptions(actor) : Promise.resolve(null),
   ]);
   const [year = 0, monthNumber = 0] = month.split("-").map(Number);
@@ -147,7 +181,11 @@ export async function getCalendarEntries(month: string) {
 
   return {
     canCreateEvents,
-    entries: [...events.map((event) => eventToEntry(actor, event)), ...birthdayEntries],
+    entries: [
+      ...events.map((event) => eventToEntry(actor, event)),
+      ...birthdayEntries,
+      ...ptoEntries.map(ptoToEntry),
+    ],
     eventFormOptions,
   };
 }

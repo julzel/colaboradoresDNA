@@ -25,7 +25,7 @@ describe("calendar views", () => {
   it("renders the agenda empty state in Spanish", () => {
     render(<CalendarAgenda entries={[]} month="2026-07" />);
     expect(
-      screen.getByRole("heading", { name: "No hay eventos para este mes" }),
+      screen.getByRole("heading", { name: "No hay actividades para este mes" }),
     ).toBeInTheDocument();
   });
 
@@ -41,7 +41,7 @@ describe("calendar views", () => {
     expect(
       screen.getByRole("heading", { name: /lunes, 13 de julio de 2026/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText("No hay eventos para este día.")).toBeInTheDocument();
+    expect(screen.getByText("No hay actividades para este día.")).toBeInTheDocument();
   });
 });
 
