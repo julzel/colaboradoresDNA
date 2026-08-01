@@ -31,34 +31,13 @@ function Feedback({
   );
 }
 
-export function PtoSubmitForm({
-  administratorOptions,
-  requestId,
-}: {
-  administratorOptions: AdministratorOption[];
-  requestId: string;
-}) {
+export function PtoSubmitForm({ requestId }: { requestId: string }) {
   const [state, action] = useActionState(submitPtoRequestAction, initialPtoActionState);
   return (
     <form action={action} className={styles.formCard}>
       <input name="requestId" type="hidden" value={requestId} />
       {state.requiresConfirmation && (
         <input name="confirmWarnings" type="hidden" value="true" />
-      )}
-      {administratorOptions.length > 0 && (
-        <SelectField
-          id="administratorApproverId"
-          label="Persona aprobadora"
-          name="administratorApproverId"
-          required
-        >
-          <option value="">Seleccioná otra persona administradora</option>
-          {administratorOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.displayName}
-            </option>
-          ))}
-        </SelectField>
       )}
       <Feedback message={state.message} warning={state.status === "warning"} />
       <SubmitButton pendingLabel="Enviando…">

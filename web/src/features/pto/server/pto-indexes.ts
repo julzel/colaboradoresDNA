@@ -60,6 +60,14 @@ const ptoIndexes: Readonly<Record<string, readonly IndexDescription[]>> = {
       key: { status: 1, startDate: 1, endDate: 1 },
       name: "pto_requests_calendar_range",
     },
+    {
+      key: { status: 1, submittedAt: 1, requesterPlatformUserId: 1 },
+      name: "pto_requests_administrator_queue",
+    },
+    {
+      key: { status: 1, updatedAt: -1 },
+      name: "pto_requests_administrator_history",
+    },
   ],
 };
 

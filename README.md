@@ -104,10 +104,8 @@ cd web
 pnpm bootstrap:pto-model
 ```
 
-Optionally set `PTO_SUPERVISOR_APPROVER_EMAIL` in `.env.local` to the email of
-Yerlin Marquez's active platform account before running the command. Otherwise,
-an administrator can select that stable account later under **Solicitudes de
-ausencia → Configuración de ausencias**.
+Any active administrator can approve or deny a pending PTO request, except
+their own. Collaborator requests also route to their assigned supervisor.
 
 New collaborators receive an opening PTO balance during creation. For existing
 collaborators, open their administration detail, select **Saldo de ausencias**,

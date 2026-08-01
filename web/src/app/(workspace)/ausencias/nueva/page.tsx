@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
@@ -10,6 +11,7 @@ export const metadata: Metadata = { title: "Nueva solicitud de ausencia" };
 
 export default async function NewPtoRequestPage() {
   const dashboard = await getPtoDashboard();
+  if (!dashboard.canRequest) notFound();
   return (
     <Container>
       <main className={styles.page} id="main-content">

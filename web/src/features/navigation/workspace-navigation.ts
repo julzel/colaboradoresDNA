@@ -21,9 +21,20 @@ const employeeNavigationItem: NavigationItem = {
   label: "Colaboradores",
 };
 
+const ptoAdministrationNavigationItem: NavigationItem = {
+  href: "/admin/ausencias",
+  icon: ClipboardClock,
+  label: "Gestionar ausencias",
+};
+
 export function getWorkspaceNavigation(role: PlatformRole): readonly NavigationItem[] {
   return role === "administrator"
-    ? [...baseNavigationItems, administratorNavigationItem, employeeNavigationItem]
+    ? [
+        ...baseNavigationItems,
+        administratorNavigationItem,
+        employeeNavigationItem,
+        ptoAdministrationNavigationItem,
+      ]
     : baseNavigationItems;
 }
 
@@ -63,6 +74,14 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
       { href: "/", label: "Inicio" },
       { href: "/admin", label: "Administración" },
       { label: "Cuentas y acceso" },
+    ] as const;
+  }
+
+  if (pathname.startsWith("/admin/ausencias")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Solicitudes de ausencia" },
     ] as const;
   }
 

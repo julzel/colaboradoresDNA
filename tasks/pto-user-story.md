@@ -58,8 +58,9 @@ The application provides a Spanish, mobile-first `Solicitudes de ausencia`
 area in which:
 
 - Every active employee can maintain drafts and submit their own requests.
-- The approver is resolved and snapshotted when a draft is submitted.
-- Only the assigned, authorized approver can approve or deny a pending request.
+- Collaborator requests snapshot their assigned supervisor when submitted.
+- Any active administrator can approve or deny any pending request except their
+  own; an assigned supervisor can act on requests routed to them.
 - Opening balances, manual adjustments, and approved-request effects form one
   auditable balance ledger.
 - Half-day values are exact and never depend on floating-point arithmetic.
@@ -127,47 +128,26 @@ auditability. Do not reconstruct the normal page balance by summing the entire
 ledger on every request, and do not permit direct updates to the current value
 without a corresponding ledger entry.
 
-### Approver snapshot
+### Approver assignment and administrator pool
 
-`assignedApproverPlatformUserId` is `null` while a request is a draft and is
-resolved when the request is submitted. It remains a historical snapshot even
-if the requester's assignment or the approver's role later changes. Pending
-requests must never silently reroute.
+`assignedApproverPlatformUserId` is resolved for collaborator requests when
+they are submitted. It remains a historical snapshot even if the requester's
+assignment or the supervisor's role later changes. Pending requests never
+silently reroute.
+
+Supervisor and administrator requests enter the shared administrator approval
+pool and keep `assignedApproverPlatformUserId` as `null`. Any active
+administrator may decide any pending request except their own. Active
+administrators may also decide collaborator requests as an authorized override.
 
 If a snapshotted approver becomes inactive before deciding, an administrator
 must use an explicit audited reassignment operation. Reassignment must exclude
 the requester and include only an approver eligible under the requester's role
 rule.
 
-### Stable configuration for Yerlin Marquez
-
-Do not route by display-name comparison. Names are mutable and not unique.
-Store Yerlin Marquez's stable `platformUserId` in a PTO configuration record,
-for example:
-
-```ts
-type PtoSettingsDocument = {
-  _id: "global";
-  supervisorApproverPlatformUserId: ObjectId;
-  updatedAt: Date;
-  updatedByPlatformUserId: ObjectId;
-};
-```
-
-The bootstrap or migration process must resolve and validate this binding once.
-Supervisor submission must fail with a safe configuration message if the
-configured user is missing, inactive, or is the requester. Yerlin's platform
-role must not be inferred from her name; the stable configuration assignment is
-the authorization scope for supervisor requests.
-
-### Administrator request routing
-
-The requirement says an administrator request routes to another active
-administrator but does not define automatic selection. For the MVP, the
-requesting administrator should select an approver from a server-provided list
-of active administrators that excludes themselves. This avoids inventing a
-round-robin or seniority policy. Collaborators and supervisors do not select
-their approver.
+No named individual receives special routing and requesters do not select an
+administrator. This avoids hard-coded people, mutable-name matching, and an
+unnecessary single point of failure.
 
 ### Approved requests are terminal
 
@@ -341,17 +321,17 @@ configuration error while the draft remains saved.
 
 ### Supervisor requester
 
-1. Read `pto_settings.supervisorApproverPlatformUserId`.
-2. Require the configured Yerlin Marquez account to be active and different
-   from the requester.
-3. Snapshot that configured platform user as the approver.
+1. Submit the request to the shared administrator pool.
+2. Keep the assigned approver empty until an administrator records a decision.
+3. Exclude the requester from the administrator approval queue.
 
 ### Administrator requester
 
-1. Load active administrator options excluding the requester.
-2. Require the requester to select one on submission.
-3. Validate the selection again on the server.
-4. Snapshot the selected administrator as the approver.
+1. Submit the request to the shared administrator pool.
+2. Keep the assigned approver empty until another administrator records a
+   decision.
+3. Exclude the requester from the administrator approval queue and enforce the
+   same self-approval restriction in the transaction.
 
 If no eligible approver exists, submission is blocked; draft creation and
 editing remain available.
@@ -448,8 +428,7 @@ type PtoRequestDocument = {
 ```
 
 The requester IDs, status, approver, balance effects, and history are
-server-owned fields. Client forms may submit only editable draft fields and,
-for administrator requesters, an eligible approver choice.
+server-owned fields. Client forms may submit only editable draft fields.
 
 ### `pto_audit`
 
@@ -474,13 +453,6 @@ notes, reasons, employee names, email addresses, or balance values. The balance
 ledger is authoritative for actual accounting values and required adjustment
 reasons.
 
-### `pto_settings`
-
-The singleton configuration binds supervisor requests to Yerlin Marquez by
-stable platform user ID. Updating this setting is an administrator-only,
-audited operation. A configuration UI is optional for the MVP; a reviewed
-bootstrap command is acceptable.
-
 ## Required indexes
 
 At minimum:
@@ -498,6 +470,8 @@ pto_requests
   { requesterEmployeeId: 1, createdAt: -1 }
   { requesterEmployeeId: 1, status: 1, startDate: 1, endDate: 1 }
   { assignedApproverPlatformUserId: 1, status: 1, submittedAt: 1 }
+  { status: 1, submittedAt: 1, requesterPlatformUserId: 1 }
+  { status: 1, updatedAt: -1 }
   { status: 1, startDate: 1, endDate: 1 }
 
 pto_audit
@@ -506,8 +480,8 @@ pto_audit
   { actorPlatformUserId: 1, createdAt: -1 }
 ```
 
-Add these to an idempotent `bootstrap-pto-model.mjs` script. Index creation and
-settings migration must be safe to rerun.
+Add these to an idempotent `bootstrap-pto-model.mjs` script. Index creation must
+be safe to rerun.
 
 ## Transaction and concurrency rules
 
@@ -544,8 +518,8 @@ An adjustment transaction must:
 Approval must run in one MongoDB transaction:
 
 1. Re-read the request and conditionally require `pending` status.
-2. Verify the actor is the snapshotted approver, is active, remains eligible,
-   and is not the requester.
+2. Verify the actor is either the active snapshotted supervisor or an active
+   administrator, and is not the requester.
 3. Recompute the confirmed category balance effect.
 4. If balance applies, lock or conditionally update the employee balance,
    allowing the result to be negative.
@@ -724,12 +698,12 @@ consumer without creating an unused schedule UI in this delivery.
 1. Submitting a valid draft resolves an eligible approver according to the
    requester's current platform role.
 2. Collaborator requests route only to their effective assigned supervisor.
-3. Supervisor requests route to the configured Yerlin Marquez platform user.
-4. Administrator requests route to another selected active administrator.
-5. No requester can be assigned as their own approver.
-6. Missing assignment, missing opening balance, missing/inactive configured
-   approver, and no eligible administrator are configuration blockers with safe
-   Spanish messages; the draft remains intact.
+3. Supervisor requests enter the shared administrator approval pool.
+4. Administrator requests enter the same pool and are hidden from their own
+   approval queue.
+5. No requester can approve their own request.
+6. Missing assignment and missing opening balance are configuration blockers
+   with safe Spanish messages; the draft remains intact.
 7. Successful submission snapshots the approver, records actor and timestamp,
    and changes exactly once to `pending`.
 
@@ -744,9 +718,9 @@ consumer without creating an unused schedule UI in this delivery.
 
 ### 7. Approval
 
-1. Only the active snapshotted approver may approve a pending request.
-2. Administrators cannot approve unrelated requests merely because they are
-   administrators.
+1. The active snapshotted supervisor or any active administrator may approve a
+   pending request.
+2. Administrators cannot approve their own requests.
 3. Approval accepts an optional decision note.
 4. The confirmed category rule determines whether a balance movement applies.
 5. When applicable, approval records delta, before, and after on both the
@@ -758,7 +732,8 @@ consumer without creating an unused schedule UI in this delivery.
 
 ### 8. Denial
 
-1. Only the active snapshotted approver may deny a pending request.
+1. The active snapshotted supervisor or any active administrator may deny a
+   pending request, except their own.
 2. Denial accepts an optional decision note.
 3. Denial records actor, timestamp, status history, and audit.
 4. Denial does not change the balance or create a balance ledger movement.
@@ -786,12 +761,16 @@ consumer without creating an unused schedule UI in this delivery.
 ### 11. Lists and detail
 
 1. `Mis solicitudes` shows drafts and complete status history newest first.
-2. `Por aprobar` shows only pending requests assigned to the current user.
-3. Detail returns collaborator and decision notes only to the requester,
+2. `Por aprobar` shows assigned pending requests for supervisors and all
+   pending requests except the viewer's own for administrators.
+3. The administrator management view lists organization-wide submitted
+   requests, supports status filtering, prioritizes pending work, and never
+   exposes private drafts.
+4. Detail returns collaborator and decision notes only to the requester,
    assigned approver, and administrators.
-4. Empty states distinguish no personal requests from no pending approvals.
-5. Status uses Spanish text and never relies on color alone.
-6. Internal IDs and unrelated employee data are absent from client projections.
+5. Empty states distinguish no personal requests from no pending approvals.
+6. Status uses Spanish text and never relies on color alone.
+7. Internal IDs and unrelated employee data are absent from client projections.
 
 ### 12. Calendar privacy
 
@@ -931,8 +910,8 @@ Components never import repositories.
 
 - Define units, categories, statuses, transition matrix, input schemas, and
   safe Spanish domain errors.
-- Add balances, ledger, requests, settings, audit collections, and indexes.
-- Add the idempotent bootstrap script and settings validation.
+- Add balances, ledger, requests, audit collections, and indexes.
+- Add the idempotent bootstrap script.
 - Unit test all half-day conversion and state transitions.
 
 ### Slice 2: Opening balances and adjustments
@@ -949,7 +928,7 @@ Components never import repositories.
 - Add create/edit draft, server preflight warnings, cancellation, and guarded
   forms.
 - Implement role-based approver resolution and snapshotting.
-- Test missing configuration, self-routing, overlaps, and warning confirmation.
+- Test missing assignments, self-approval, overlaps, and warning confirmation.
 
 ### Slice 4: Approver queue and decisions
 
@@ -1000,9 +979,9 @@ Components never import repositories.
 ### Authorization
 
 - Each role reading own requests.
-- Supervisor and administrator assigned queues.
-- Unassigned approver denial.
-- Administrator read access without approval override.
+- Supervisor assigned queues and the shared administrator queue.
+- Unassigned pool-request approval by an administrator.
+- Administrator approval override with self-approval denial.
 - Direct mutation attempts against another request.
 - Deactivated users and approvers.
 
@@ -1020,8 +999,8 @@ Components never import repositories.
 - Administrator creates employee with opening balance.
 - Existing employee receives an opening balance and adjustment.
 - Collaborator draft → warning → pending → supervisor approval.
-- Supervisor request → configured Yerlin approval.
-- Administrator request → another administrator approval.
+- Supervisor request → shared administrator pool approval.
+- Administrator request → another administrator in the shared pool approval.
 - Draft and pending cancellation.
 - Denial without balance effect.
 - Approved absence appears only on authorized calendars.

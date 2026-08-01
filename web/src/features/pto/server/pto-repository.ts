@@ -22,13 +22,6 @@ import { recordPtoAudit } from "@/features/pto/server/pto-audit-repository";
 import { ensurePtoIndexes } from "@/features/pto/server/pto-indexes";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
 
-export type PtoSettingsDocument = {
-  _id: "global";
-  supervisorApproverPlatformUserId: ObjectId;
-  updatedAt: Date;
-  updatedByPlatformUserId: ObjectId;
-};
-
 export type PtoRequest = Omit<
   PtoRequestDocument,
   | "_id"
@@ -57,7 +50,6 @@ async function getPtoCollections() {
     ledger: database.collection<PtoBalanceLedgerDocument>("pto_balance_ledger"),
     platformUsers: database.collection<PlatformUserDocument>("platform_users"),
     requests: database.collection<PtoRequestDocument>("pto_requests"),
-    settings: database.collection<PtoSettingsDocument>("pto_settings"),
   };
 }
 
@@ -322,7 +314,7 @@ export async function updatePtoDraft(input: {
 
 export async function submitPtoDraft(input: {
   actorPlatformUserId: string;
-  approverPlatformUserId: string;
+  approverPlatformUserId: string | null;
   requestId: string;
 }) {
   objectIdStringSchema.parse(input.requestId);
@@ -349,7 +341,9 @@ export async function submitPtoDraft(input: {
         { _id: existing._id, status: "draft" },
         {
           $set: {
-            assignedApproverPlatformUserId: new ObjectId(input.approverPlatformUserId),
+            assignedApproverPlatformUserId: input.approverPlatformUserId
+              ? new ObjectId(input.approverPlatformUserId)
+              : null,
             status: "pending",
             submittedAt: now,
             updatedAt: now,
@@ -437,6 +431,7 @@ export async function cancelPtoRequest(input: {
 
 export async function decidePtoRequest(input: {
   actorPlatformUserId: string;
+  administratorOverride: boolean;
   decision: "approved" | "denied";
   decisionNote: string | null;
   requestId: string;
@@ -451,7 +446,11 @@ export async function decidePtoRequest(input: {
       const existing = await requests.findOne(
         {
           _id: new ObjectId(decision.requestId),
-          assignedApproverPlatformUserId: new ObjectId(input.actorPlatformUserId),
+          ...(input.administratorOverride
+            ? {}
+            : {
+                assignedApproverPlatformUserId: new ObjectId(input.actorPlatformUserId),
+              }),
           status: "pending",
         },
         { session },
@@ -510,6 +509,11 @@ export async function decidePtoRequest(input: {
         { _id: existing._id, status: "pending" },
         {
           $set: {
+            assignedApproverPlatformUserId:
+              existing.assignedApproverPlatformUserId ??
+              (input.administratorOverride
+                ? new ObjectId(input.actorPlatformUserId)
+                : null),
             balanceAfterUnits,
             balanceBeforeUnits,
             balanceDeltaUnits,
@@ -539,6 +543,9 @@ export async function decidePtoRequest(input: {
           "status",
           "decisionNote",
           "decidedAt",
+          ...(existing.assignedApproverPlatformUserId === null
+            ? ["assignedApproverPlatformUserId"]
+            : []),
           ...(balanceDeltaUnits === null ? [] : ["balanceDeltaUnits"]),
         ],
         session,
@@ -635,13 +642,28 @@ export async function listPtoRequestsForRequester(employeeId: string) {
   return documents.map(toPtoRequest);
 }
 
-export async function listPendingPtoApprovals(platformUserId: string) {
+export async function listPtoRequestsForAdministration() {
+  await ensurePtoIndexes();
+  const { requests } = await getPtoCollections();
+  const documents = await requests
+    .find({ status: { $ne: "draft" } })
+    .sort({ updatedAt: -1 })
+    .toArray();
+  return documents.map(toPtoRequest);
+}
+
+export async function listPendingPtoApprovals(
+  platformUserId: string,
+  includeAdministratorPool = false,
+) {
   objectIdStringSchema.parse(platformUserId);
   await ensurePtoIndexes();
   const { requests } = await getPtoCollections();
   const documents = await requests
     .find({
-      assignedApproverPlatformUserId: new ObjectId(platformUserId),
+      ...(includeAdministratorPool
+        ? { requesterPlatformUserId: { $ne: new ObjectId(platformUserId) } }
+        : { assignedApproverPlatformUserId: new ObjectId(platformUserId) }),
       status: "pending",
     })
     .sort({ submittedAt: 1 })
@@ -689,80 +711,6 @@ export async function getPtoRequestWarnings(request: PtoRequest) {
     projectedBalanceUnits,
     wouldBeNegative: projectedBalanceUnits !== null && projectedBalanceUnits < 0,
   };
-}
-
-export async function getGlobalPtoSettings() {
-  await ensurePtoIndexes();
-  const { settings } = await getPtoCollections();
-  return settings.findOne({ _id: "global" });
-}
-
-export async function setGlobalPtoSettings(input: {
-  actorPlatformUserId: string;
-  supervisorApproverPlatformUserId: string;
-}) {
-  objectIdStringSchema.parse(input.actorPlatformUserId);
-  objectIdStringSchema.parse(input.supervisorApproverPlatformUserId);
-  await ensurePtoIndexes();
-  const { platformUsers, settings } = await getPtoCollections();
-  const approver = await platformUsers.findOne({
-    _id: new ObjectId(input.supervisorApproverPlatformUserId),
-    status: "active",
-  });
-  if (!approver) throw new PtoDomainError("approver_ineligible");
-  const client = await getMongoClient();
-  await client.withSession(async (session) => {
-    await session.withTransaction(async () => {
-      const now = new Date();
-      await settings.updateOne(
-        { _id: "global" },
-        {
-          $set: {
-            supervisorApproverPlatformUserId: approver._id,
-            updatedAt: now,
-            updatedByPlatformUserId: new ObjectId(input.actorPlatformUserId),
-          },
-          $setOnInsert: { _id: "global" },
-        },
-        { session, upsert: true },
-      );
-      await recordPtoAudit({
-        action: "settings_updated",
-        actorPlatformUserId: input.actorPlatformUserId,
-        changedFields: ["supervisorApproverPlatformUserId"],
-        session,
-      });
-    });
-  });
-}
-
-export async function listActivePtoApproverOptions() {
-  const { platformUsers } = await getPtoCollections();
-  const documents = await platformUsers
-    .find({ status: "active" })
-    .sort({ displayName: 1 })
-    .toArray();
-  return documents.map((document) => ({
-    displayName: document.displayName,
-    id: document._id.toHexString(),
-    role: document.role,
-  }));
-}
-
-export async function listActiveAdministratorOptions(excludedPlatformUserId: string) {
-  const { platformUsers } = await getPtoCollections();
-  const documents = await platformUsers
-    .find({
-      _id: { $ne: new ObjectId(excludedPlatformUserId) },
-      role: "administrator",
-      status: "active",
-    })
-    .sort({ displayName: 1 })
-    .toArray();
-  return documents.map((document) => ({
-    displayName: document.displayName,
-    id: document._id.toHexString(),
-  }));
 }
 
 export async function getPtoSupportingCollections() {

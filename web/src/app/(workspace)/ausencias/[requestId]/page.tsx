@@ -136,11 +136,11 @@ export default async function PtoRequestDetailPage({
         {detail.canSubmit && (
           <ElevatedSurface as="section" className={styles.card}>
             <h2>Enviar a aprobación</h2>
-            <p className={styles.muted}>La persona aprobadora se asignará al enviar.</p>
-            <PtoSubmitForm
-              administratorOptions={detail.administratorOptions}
-              requestId={request.id}
-            />
+            <p className={styles.muted}>
+              Colaboradores se envían a su supervisor. Las demás solicitudes quedan
+              disponibles para administración.
+            </p>
+            <PtoSubmitForm requestId={request.id} />
           </ElevatedSurface>
         )}
         {detail.canDecide && (

@@ -24,7 +24,6 @@ import {
   reassignOrphanedPtoApprover,
   submitOwnPtoDraft,
   updateOwnPtoDraft,
-  updatePtoAdministrationSettings,
 } from "@/features/pto/server/pto-service";
 
 function getText(formData: FormData, name: string) {
@@ -50,7 +49,7 @@ function ptoErrorState(error: unknown): PtoActionState {
   if (error instanceof PtoDomainError) {
     const messages: Record<PtoDomainError["code"], string> = {
       approver_ineligible:
-        "No hay una persona aprobadora elegible. Revisá la jefatura o la configuración de ausencias.",
+        "No hay una persona aprobadora elegible. Revisá la jefatura asignada.",
       balance_exists: "Este colaborador ya tiene un saldo de ausencias.",
       balance_missing:
         "No hay un saldo inicial registrado. Administración debe configurarlo primero.",
@@ -114,10 +113,7 @@ export async function submitPtoRequestAction(
         status: "warning",
       };
     }
-    await submitOwnPtoDraft({
-      requestId: parsedId.data,
-      selectedAdministratorId: getText(formData, "administratorApproverId") || null,
-    });
+    await submitOwnPtoDraft({ requestId: parsedId.data });
   } catch (error) {
     return ptoErrorState(error);
   }
@@ -250,22 +246,4 @@ export async function adjustPtoBalanceAction(
   }
   revalidatePath(`/admin/colaboradores/${parsed.data.employeeId}/ausencias`);
   redirect(`/admin/colaboradores/${parsed.data.employeeId}/ausencias`);
-}
-
-export async function updatePtoSettingsAction(
-  _state: PtoActionState,
-  formData: FormData,
-): Promise<PtoActionState> {
-  const approverId = objectIdStringSchema.safeParse(
-    getText(formData, "supervisorApproverPlatformUserId"),
-  );
-  if (!approverId.success) return zodState(approverId.error);
-  try {
-    await updatePtoAdministrationSettings(approverId.data);
-  } catch (error) {
-    return ptoErrorState(error);
-  }
-  revalidatePath("/admin/ausencias");
-  revalidatePath("/ausencias");
-  redirect("/admin/ausencias");
 }

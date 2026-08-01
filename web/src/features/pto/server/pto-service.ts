@@ -25,17 +25,14 @@ import {
   decidePtoRequest,
   findPtoBalance,
   findPtoRequestById,
-  getGlobalPtoSettings,
   getPtoRequestWarnings,
   getPtoSupportingCollections,
-  listActiveAdministratorOptions,
-  listActivePtoApproverOptions,
   listPendingPtoApprovals,
   listPtoBalanceLedger,
+  listPtoRequestsForAdministration,
   listPtoRequestsForRequester,
   reassignPtoRequestApprover,
   submitPtoDraft,
-  setGlobalPtoSettings,
   updatePtoDraft,
   type PtoRequest,
 } from "@/features/pto/server/pto-repository";
@@ -63,7 +60,11 @@ async function toRequestView(request: PtoRequest): Promise<PtoRequestView> {
   const employee = await findEmployeeById(request.requesterEmployeeId);
   return {
     ...request,
-    approverName: await getPlatformUserName(request.assignedApproverPlatformUserId),
+    approverName: request.assignedApproverPlatformUserId
+      ? await getPlatformUserName(request.assignedApproverPlatformUserId)
+      : request.status === "draft"
+        ? null
+        : "Cualquier administrador activo",
     requesterName: employee
       ? formatEmployeePreferredDisplayName(employee)
       : "Colaborador",
@@ -73,11 +74,9 @@ async function toRequestView(request: PtoRequest): Promise<PtoRequestView> {
 async function resolveSubmissionApprover({
   platformUser,
   requesterEmployeeId,
-  selectedAdministratorId,
 }: {
   platformUser: PlatformUser;
   requesterEmployeeId: string;
-  selectedAdministratorId: string | null | undefined;
 }) {
   if (platformUser.role === "collaborator") {
     const assignment = await findEffectiveEmployeeAssignment({
@@ -104,54 +103,58 @@ async function resolveSubmissionApprover({
     return approver.id;
   }
 
-  if (platformUser.role === "supervisor") {
-    const setting = await getGlobalPtoSettings();
-    const configuredId = setting?.supervisorApproverPlatformUserId.toHexString();
-    const approver = configuredId ? await findPlatformUserById(configuredId) : null;
-    if (!approver || approver.status !== "active" || approver.id === platformUser.id) {
-      throw new PtoDomainError("approver_ineligible");
-    }
-    return approver.id;
-  }
-
-  if (!selectedAdministratorId) {
-    throw new PtoDomainError("approver_ineligible");
-  }
-  const approver = await findPlatformUserById(selectedAdministratorId);
-  if (
-    !approver ||
-    approver.status !== "active" ||
-    approver.role !== "administrator" ||
-    approver.id === platformUser.id
-  ) {
-    throw new PtoDomainError("approver_ineligible");
-  }
-  return approver.id;
+  return null;
 }
 
 export async function getPtoDashboard() {
-  const { employee, platformUser } = await requirePtoEmployee();
-  const [balance, ownRequests, pendingApprovals, administratorOptions] =
-    await Promise.all([
-      findPtoBalance(employee.id),
-      listPtoRequestsForRequester(employee.id),
-      listPendingPtoApprovals(platformUser.id),
-      platformUser.role === "administrator"
-        ? listActiveAdministratorOptions(platformUser.id)
-        : Promise.resolve([]),
-    ]);
+  const { platformUser } = await requirePlatformUser();
+  const employee = await findEmployeeByPlatformUserId(platformUser.id);
+  if (
+    (!employee || employee.employmentStatus !== "active") &&
+    platformUser.role !== "administrator"
+  ) {
+    throw new PtoDomainError("employee_missing");
+  }
+  const [balance, ownRequests, pendingApprovals] = await Promise.all([
+    employee ? findPtoBalance(employee.id) : Promise.resolve(null),
+    employee ? listPtoRequestsForRequester(employee.id) : Promise.resolve([]),
+    listPendingPtoApprovals(platformUser.id, platformUser.role === "administrator"),
+  ]);
   return {
-    administratorOptions,
     balanceUnits: balance?.currentBalanceUnits ?? null,
-    employeeName: formatEmployeePreferredDisplayName(employee),
+    canManage: platformUser.role === "administrator",
+    canRequest: employee?.employmentStatus === "active",
+    employeeName: employee
+      ? formatEmployeePreferredDisplayName(employee)
+      : platformUser.displayName,
     ownRequests: await Promise.all(ownRequests.map(toRequestView)),
     pendingApprovals: await Promise.all(pendingApprovals.map(toRequestView)),
-    role: platformUser.role,
+  };
+}
+
+export async function getPtoAdministrationDashboard() {
+  await requirePlatformUser({ roles: ["administrator"] });
+  const requests = await listPtoRequestsForAdministration();
+  const views = await Promise.all(requests.map(toRequestView));
+  views.sort(
+    (first, second) =>
+      Number(second.status === "pending") - Number(first.status === "pending") ||
+      second.updatedAt.getTime() - first.updatedAt.getTime(),
+  );
+  return {
+    counts: {
+      all: views.length,
+      approved: views.filter((request) => request.status === "approved").length,
+      cancelled: views.filter((request) => request.status === "cancelled").length,
+      denied: views.filter((request) => request.status === "denied").length,
+      pending: views.filter((request) => request.status === "pending").length,
+    },
+    requests: views,
   };
 }
 
 export async function getPtoRequestDetail(requestId: string) {
-  const { employee, platformUser } = await requirePtoEmployee();
+  const { platformUser } = await requirePlatformUser();
   const request = await findPtoRequestById(requestId);
   if (!request) return null;
   const isRequester = request.requesterPlatformUserId === platformUser.id;
@@ -165,21 +168,19 @@ export async function getPtoRequestDetail(requestId: string) {
   const canReassign =
     platformUser.role === "administrator" &&
     request.status === "pending" &&
+    request.assignedApproverPlatformUserId !== null &&
     currentApprover?.status !== "active";
   let reassignmentOptions: Array<{ displayName: string; id: string }> = [];
   if (canReassign) {
     const requester = await findPlatformUserById(request.requesterPlatformUserId);
     if (requester) {
-      if (requester.role === "administrator") {
-        reassignmentOptions = await listActiveAdministratorOptions(requester.id);
-      } else {
+      if (requester.role === "collaborator") {
         try {
           const eligibleId = await resolveSubmissionApprover({
             platformUser: requester,
             requesterEmployeeId: request.requesterEmployeeId,
-            selectedAdministratorId: null,
           });
-          const eligible = await findPlatformUserById(eligibleId);
+          const eligible = eligibleId ? await findPlatformUserById(eligibleId) : null;
           if (eligible) {
             reassignmentOptions = [
               { displayName: eligible.displayName, id: eligible.id },
@@ -191,26 +192,22 @@ export async function getPtoRequestDetail(requestId: string) {
       }
     }
   }
-  const [warnings, administratorOptions] = await Promise.all([
-    request.status === "draft" || request.status === "pending"
-      ? getPtoRequestWarnings(request)
-      : Promise.resolve({
-          hasOverlap: false,
-          projectedBalanceUnits: null,
-          wouldBeNegative: false,
-        }),
-    isRequester && platformUser.role === "administrator" && request.status === "draft"
-      ? listActiveAdministratorOptions(platformUser.id)
-      : Promise.resolve([]),
-  ]);
+  const warnings = await (request.status === "draft" || request.status === "pending"
+    ? getPtoRequestWarnings(request)
+    : Promise.resolve({
+        hasOverlap: false,
+        projectedBalanceUnits: null,
+        wouldBeNegative: false,
+      }));
   return {
-    administratorOptions,
     canCancel: isRequester && ["draft", "pending"].includes(request.status),
-    canDecide: isApprover && request.status === "pending",
+    canDecide:
+      request.status === "pending" &&
+      !isRequester &&
+      (isApprover || platformUser.role === "administrator"),
     canEdit: isRequester && request.status === "draft",
     canReassign,
     canSubmit: isRequester && request.status === "draft",
-    currentEmployeeId: employee.id,
     history: await Promise.all(
       request.statusHistory.map(async (entry) => ({
         actorName: (await getPlatformUserName(entry.actorPlatformUserId)) ?? "Usuario",
@@ -243,13 +240,7 @@ export async function updateOwnPtoDraft(requestId: string, request: PtoDraftInpu
   });
 }
 
-export async function submitOwnPtoDraft({
-  requestId,
-  selectedAdministratorId,
-}: {
-  requestId: string;
-  selectedAdministratorId?: string | null;
-}) {
+export async function submitOwnPtoDraft({ requestId }: { requestId: string }) {
   const { employee, platformUser } = await requirePtoEmployee();
   if (!(await findPtoBalance(employee.id))) {
     throw new PtoDomainError("balance_missing");
@@ -257,7 +248,6 @@ export async function submitOwnPtoDraft({
   const approverPlatformUserId = await resolveSubmissionApprover({
     platformUser,
     requesterEmployeeId: employee.id,
-    selectedAdministratorId,
   });
   return submitPtoDraft({
     actorPlatformUserId: platformUser.id,
@@ -276,8 +266,12 @@ export async function decideAssignedPtoRequest(input: {
   decisionNote: string | null;
   requestId: string;
 }) {
-  const { platformUser } = await requirePtoEmployee();
-  return decidePtoRequest({ actorPlatformUserId: platformUser.id, ...input });
+  const { platformUser } = await requirePlatformUser();
+  return decidePtoRequest({
+    actorPlatformUserId: platformUser.id,
+    administratorOverride: platformUser.role === "administrator",
+    ...input,
+  });
 }
 
 export async function reassignOrphanedPtoApprover(input: {
@@ -294,10 +288,8 @@ export async function reassignOrphanedPtoApprover(input: {
   const eligibleId = await resolveSubmissionApprover({
     platformUser: requester,
     requesterEmployeeId: detail.requesterEmployeeId,
-    selectedAdministratorId:
-      requester.role === "administrator" ? input.approverPlatformUserId : null,
   });
-  if (eligibleId !== input.approverPlatformUserId) {
+  if (!eligibleId || eligibleId !== input.approverPlatformUserId) {
     throw new PtoDomainError("approver_ineligible");
   }
   return reassignPtoRequestApprover({
@@ -358,31 +350,6 @@ export async function adjustEmployeePtoBalance(input: {
 }) {
   const { platformUser } = await requirePlatformUser({ roles: ["administrator"] });
   return adjustPtoBalance({ actorPlatformUserId: platformUser.id, ...input });
-}
-
-export async function getPtoAdministrationSettings() {
-  await requirePlatformUser({ roles: ["administrator"] });
-  const [setting, options] = await Promise.all([
-    getGlobalPtoSettings(),
-    listActivePtoApproverOptions(),
-  ]);
-  const selectedId = setting?.supervisorApproverPlatformUserId.toHexString() ?? null;
-  return {
-    options,
-    selectedId,
-    selectedName:
-      options.find((option) => option.id === selectedId)?.displayName ?? null,
-  };
-}
-
-export async function updatePtoAdministrationSettings(
-  supervisorApproverPlatformUserId: string,
-) {
-  const { platformUser } = await requirePlatformUser({ roles: ["administrator"] });
-  return setGlobalPtoSettings({
-    actorPlatformUserId: platformUser.id,
-    supervisorApproverPlatformUserId,
-  });
 }
 
 export async function listVisibleApprovedPtoForCalendar({

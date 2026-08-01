@@ -14,8 +14,7 @@ export type PtoAuditAction =
   | "request_denied"
   | "request_approver_reassigned"
   | "request_submitted"
-  | "request_updated"
-  | "settings_updated";
+  | "request_updated";
 
 type PtoAuditDocument = {
   _id: ObjectId;

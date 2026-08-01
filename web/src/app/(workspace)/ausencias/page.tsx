@@ -67,16 +67,27 @@ export default async function PtoDashboardPage() {
             <h1>Solicitudes de ausencia</h1>
             <p>Consultá tu saldo y administrá tus solicitudes.</p>
           </div>
-          <ButtonLink href="/ausencias/nueva">Nueva solicitud</ButtonLink>
+          <div className={styles.actions}>
+            {dashboard.canRequest && (
+              <ButtonLink href="/ausencias/nueva">Nueva solicitud</ButtonLink>
+            )}
+            {dashboard.canManage && (
+              <ButtonLink href="/admin/ausencias" variant="secondary">
+                Administrar solicitudes
+              </ButtonLink>
+            )}
+          </div>
         </header>
 
         <div className={styles.summaryGrid}>
           <ElevatedSurface className={styles.card}>
             <p className="eyebrow">Saldo disponible</p>
             <p className={styles.metric}>
-              {dashboard.balanceUnits === null
-                ? "Sin configurar"
-                : `${formatPtoDays(dashboard.balanceUnits)} días`}
+              {!dashboard.canRequest
+                ? "No aplica"
+                : dashboard.balanceUnits === null
+                  ? "Sin configurar"
+                  : `${formatPtoDays(dashboard.balanceUnits)} días`}
             </p>
           </ElevatedSurface>
           <ElevatedSurface className={styles.card}>
@@ -98,9 +109,11 @@ export default async function PtoDashboardPage() {
           <ElevatedSurface as="section" className={styles.card}>
             <div className={styles.sectionHeader}>
               <h2>Mis solicitudes</h2>
-              <ButtonLink href="/ausencias/nueva" size="small" variant="secondary">
-                Crear
-              </ButtonLink>
+              {dashboard.canRequest && (
+                <ButtonLink href="/ausencias/nueva" size="small" variant="secondary">
+                  Crear
+                </ButtonLink>
+              )}
             </div>
             <RequestList
               empty="Todavía no tenés solicitudes."
@@ -115,14 +128,6 @@ export default async function PtoDashboardPage() {
             />
           </ElevatedSurface>
         </div>
-
-        {dashboard.role === "administrator" && (
-          <div className={styles.actions}>
-            <ButtonLink href="/admin/ausencias" variant="secondary">
-              Configuración de ausencias
-            </ButtonLink>
-          </div>
-        )}
       </main>
     </Container>
   );
