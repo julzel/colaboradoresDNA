@@ -101,6 +101,30 @@ describe("PTO submission routing", () => {
     });
   });
 
+  it("allows an active administrator to be the collaborator's assigned manager", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+    mocks.findEffectiveEmployeeAssignment.mockResolvedValue({ managerEmployeeId });
+    mocks.findEmployeeById.mockResolvedValue({
+      employmentStatus: "active",
+      platformUserId: approverId,
+    });
+    mocks.findPlatformUserById.mockResolvedValue({
+      id: approverId,
+      role: "administrator",
+      status: "active",
+    });
+
+    await submitOwnPtoDraft({ requestId });
+
+    expect(mocks.submitPtoDraft).toHaveBeenCalledWith({
+      actorPlatformUserId: actorId,
+      approverPlatformUserId: approverId,
+      requestId,
+    });
+  });
+
   it("routes a supervisor to the shared administrator pool", async () => {
     mocks.requirePlatformUser.mockResolvedValue({
       platformUser: { id: actorId, role: "supervisor" },
