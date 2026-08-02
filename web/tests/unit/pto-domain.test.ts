@@ -50,6 +50,25 @@ describe("PTO domain", () => {
     ).toBe(false);
   });
 
+  it("allows an omitted or blank collaborator note", () => {
+    const request = {
+      category: "vacation",
+      durationUnits: 2,
+      endDate: "2026-08-02",
+      startDate: "2026-08-01",
+    };
+
+    expect(ptoDraftInputSchema.parse(request).collaboratorNote).toBeNull();
+    expect(
+      ptoDraftInputSchema.parse({ ...request, collaboratorNote: "   " })
+        .collaboratorNote,
+    ).toBeNull();
+    expect(
+      ptoDraftInputSchema.parse({ ...request, collaboratorNote: null })
+        .collaboratorNote,
+    ).toBeNull();
+  });
+
   it("detects inclusive overlaps", () => {
     expect(
       ptoRangesOverlap(

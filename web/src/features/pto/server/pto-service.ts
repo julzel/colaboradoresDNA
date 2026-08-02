@@ -95,7 +95,7 @@ async function resolveSubmissionApprover({
       manager.employmentStatus !== "active" ||
       !approver ||
       approver.status !== "active" ||
-      approver.role !== "supervisor" ||
+      !["administrator", "supervisor"].includes(approver.role) ||
       approver.id === platformUser.id
     ) {
       throw new PtoDomainError("approver_ineligible");

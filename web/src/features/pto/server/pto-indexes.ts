@@ -85,7 +85,10 @@ export async function ensurePtoIndexes() {
           return indexes.map((index) => collection.createIndex(index.key, index));
         }),
       );
-    })();
+    })().catch((error: unknown) => {
+      globalThis.ptoIndexesPromise = undefined;
+      throw error;
+    });
   }
 
   return globalThis.ptoIndexesPromise;

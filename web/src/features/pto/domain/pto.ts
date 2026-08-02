@@ -70,7 +70,8 @@ export const ptoDraftInputSchema = z
     category: ptoCategorySchema,
     collaboratorNote: z
       .string()
-      .transform((value) => (value.trim() ? normalizeHumanText(value) : null))
+      .nullish()
+      .transform((value) => (value?.trim() ? normalizeHumanText(value) : null))
       .pipe(z.string().max(1000).nullable()),
     durationUnits: ptoDurationUnitsSchema,
     endDate: isoCalendarDateSchema,
