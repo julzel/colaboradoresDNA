@@ -12,9 +12,15 @@ type WorkspaceShellProps = {
   children: ReactNode;
   displayName: string;
   role: PlatformRole;
+  unreadNotificationCount: number;
 };
 
-export function WorkspaceShell({ children, displayName, role }: WorkspaceShellProps) {
+export function WorkspaceShell({
+  children,
+  displayName,
+  role,
+  unreadNotificationCount,
+}: WorkspaceShellProps) {
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -28,11 +34,18 @@ export function WorkspaceShell({ children, displayName, role }: WorkspaceShellPr
         </Link>
 
         <p className={styles.navLabel}>Navegación</p>
-        <WorkspaceNavigation role={role} />
+        <WorkspaceNavigation
+          role={role}
+          unreadNotificationCount={unreadNotificationCount}
+        />
       </aside>
 
       <div className={styles.mainColumn}>
-        <WorkspaceHeader displayName={displayName} role={role} />
+        <WorkspaceHeader
+          displayName={displayName}
+          role={role}
+          unreadNotificationCount={unreadNotificationCount}
+        />
         <main className={styles.content} id="main-content">
           {children}
         </main>

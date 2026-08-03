@@ -219,6 +219,9 @@ async function validateTargets(
   }
 
   if (input.inviteePlatformUserIds.length > 0) {
+    if (input.inviteePlatformUserIds.includes(actor.platformUserId)) {
+      throw new CalendarDomainError("invitee_not_found");
+    }
     const ids = input.inviteePlatformUserIds.map((id) => new ObjectId(id));
     const [employeeCount, userCount] = await Promise.all([
       employees.countDocuments({
@@ -227,7 +230,7 @@ async function validateTargets(
       }),
       platformUsers.countDocuments({
         _id: { $in: ids },
-        status: "active",
+        status: { $in: ["active", "invited"] },
       }),
     ]);
     if (employeeCount !== ids.length || userCount !== ids.length) {
@@ -464,8 +467,11 @@ export async function listCalendarEventTargetOptions(
   const people = await platformUsers
     .find(
       {
-        _id: { $in: employeeProfiles.map((employee) => employee.platformUserId) },
-        status: "active",
+        _id: {
+          $in: employeeProfiles.map((employee) => employee.platformUserId),
+          $ne: new ObjectId(actor.platformUserId),
+        },
+        status: { $in: ["active", "invited"] },
       },
       { projection: { displayName: 1 } },
     )

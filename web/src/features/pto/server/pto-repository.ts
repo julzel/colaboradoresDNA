@@ -664,6 +664,35 @@ export async function listPtoRequestsForRequester(employeeId: string) {
   return documents.map(toPtoRequest);
 }
 
+export async function listUpcomingApprovedProxyPtoRequests({
+  limit = 5,
+  platformUserId,
+  today,
+}: {
+  limit?: number;
+  platformUserId: string;
+  today: string;
+}) {
+  objectIdStringSchema.parse(platformUserId);
+  await ensurePtoIndexes();
+  const { requests } = await getPtoCollections();
+  const requesterPlatformUserId = new ObjectId(platformUserId);
+  const documents = await requests
+    .find({
+      createdByPlatformUserId: {
+        $exists: true,
+        $ne: requesterPlatformUserId,
+      },
+      endDate: { $gte: today },
+      requesterPlatformUserId,
+      status: "approved",
+    })
+    .sort({ startDate: 1, createdAt: 1 })
+    .limit(limit)
+    .toArray();
+  return documents.map(toPtoRequest);
+}
+
 export async function listPtoRequestsForAdministration() {
   await ensurePtoIndexes();
   const { requests } = await getPtoCollections();

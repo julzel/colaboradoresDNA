@@ -31,6 +31,7 @@ import {
   listPtoBalanceLedger,
   listPtoRequestsForAdministration,
   listPtoRequestsForRequester,
+  listUpcomingApprovedProxyPtoRequests,
   reassignPtoRequestApprover,
   submitPtoDraft,
   updatePtoDraft,
@@ -484,4 +485,15 @@ export async function listVisibleApprovedPtoForCalendar({
       };
     }),
   );
+}
+
+export async function listUpcomingProxyPtoNotifications(
+  platformUserId: string,
+  limit = 5,
+) {
+  return listUpcomingApprovedProxyPtoRequests({
+    limit,
+    platformUserId,
+    today: getTodayInCostaRica(),
+  });
 }

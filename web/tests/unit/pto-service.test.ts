@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   decidePtoRequest: vi.fn(),
   listPendingPtoApprovals: vi.fn(),
   listPtoRequestsForAdministration: vi.fn(),
+  listUpcomingApprovedProxyPtoRequests: vi.fn(),
   requirePlatformUser: vi.fn(),
   submitPtoDraft: vi.fn(),
 }));
@@ -58,6 +59,7 @@ vi.mock("@/features/pto/server/pto-repository", () => ({
   listPtoBalanceLedger: vi.fn(),
   listPtoRequestsForAdministration: mocks.listPtoRequestsForAdministration,
   listPtoRequestsForRequester: vi.fn(),
+  listUpcomingApprovedProxyPtoRequests: mocks.listUpcomingApprovedProxyPtoRequests,
   reassignPtoRequestApprover: vi.fn(),
   submitPtoDraft: mocks.submitPtoDraft,
   updatePtoDraft: vi.fn(),

@@ -9,7 +9,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html lang="es-CR">
+    <html data-scroll-behavior="smooth" lang="es-CR">
       <body>
         <main className="error-page">
           <p className="eyebrow">Ocurrió un error</p>

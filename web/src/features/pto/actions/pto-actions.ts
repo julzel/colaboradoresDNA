@@ -201,6 +201,7 @@ export async function decidePtoRequestAction(
   revalidatePath("/admin/ausencias");
   revalidatePath(`/ausencias/${parsed.data.requestId}`);
   revalidatePath("/calendario");
+  revalidatePath("/", "layout");
   redirect(`/ausencias/${parsed.data.requestId}`);
 }
 

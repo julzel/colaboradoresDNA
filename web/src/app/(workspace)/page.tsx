@@ -1,15 +1,17 @@
 import { Bell, CalendarDays, Clock3 } from "lucide-react";
-import Link from "next/link";
 
-import { ButtonLink } from "@/components/ui/button/button";
+import { Button, ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
-import { calendarEventTypeLabels } from "@/features/calendar/domain/calendar-event";
 import {
   formatCalendarDate,
   formatCalendarTime,
 } from "@/features/calendar/domain/calendar-utils";
 import { getCalendarDashboardNotifications } from "@/features/calendar/server/calendar-service";
+import {
+  openDashboardNotificationAction,
+  readAllDashboardNotificationsAction,
+} from "@/features/dashboard/actions/dashboard-notification-actions";
 import styles from "@/features/dashboard/components/dashboard.module.css";
 
 function eventSchedule(notification: {
@@ -54,33 +56,55 @@ export default async function HomePage() {
           <div className={styles.sectionHeader}>
             <div>
               <p className="eyebrow">Notificaciones</p>
-              <h2>Eventos a los que te agregaron</h2>
+              <h2>Próximas notificaciones</h2>
             </div>
-            <Bell aria-hidden="true" size={24} />
+            <div className={styles.notificationHeaderActions}>
+              {dashboard.unreadCount > 0 && (
+                <form action={readAllDashboardNotificationsAction}>
+                  <Button size="small" type="submit" variant="quiet">
+                    Marcar todas como leídas
+                  </Button>
+                </form>
+              )}
+              <Bell aria-hidden="true" size={24} />
+            </div>
           </div>
 
           {dashboard.notifications.length === 0 ? (
-            <p className={styles.empty}>No tenés invitaciones próximas.</p>
+            <p className={styles.empty}>No tenés notificaciones próximas.</p>
           ) : (
             <ul className={styles.notificationList}>
               {dashboard.notifications.map((notification) => (
-                <li key={notification.id}>
-                  <Link
-                    className={styles.notificationLink}
-                    href={`/calendario/eventos/${notification.id}`}
-                  >
-                    <span
-                      className={styles.eventType}
-                      data-event-type={notification.eventType}
+                <li key={`${notification.kind}:${notification.id}`}>
+                  <form action={openDashboardNotificationAction}>
+                    <input
+                      name="notificationKey"
+                      type="hidden"
+                      value={notification.key}
+                    />
+                    <button
+                      className={styles.notificationLink}
+                      data-unread={notification.isUnread}
+                      type="submit"
                     >
-                      {calendarEventTypeLabels[notification.eventType]}
-                    </span>
-                    <strong>{notification.title}</strong>
-                    <span className={styles.schedule}>
-                      <Clock3 aria-hidden="true" size={15} />
-                      {eventSchedule(notification)}
-                    </span>
-                  </Link>
+                      <span className={styles.notificationMeta}>
+                        <span
+                          className={styles.eventType}
+                          data-event-type={notification.eventType ?? undefined}
+                        >
+                          {notification.label}
+                        </span>
+                        {notification.isUnread && (
+                          <span className={styles.unreadLabel}>Nueva</span>
+                        )}
+                      </span>
+                      <strong>{notification.title}</strong>
+                      <span className={styles.schedule}>
+                        <Clock3 aria-hidden="true" size={15} />
+                        {eventSchedule(notification)}
+                      </span>
+                    </button>
+                  </form>
                 </li>
               ))}
             </ul>

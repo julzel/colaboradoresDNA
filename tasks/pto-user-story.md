@@ -2,9 +2,8 @@
 
 ## Status
 
-**Status:** Ready for implementation after the balance-impact decision in
-[`Product decisions required before approval logic`](#product-decisions-required-before-approval-logic)
-is confirmed.
+**Status:** Implemented for the MVP. The documented non-goals remain out of
+scope; future policy changes should extend the existing domain and audit model.
 
 **Priority:** MVP.
 
@@ -52,6 +51,10 @@ As an administrator, I want to assign opening balances and record reasoned
 adjustments so that every employee starts from a known balance and every change
 can be reconstructed from an immutable ledger.
 
+As an administrator, I want to create and manage a request on behalf of an
+employee so that an absence can be recorded through the same audited workflow
+when the employee cannot create it themselves.
+
 ## Product outcome
 
 The application provides a Spanish, mobile-first `Solicitudes de ausencia`
@@ -66,6 +69,11 @@ area in which:
 - Half-day values are exact and never depend on floating-point arithmetic.
 - Negative balances are supported and produce warnings rather than blockers.
 - Approved absences become a privacy-safe calendar source.
+- An administrator can create a request for an active employee while preserving
+  that employee as the requester for balance, routing, calendar, and
+  self-approval rules.
+- Upcoming approved requests created by an administrator notify the employee in
+  Inicio; the employee can mark those notifications as read.
 - Clerk remains responsible only for identity; MongoDB remains authoritative
   for employees, roles, assignments, requests, balances, and authorization.
 
@@ -186,29 +194,37 @@ AND candidate.endDate >= existing.startDate
 Overlap is a warning, not a blocker. Denied and cancelled requests do not
 produce overlap warnings. The current draft is excluded from its own check.
 
-### No notification system in this scope
+### Implemented in-app notification scope
 
-Email, push, Slack, and in-app notification delivery are not requested. The
-assigned approver sees pending work in the application. Notification delivery
-may be added later without changing request authorization or audit history.
+The MVP does not send email, push, or Slack notifications. It does provide an
+in-app dashboard notification for an upcoming approved PTO request that an
+administrator created on behalf of an employee:
 
-## Product decisions required before approval logic
+- The notification appears on Inicio as `Ausencia aprobada`, includes the
+  category and dates, and links to the request detail.
+- It remains visible through the request end date, alongside other upcoming
+  notifications; Inicio shows the five nearest items.
+- Read state is per platform user and notification key in
+  `dashboard_notification_reads`. Unread items receive a `Nueva` treatment and
+  Inicio's navigation item shows an unread count (capped visually at `99+`).
+- Opening the notification marks it read. The user can also mark all current
+  notifications as read.
+- Read state is a presentation concern only: it does not alter PTO status,
+  balance, authorization, or audit history.
 
-### 1. Which categories affect the balance?
+## Confirmed product decisions
 
-The requirements define one balance and four categories but do not state which
-categories consume that balance. They also explicitly prohibit inferring
-allowance policies. The implementation must not assume that `sick`, `personal`,
-or `other` behaves like `vacation`.
+### 1. Category balance effects
 
-Before implementing approval effects, product must approve a complete mapping:
+The MVP uses one generic absence balance. All categories consume that balance
+when approved:
 
-| Category   | Balance effect | Decision |
-| ---------- | -------------- | -------- |
-| `vacation` | TBD            | Required |
-| `sick`     | TBD            | Required |
-| `personal` | TBD            | Required |
-| `other`    | TBD            | Required |
+| Category   | Balance effect |
+| ---------- | -------------- |
+| `vacation` | `-duration`    |
+| `sick`     | `-duration`    |
+| `personal` | `-duration`    |
+| `other`    | `-duration`    |
 
 Recommended model:
 
@@ -220,18 +236,15 @@ type PtoBalanceEffect = {
 };
 ```
 
-For a balance-consuming category, approval sets the delta to
-`-request.durationUnits` and records before/after snapshots. For a category
-that does not consume the balance, all three values remain `null` and no ledger
-movement is created. The confirmed mapping belongs in one tested domain
-function, not scattered through forms or repositories.
+Approval sets the delta to `-request.durationUnits` and records before/after
+snapshots. The mapping lives in the tested `ptoCategoryConsumesBalance` domain
+record so a later policy change has one controlled implementation boundary.
 
 ### 2. Who may read approved absences beyond the requester and approver?
 
-This story recommends the privacy-minimizing scope below: the requester, the
-assigned approver, and administrators. If approved absences should be visible
-to department colleagues or the entire company, that broader audience must be
-explicitly approved before calendar queries are widened.
+The implemented privacy-minimizing scope is the requester, the assigned
+approver, and administrators. Approved absences are not visible to department
+colleagues or the entire company.
 
 ## PTO categories
 
@@ -267,15 +280,15 @@ Draft/Pending → Cancelled
 
 Allowed transitions:
 
-| From      | Action  | To          | Actor                        |
-| --------- | ------- | ----------- | ---------------------------- |
-| —         | Create  | `draft`     | Requester                    |
-| `draft`   | Edit    | `draft`     | Requester                    |
-| `draft`   | Submit  | `pending`   | Requester                    |
-| `draft`   | Cancel  | `cancelled` | Requester                    |
-| `pending` | Approve | `approved`  | Assigned authorized approver |
-| `pending` | Deny    | `denied`    | Assigned authorized approver |
-| `pending` | Cancel  | `cancelled` | Requester                    |
+| From      | Action  | To          | Actor                            |
+| --------- | ------- | ----------- | -------------------------------- |
+| —         | Create  | `draft`     | Requester or proxy administrator |
+| `draft`   | Edit    | `draft`     | Requester or proxy administrator |
+| `draft`   | Submit  | `pending`   | Requester or proxy administrator |
+| `draft`   | Cancel  | `cancelled` | Requester or proxy administrator |
+| `pending` | Approve | `approved`  | Assigned authorized approver     |
+| `pending` | Deny    | `denied`    | Assigned authorized approver     |
+| `pending` | Cancel  | `cancelled` | Requester or proxy administrator |
 
 Every other transition is rejected on the server, including direct status
 mutation, self-approval, editing pending requests, reopening terminal requests,
@@ -317,9 +330,9 @@ employee as requester and record the administrator separately as the creator.
 1. Find the requester's effective assignment on the submission date.
 2. Require `managerEmployeeId`.
 3. Resolve that manager's linked active platform user.
-4. Require the manager's platform role to be `supervisor`.
+4. Require the manager's platform role to be `supervisor` or `administrator`.
 5. Require manager and requester to be different people.
-6. Snapshot that supervisor as the approver.
+6. Snapshot that eligible manager as the approver.
 
 Do not silently fall back to an administrator when the collaborator lacks an
 eligible assigned supervisor. Submission is blocked with a safe Spanish
@@ -413,7 +426,9 @@ type PtoRequestDocument = {
   _id: ObjectId;
   requesterEmployeeId: ObjectId;
   requesterPlatformUserId: ObjectId;
-  createdByPlatformUserId: ObjectId;
+  // Legacy self-service requests may omit this; read models treat the
+  // requester as creator in that case.
+  createdByPlatformUserId?: ObjectId;
   startDate: string;
   endDate: string;
   durationUnits: number;
@@ -434,8 +449,10 @@ type PtoRequestDocument = {
 };
 ```
 
-The requester IDs, status, approver, balance effects, and history are
-server-owned fields. Client forms may submit only editable draft fields.
+The requester IDs, creator, status, approver, balance effects, and history are
+server-owned fields. Client forms may submit only editable draft fields. For a
+proxy request, `createdByPlatformUserId` identifies the administrator while
+requester IDs remain those of the employee.
 
 ### `pto_audit`
 
@@ -476,6 +493,7 @@ pto_balance_ledger
 pto_requests
   { requesterEmployeeId: 1, createdAt: -1 }
   { requesterEmployeeId: 1, status: 1, startDate: 1, endDate: 1 }
+  { requesterPlatformUserId: 1, status: 1, endDate: 1, startDate: 1 }
   { assignedApproverPlatformUserId: 1, status: 1, submittedAt: 1 }
   { status: 1, submittedAt: 1, requesterPlatformUserId: 1 }
   { status: 1, updatedAt: -1 }
@@ -485,10 +503,14 @@ pto_audit
   { targetRequestId: 1, createdAt: -1 }
   { targetEmployeeId: 1, createdAt: -1 }
   { actorPlatformUserId: 1, createdAt: -1 }
+
+dashboard_notification_reads
+  unique { platformUserId: 1, notificationKey: 1 }
 ```
 
-Add these to an idempotent `bootstrap-pto-model.mjs` script. Index creation must
-be safe to rerun.
+The feature creates these indexes idempotently through `ensurePtoIndexes()`.
+The dashboard read-state repository creates its own unique index idempotently.
+All index creation is safe to rerun.
 
 ## Transaction and concurrency rules
 
@@ -546,22 +568,24 @@ status history and audit, but they do not mutate the balance.
 ## Suggested routes and navigation
 
 ```text
-/solicitudes-ausencia
-/solicitudes-ausencia/nueva
-/solicitudes-ausencia/[requestId]
-/solicitudes-ausencia/[requestId]/editar
+/ausencias
+/ausencias/nueva
+/ausencias/[requestId]
+/ausencias/[requestId]/editar
+/admin/ausencias
 /admin/colaboradores/[employeeId]/ausencias
+/admin/colaboradores/[employeeId]/ausencias/nueva
 ```
 
-Add `Solicitudes de ausencia` to the base workspace navigation for every active
-role. The main page provides role-aware sections or tabs:
+`Ausencias` is in the base workspace navigation for every active role. The main
+page provides role-aware sections:
 
 - `Mis solicitudes` for all roles.
 - `Por aprobar` for supervisors and administrators with assigned work.
 - `Historial de decisiones` for approvers.
 
-Administrators receive balance administration from the employee detail route,
-not from a client-side-only privileged panel.
+Administrators receive balance administration and the proxy-request entry point
+from the employee detail route, not from a client-side-only privileged panel.
 
 ## Read models and privacy
 
@@ -650,6 +674,10 @@ Rules:
 - Approved entries are read-only from the calendar; decisions remain in
   `Solicitudes de ausencia`.
 
+For an approved proxy request, the employee's own Inicio notification is a
+separate, requester-only projection. It may show the category and links to the
+request detail; it never changes the privacy of shared calendar entries.
+
 The current project has employee work-pattern summaries but no shared schedule
 route. Expose the same privacy-safe approved-absence query for a future schedule
 consumer without creating an unused schedule UI in this delivery.
@@ -664,7 +692,7 @@ consumer without creating an unused schedule UI in this delivery.
    obtain PTO data or mutate it.
 3. A self-service requester is derived from the authenticated platform user.
    For an administrator proxy request, requester identity is derived server-side
-   from the selected employee record and its active linked platform user.
+   from the selected active employee record and its linked platform user.
 4. Client-submitted platform-user requester, actor, status, balance, history,
    and snapshot fields are ignored or rejected.
 5. Direct Server Action invocation enforces the same authorization as the UI.
@@ -698,7 +726,8 @@ consumer without creating an unused schedule UI in this delivery.
 3. Duration accepts at least `0.5` day and only `0.5` increments.
 4. Start date cannot be after end date.
 5. A draft can be edited repeatedly without writing balance movements.
-6. A requester cannot edit another person's draft.
+6. A requester cannot edit another person's draft. An administrator may manage
+   an administrator-created proxy draft for the employee it targets.
 7. Pending and terminal requests cannot be edited.
 8. Unsaved changes use the existing guarded-form behavior.
 9. An administrator can create, edit, submit, or cancel a draft on behalf of an
@@ -756,7 +785,8 @@ consumer without creating an unused schedule UI in this delivery.
 
 ### 9. Cancellation
 
-1. A requester can cancel only their own `draft` or `pending` request.
+1. A requester can cancel only their own `draft` or `pending` request. An
+   administrator may also cancel a proxy request created for an employee.
 2. Cancellation records actor, timestamp, status history, and audit.
 3. Cancellation does not change the balance.
 4. Approved and denied requests cannot be cancelled or edited.
@@ -779,7 +809,7 @@ consumer without creating an unused schedule UI in this delivery.
 1. `Mis solicitudes` shows drafts and complete status history newest first.
 2. `Por aprobar` shows assigned pending requests for supervisors and all
    pending requests except the viewer's own for administrators.
-3. The administrator management view lists organization-wide submitted
+3. The administrator management view lists organization-wide non-draft
    requests, supports status filtering, prioritizes pending work, and never
    exposes private drafts.
 4. Detail returns collaborator and decision notes only to the requester,
@@ -798,8 +828,22 @@ consumer without creating an unused schedule UI in this delivery.
    or afternoon time.
 5. Calendar authorization runs on the server and does not rely on hiding an
    entry in a Client Component.
+6. A proxy-created request may show its category in the employee's own Inicio
+   notification, but that does not widen the shared-calendar projection.
 
-### 13. Auditability
+### 13. Dashboard notification state
+
+1. Only an upcoming approved PTO request created by an administrator on behalf
+   of the employee enters that employee's dashboard notification feed.
+2. The employee can read the PTO detail through the notification; the server
+   validates that the submitted notification key is still in that employee's
+   current feed before marking it read and redirecting.
+3. Read markers are unique per platform user and notification key. Marking a
+   notification read never changes PTO business data.
+4. The workspace navigation renders the same unread count in desktop and mobile
+   navigation.
+
+### 14. Auditability
 
 1. Every create, edit, submit, approve, deny, cancel, approver reassignment,
    opening balance, and adjustment records actor and UTC timestamp.
@@ -808,7 +852,7 @@ consumer without creating an unused schedule UI in this delivery.
 4. Audit writes are in the same transaction as their business mutation.
 5. Audit metadata contains field names, not private text or identification data.
 
-### 14. Responsive and accessible behavior
+### 15. Responsive and accessible behavior
 
 1. All requester, approver, and balance-admin flows work at 320 CSS pixels and
    200% zoom without root-level horizontal scrolling.
@@ -821,14 +865,15 @@ consumer without creating an unused schedule UI in this delivery.
    understandable on mobile.
 6. Light and dark themes meet WCAG 2.2 AA contrast expectations.
 
-### 15. Quality and failure behavior
+### 16. Quality and failure behavior
 
 1. Expected validation and stale-state conflicts return safe Spanish outcomes
    without exposing database details.
 2. Transaction failures leave no partial balance, ledger, request, or audit
    writes.
 3. Revalidation updates request lists, approver queues, employee detail,
-   profile balance, and calendar pages after relevant mutations.
+   profile balance, calendar pages, and the workspace notification badge after
+   relevant mutations.
 4. Formatting, linting, CSS validation, TypeScript, tests, and production build
    pass.
 
@@ -876,43 +921,42 @@ Then the approved absence appears
 And neither note nor the balance snapshot is present in the calendar payload
 ```
 
+### Administrator-created request notifies the employee
+
+```text
+Given an administrator creates and approves a future absence for an employee
+When the employee loads Inicio
+Then the employee sees an unread "Ausencia aprobada" notification
+And it links to that request detail
+And opening it marks only that employee's notification read
+And the employee's balance, routing, and calendar ownership remain unchanged
+```
+
 ## Suggested feature structure
 
 ```text
 web/src/
 ├── app/(workspace)/
-│   ├── solicitudes-ausencia/
+│   ├── ausencias/
 │   │   ├── [requestId]/editar/page.tsx
 │   │   ├── [requestId]/page.tsx
 │   │   ├── nueva/page.tsx
-│   │   ├── error.tsx
-│   │   ├── loading.tsx
 │   │   └── page.tsx
-│   └── admin/colaboradores/[employeeId]/ausencias/page.tsx
+│   └── admin/
+│       ├── ausencias/page.tsx
+│       └── colaboradores/[employeeId]/ausencias/
+│           ├── nueva/page.tsx
+│           └── page.tsx
 └── features/pto/
-    ├── actions/
-    │   ├── pto-balance-actions.ts
-    │   └── pto-request-actions.ts
+    ├── actions/pto-actions.ts
     ├── components/
-    │   ├── pto-approval-queue.tsx
-    │   ├── pto-balance-card.tsx
-    │   ├── pto-balance-ledger.tsx
+    │   ├── pto-balance-forms.tsx
     │   ├── pto-request-form.tsx
-    │   ├── pto-request-list.tsx
-    │   └── pto-warning-summary.tsx
-    ├── domain/
-    │   ├── pto-action-state.ts
-    │   ├── pto-balance.ts
-    │   ├── pto-category.ts
-    │   ├── pto-request.ts
-    │   └── pto-workflow.ts
+    │   └── pto-transition-forms.tsx
+    ├── domain/pto.ts
     └── server/
-        ├── pto-audit-repository.ts
-        ├── pto-balance-repository.ts
-        ├── pto-calendar-repository.ts
         ├── pto-indexes.ts
-        ├── pto-read-repository.ts
-        ├── pto-request-repository.ts
+        ├── pto-repository.ts
         └── pto-service.ts
 ```
 
@@ -920,14 +964,20 @@ Keep one component per file. Pages should remain Server Components unless an
 interaction requires client state. Server Actions call `pto-service.ts`; Client
 Components never import repositories.
 
-## Implementation roadmap
+## Implementation status and remaining roadmap
+
+The domain, balances, drafts, routing, approval actions, calendar aggregation,
+administrator proxy requests, and dashboard notification/read-state behavior
+are implemented. The slices below remain a historical delivery map and a guide
+for regression coverage; they are not pending MVP work unless explicitly noted.
 
 ### Slice 1: Domain foundation and indexes
 
 - Define units, categories, statuses, transition matrix, input schemas, and
   safe Spanish domain errors.
 - Add balances, ledger, requests, audit collections, and indexes.
-- Add the idempotent bootstrap script.
+- Confirm idempotent runtime index creation remains healthy in each deployment
+  environment.
 - Unit test all half-day conversion and state transitions.
 
 ### Slice 2: Opening balances and adjustments
@@ -980,6 +1030,9 @@ Components never import repositories.
 - Category labels and the product-approved balance-effect mapping.
 - Role-based approver resolution and self-approval rejection.
 - Privacy-safe request and calendar projections.
+- Administrator-created employee requests preserve the employee requester and
+  creator attribution.
+- Dashboard notification aggregation, unread state, and trusted read redirect.
 
 ### Repository and integration
 
@@ -1000,6 +1053,7 @@ Components never import repositories.
 - Administrator approval override with self-approval denial.
 - Direct mutation attempts against another request.
 - Deactivated users and approvers.
+- Administrator proxy-draft create, edit, submit, and cancel authorization.
 
 ### Component
 
@@ -1020,6 +1074,8 @@ Components never import repositories.
 - Draft and pending cancellation.
 - Denial without balance effect.
 - Approved absence appears only on authorized calendars.
+- Administrator-created approved absence appears in the employee's Inicio feed
+  and can be marked read.
 - Mobile and 200%-zoom flows have no root horizontal scrolling.
 - Automated accessibility checks pass in light and dark themes.
 
@@ -1034,7 +1090,8 @@ Components never import repositories.
 - Morning/afternoon allocation for half-day requests.
 - Attachments or medical documentation.
 - Delegated or temporary approvers beyond audited orphan recovery.
-- Email, push, Slack, or other notifications.
+- Email, push, Slack, or other delivery channels. The implemented in-app Inicio
+  notification/read-state experience remains in scope.
 - Bulk approval or bulk balance adjustments.
 - Payroll or external HRIS synchronization.
 - Editing, cancelling, or reversing an approved request.
@@ -1044,8 +1101,9 @@ Components never import repositories.
 
 This story is complete when:
 
-1. The category balance-impact mapping and calendar audience are explicitly
-   approved and covered by tests.
+1. The generic balance mapping (all four categories consume balance) and the
+   requester/approver/administrator calendar audience are documented and
+   covered by tests.
 2. Every existing employee has exactly one opening balance ledger record.
 3. New employee creation includes an opening balance transactionally.
 4. All workflow transitions, role routing rules, warnings, and negative-balance
@@ -1054,5 +1112,6 @@ This story is complete when:
 6. Approved absences appear through a privacy-safe authorized calendar source.
 7. No private note or sensitive employee field is exposed through list or
    calendar projections.
-8. The complete workflow passes unit, integration, authorization, component,
-   end-to-end, responsive, and accessibility verification.
+8. The complete workflow, including proxy-request attribution and dashboard
+   read state, passes proportionate unit, authorization, component, responsive,
+   and production-build verification.

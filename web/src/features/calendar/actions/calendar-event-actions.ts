@@ -97,7 +97,7 @@ export async function createCalendarEventAction(
   }
 
   revalidatePath("/calendario");
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   redirect(
     createFeedbackUrl(
       `/calendario/eventos/${event.id}`,
@@ -123,7 +123,7 @@ export async function updateCalendarEventAction(
   }
 
   revalidatePath("/calendario");
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   revalidatePath(`/calendario/eventos/${eventId}`);
   redirect(
     createFeedbackUrl(
@@ -156,7 +156,7 @@ export async function deleteCalendarEventAction(formData: FormData) {
   }
 
   revalidatePath("/calendario");
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   redirect(
     createFeedbackUrl(
       createCalendarUrl({ month: query.month, view: query.view }),

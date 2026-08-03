@@ -17,9 +17,14 @@ import styles from "./workspace-header.module.css";
 type WorkspaceHeaderProps = {
   displayName: string;
   role: PlatformRole;
+  unreadNotificationCount: number;
 };
 
-export function WorkspaceHeader({ displayName, role }: WorkspaceHeaderProps) {
+export function WorkspaceHeader({
+  displayName,
+  role,
+  unreadNotificationCount,
+}: WorkspaceHeaderProps) {
   const pathname = usePathname();
 
   return (
@@ -32,7 +37,11 @@ export function WorkspaceHeader({ displayName, role }: WorkspaceHeaderProps) {
           </summary>
           <div className={styles.mobileNavPanel}>
             <p>Menú principal</p>
-            <WorkspaceNavigation label="Navegación móvil" role={role} />
+            <WorkspaceNavigation
+              label="Navegación móvil"
+              role={role}
+              unreadNotificationCount={unreadNotificationCount}
+            />
           </div>
         </details>
         <Link

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
+import { cache } from "react";
 
 import type { PlatformUser } from "@/features/auth/domain/platform-user";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
@@ -32,8 +33,18 @@ import {
   findEmployeeByPlatformUserId,
   listBirthdayCalendarEntries,
 } from "@/features/employees/server/employee-repository";
-import { formatPtoDays } from "@/features/pto/domain/pto";
-import { listVisibleApprovedPtoForCalendar } from "@/features/pto/server/pto-service";
+import type { DashboardNotification } from "@/features/dashboard/domain/dashboard-notification";
+import {
+  listReadNotificationKeys,
+  markNotificationKeysRead,
+} from "@/features/dashboard/server/notification-read-repository";
+import { formatPtoDays, ptoCategoryLabels } from "@/features/pto/domain/pto";
+import {
+  listUpcomingProxyPtoNotifications,
+  listVisibleApprovedPtoForCalendar,
+} from "@/features/pto/server/pto-service";
+
+const dashboardNotificationLimit = 100;
 
 async function resolveCalendarActor(
   platformUser: PlatformUser,
@@ -223,12 +234,95 @@ export async function deleteCalendarEventForActor(eventId: string) {
   return deleteCalendarEvent({ actor, eventId });
 }
 
+const getDashboardNotificationState = cache(async (platformUserId: string) => {
+  const [events, ptoRequests] = await Promise.all([
+    listUpcomingCalendarEventNotifications({
+      limit: dashboardNotificationLimit,
+      platformUserId,
+    }),
+    listUpcomingProxyPtoNotifications(platformUserId, dashboardNotificationLimit),
+  ]);
+  const notificationSources: Array<Omit<DashboardNotification, "isUnread">> = [
+    ...events.map((event) => ({
+      allDay: event.allDay,
+      endDate: event.endDate,
+      eventType: event.eventType,
+      href: `/calendario/eventos/${event.id}`,
+      id: event.id,
+      key: `event:${event.id}`,
+      kind: "event" as const,
+      label: calendarEventTypeLabels[event.eventType],
+      startDate: event.startDate,
+      startsAt: event.startsAt,
+      title: event.title,
+    })),
+    ...ptoRequests.map((request) => ({
+      allDay: true,
+      endDate: request.endDate,
+      eventType: null,
+      href: `/ausencias/${request.id}`,
+      id: request.id,
+      key: `pto:${request.id}`,
+      kind: "pto" as const,
+      label: "Ausencia aprobada",
+      startDate: request.startDate,
+      startsAt: calendarDateToUtc(request.startDate).toISOString(),
+      title: ptoCategoryLabels[request.category],
+    })),
+  ].sort((left, right) => left.startsAt.localeCompare(right.startsAt));
+  const readKeys = await listReadNotificationKeys({
+    notificationKeys: notificationSources.map((notification) => notification.key),
+    platformUserId,
+  });
+  const notifications: DashboardNotification[] = notificationSources.map(
+    (notification) => ({
+      ...notification,
+      isUnread: !readKeys.has(notification.key),
+    }),
+  );
+
+  return {
+    notifications,
+    unreadCount: notifications.filter((notification) => notification.isUnread).length,
+  };
+});
+
 export async function getCalendarDashboardNotifications() {
   const { platformUser } = await requirePlatformUser();
+  const state = await getDashboardNotificationState(platformUser.id);
+
   return {
     displayName: platformUser.displayName,
-    notifications: await listUpcomingCalendarEventNotifications({
-      platformUserId: platformUser.id,
-    }),
+    notifications: state.notifications.slice(0, 5),
+    unreadCount: state.unreadCount,
   };
+}
+
+export async function getCalendarDashboardUnreadCount(platformUserId: string) {
+  return (await getDashboardNotificationState(platformUserId)).unreadCount;
+}
+
+export async function readDashboardNotification(notificationKey: string) {
+  const { platformUser } = await requirePlatformUser();
+  const state = await getDashboardNotificationState(platformUser.id);
+  const notification = state.notifications.find(
+    (candidate) => candidate.key === notificationKey,
+  );
+  if (!notification) return null;
+  await markNotificationKeysRead({
+    notificationKeys: [notification.key],
+    platformUserId: platformUser.id,
+  });
+  return notification.href;
+}
+
+export async function readAllDashboardNotifications() {
+  const { platformUser } = await requirePlatformUser();
+  const state = await getDashboardNotificationState(platformUser.id);
+  await markNotificationKeysRead({
+    notificationKeys: state.notifications
+      .filter((notification) => notification.isUnread)
+      .map((notification) => notification.key),
+    platformUserId: platformUser.id,
+  });
 }

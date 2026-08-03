@@ -4,6 +4,7 @@ import {
   createCalendarEventForActor,
   getCalendarDashboardNotifications,
   getCalendarEntries,
+  readDashboardNotification,
 } from "@/features/calendar/server/calendar-service";
 
 const mocks = vi.hoisted(() => ({
@@ -12,9 +13,12 @@ const mocks = vi.hoisted(() => ({
   findEmployeeByPlatformUserId: vi.fn(),
   listBirthdayCalendarEntries: vi.fn(),
   listCalendarEventTargetOptions: vi.fn(),
+  listReadNotificationKeys: vi.fn(),
   listUpcomingCalendarEventNotifications: vi.fn(),
+  listUpcomingProxyPtoNotifications: vi.fn(),
   listVisibleCalendarEvents: vi.fn(),
   listVisibleApprovedPtoForCalendar: vi.fn(),
+  markNotificationKeysRead: vi.fn(),
   requirePlatformUser: vi.fn(),
 }));
 
@@ -43,7 +47,13 @@ vi.mock("@/features/calendar/server/calendar-event-repository", () => ({
   updateCalendarEvent: vi.fn(),
 }));
 
+vi.mock("@/features/dashboard/server/notification-read-repository", () => ({
+  listReadNotificationKeys: mocks.listReadNotificationKeys,
+  markNotificationKeysRead: mocks.markNotificationKeysRead,
+}));
+
 vi.mock("@/features/pto/server/pto-service", () => ({
+  listUpcomingProxyPtoNotifications: mocks.listUpcomingProxyPtoNotifications,
   listVisibleApprovedPtoForCalendar: mocks.listVisibleApprovedPtoForCalendar,
 }));
 
@@ -70,6 +80,8 @@ describe("calendar service authorization and aggregation", () => {
       people: [],
     });
     mocks.listUpcomingCalendarEventNotifications.mockResolvedValue([]);
+    mocks.listUpcomingProxyPtoNotifications.mockResolvedValue([]);
+    mocks.listReadNotificationKeys.mockResolvedValue(new Set());
     mocks.listBirthdayCalendarEntries.mockResolvedValue([
       {
         birthday: "06/07",
@@ -174,11 +186,63 @@ describe("calendar service authorization and aggregation", () => {
     const dashboard = await getCalendarDashboardNotifications();
 
     expect(mocks.listUpcomingCalendarEventNotifications).toHaveBeenCalledWith({
+      limit: 100,
       platformUserId: "507f1f77bcf86cd799439011",
     });
+    expect(mocks.listUpcomingProxyPtoNotifications).toHaveBeenCalledWith(
+      "507f1f77bcf86cd799439011",
+      100,
+    );
     expect(dashboard).toMatchObject({
       displayName: "Ana Mora",
       notifications: [{ eventType: "training", id: "event" }],
+      unreadCount: 1,
     });
+  });
+
+  it("notifies an employee about upcoming approved leave created by an administrator", async () => {
+    mocks.listUpcomingProxyPtoNotifications.mockResolvedValue([
+      {
+        category: "vacation",
+        endDate: "2026-08-12",
+        id: "leave-request",
+        startDate: "2026-08-11",
+      },
+    ]);
+
+    const dashboard = await getCalendarDashboardNotifications();
+
+    expect(dashboard.notifications).toEqual([
+      expect.objectContaining({
+        href: "/ausencias/leave-request",
+        id: "leave-request",
+        kind: "pto",
+        label: "Ausencia aprobada",
+        title: "Vacaciones",
+      }),
+    ]);
+  });
+
+  it("marks a current notification as read and returns its trusted destination", async () => {
+    const eventId = "507f1f77bcf86cd799439099";
+    mocks.listUpcomingCalendarEventNotifications.mockResolvedValue([
+      {
+        allDay: true,
+        endDate: "2026-08-12",
+        eventType: "training",
+        id: eventId,
+        startDate: "2026-08-11",
+        startsAt: "2026-08-11T06:00:00.000Z",
+        title: "Seguridad alimentaria",
+      },
+    ]);
+
+    const href = await readDashboardNotification(`event:${eventId}`);
+
+    expect(mocks.markNotificationKeysRead).toHaveBeenCalledWith({
+      notificationKeys: [`event:${eventId}`],
+      platformUserId: "507f1f77bcf86cd799439011",
+    });
+    expect(href).toBe(`/calendario/eventos/${eventId}`);
   });
 });
