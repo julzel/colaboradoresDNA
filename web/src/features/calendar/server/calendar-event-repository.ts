@@ -33,6 +33,18 @@ export type CalendarEventTargetOptions = {
   people: Array<{ displayName: string; id: string }>;
 };
 
+export type CalendarEventNotification = Pick<
+  CalendarEvent,
+  | "allDay"
+  | "endDate"
+  | "endsAt"
+  | "eventType"
+  | "id"
+  | "startDate"
+  | "startsAt"
+  | "title"
+>;
+
 export type CalendarEventDetail = {
   canManage: boolean;
   departmentName: string | null;
@@ -60,7 +72,6 @@ function visibleEventFilter(actor: CalendarActor): Filter<CalendarEventDocument>
     { organizerPlatformUserId: actorId },
     {
       inviteePlatformUserIds: actorId,
-      visibility: "invited",
     },
   ];
 
@@ -194,7 +205,7 @@ async function validateTargets(
   input: NormalizedCalendarEventInput,
   actor: CalendarActor,
 ) {
-  const { departments, platformUsers } = await getCalendarCollections();
+  const { departments, employees, platformUsers } = await getCalendarCollections();
 
   if (input.departmentId) {
     const department = await departments.findOne({
@@ -208,12 +219,21 @@ async function validateTargets(
   }
 
   if (input.inviteePlatformUserIds.length > 0) {
+    if (input.inviteePlatformUserIds.includes(actor.platformUserId)) {
+      throw new CalendarDomainError("invitee_not_found");
+    }
     const ids = input.inviteePlatformUserIds.map((id) => new ObjectId(id));
-    const count = await platformUsers.countDocuments({
-      _id: { $in: ids },
-      status: { $in: ["active", "invited"] },
-    });
-    if (count !== ids.length) {
+    const [employeeCount, userCount] = await Promise.all([
+      employees.countDocuments({
+        employmentStatus: "active",
+        platformUserId: { $in: ids },
+      }),
+      platformUsers.countDocuments({
+        _id: { $in: ids },
+        status: { $in: ["active", "invited"] },
+      }),
+    ]);
+    if (employeeCount !== ids.length || userCount !== ids.length) {
       throw new CalendarDomainError("invitee_not_found");
     }
   }
@@ -239,6 +259,7 @@ export async function createCalendarEvent({
     departmentId: input.departmentId ? new ObjectId(input.departmentId) : null,
     description: input.description,
     endsAt: input.endsAt,
+    eventType: input.eventType,
     inviteePlatformUserIds: input.inviteePlatformUserIds.map((id) => new ObjectId(id)),
     location: input.location,
     meetingUrl: input.meetingUrl,
@@ -258,7 +279,15 @@ export async function createCalendarEvent({
       await recordCalendarAudit({
         action: "event_created",
         actorPlatformUserId: actor.platformUserId,
-        changedFields: ["title", "description", "startsAt", "endsAt", "visibility"],
+        changedFields: [
+          "eventType",
+          "title",
+          "description",
+          "startsAt",
+          "endsAt",
+          "visibility",
+          "inviteePlatformUserIds",
+        ],
         session,
         targetEventId: document._id.toHexString(),
       });
@@ -322,6 +351,7 @@ export async function updateCalendarEvent({
             departmentId: input.departmentId ? new ObjectId(input.departmentId) : null,
             description: input.description,
             endsAt: input.endsAt,
+            eventType: input.eventType,
             inviteePlatformUserIds: input.inviteePlatformUserIds.map(
               (id) => new ObjectId(id),
             ),
@@ -342,6 +372,7 @@ export async function updateCalendarEvent({
         actorPlatformUserId: actor.platformUserId,
         changedFields: [
           "title",
+          "eventType",
           "description",
           "startsAt",
           "endsAt",
@@ -406,7 +437,7 @@ export async function listCalendarEventTargetOptions(
 ): Promise<CalendarEventTargetOptions> {
   await ensureCalendarIndexes();
   const { departments, employees, platformUsers } = await getCalendarCollections();
-  const [departmentDocuments, people] = await Promise.all([
+  const [departmentDocuments, employeeProfiles] = await Promise.all([
     departments
       .find({
         status: "active",
@@ -418,26 +449,31 @@ export async function listCalendarEventTargetOptions(
       })
       .sort({ name: 1 })
       .toArray(),
-    platformUsers
+    employees
       .find(
-        { status: { $in: ["active", "invited"] } },
-        { projection: { displayName: 1 } },
+        { employmentStatus: "active" },
+        {
+          projection: {
+            firstSurname: 1,
+            givenNames: 1,
+            platformUserId: 1,
+            preferredName: 1,
+            secondSurname: 1,
+          },
+        },
       )
-      .sort({ displayName: 1 })
       .toArray(),
   ]);
-  const employeeProfiles = await employees
+  const people = await platformUsers
     .find(
-      { platformUserId: { $in: people.map((person) => person._id) } },
       {
-        projection: {
-          firstSurname: 1,
-          givenNames: 1,
-          platformUserId: 1,
-          preferredName: 1,
-          secondSurname: 1,
+        _id: {
+          $in: employeeProfiles.map((employee) => employee.platformUserId),
+          $ne: new ObjectId(actor.platformUserId),
         },
+        status: { $in: ["active", "invited"] },
       },
+      { projection: { displayName: 1 } },
     )
     .toArray();
   const preferredNames = new Map(
@@ -463,4 +499,38 @@ export async function listCalendarEventTargetOptions(
         }),
       ),
   };
+}
+
+export async function listUpcomingCalendarEventNotifications({
+  limit = 5,
+  platformUserId,
+}: {
+  limit?: number;
+  platformUserId: string;
+}): Promise<CalendarEventNotification[]> {
+  await ensureCalendarIndexes();
+  const { events } = await getCalendarCollections();
+  const documents = await events
+    .find({
+      endsAt: { $gt: new Date() },
+      inviteePlatformUserIds: new ObjectId(platformUserId),
+      status: "active",
+    })
+    .sort({ startsAt: 1 })
+    .limit(limit)
+    .toArray();
+
+  return documents.map((document) => {
+    const event = toCalendarEvent(document);
+    return {
+      allDay: event.allDay,
+      endDate: event.endDate,
+      endsAt: event.endsAt,
+      eventType: event.eventType,
+      id: event.id,
+      startDate: event.startDate,
+      startsAt: event.startsAt,
+      title: event.title,
+    };
+  });
 }

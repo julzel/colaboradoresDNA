@@ -33,6 +33,7 @@ function readEventInput(formData: FormData) {
     description: optionalString(formData, "description"),
     endDate: optionalString(formData, "endDate"),
     endDateTime: optionalString(formData, "endDateTime"),
+    eventType: optionalString(formData, "eventType"),
     inviteePlatformUserIds: formData
       .getAll("inviteePlatformUserIds")
       .filter((value): value is string => typeof value === "string"),
@@ -96,6 +97,7 @@ export async function createCalendarEventAction(
   }
 
   revalidatePath("/calendario");
+  revalidatePath("/", "layout");
   redirect(
     createFeedbackUrl(
       `/calendario/eventos/${event.id}`,
@@ -121,6 +123,7 @@ export async function updateCalendarEventAction(
   }
 
   revalidatePath("/calendario");
+  revalidatePath("/", "layout");
   revalidatePath(`/calendario/eventos/${eventId}`);
   redirect(
     createFeedbackUrl(
@@ -153,6 +156,7 @@ export async function deleteCalendarEventAction(formData: FormData) {
   }
 
   revalidatePath("/calendario");
+  revalidatePath("/", "layout");
   redirect(
     createFeedbackUrl(
       createCalendarUrl({ month: query.month, view: query.view }),

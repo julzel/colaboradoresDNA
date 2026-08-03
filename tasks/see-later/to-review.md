@@ -1,0 +1,1 @@
+- When a department is selected, send a calendar event notification to all members of that department.

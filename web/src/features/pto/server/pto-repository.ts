@@ -26,11 +26,13 @@ export type PtoRequest = Omit<
   PtoRequestDocument,
   | "_id"
   | "assignedApproverPlatformUserId"
+  | "createdByPlatformUserId"
   | "requesterEmployeeId"
   | "requesterPlatformUserId"
   | "statusHistory"
 > & {
   assignedApproverPlatformUserId: string | null;
+  createdByPlatformUserId: string;
   id: string;
   requesterEmployeeId: string;
   requesterPlatformUserId: string;
@@ -57,6 +59,7 @@ function toPtoRequest(document: PtoRequestDocument): PtoRequest {
   const {
     _id,
     assignedApproverPlatformUserId,
+    createdByPlatformUserId,
     requesterEmployeeId,
     requesterPlatformUserId,
     statusHistory,
@@ -66,6 +69,9 @@ function toPtoRequest(document: PtoRequestDocument): PtoRequest {
     ...request,
     assignedApproverPlatformUserId:
       assignedApproverPlatformUserId?.toHexString() ?? null,
+    createdByPlatformUserId: (
+      createdByPlatformUserId ?? requesterPlatformUserId
+    ).toHexString(),
     id: _id.toHexString(),
     requesterEmployeeId: requesterEmployeeId.toHexString(),
     requesterPlatformUserId: requesterPlatformUserId.toHexString(),
@@ -212,6 +218,7 @@ export async function createPtoDraft(input: {
   actorPlatformUserId: string;
   employeeId: string;
   request: PtoDraftInput;
+  requesterPlatformUserId?: string;
 }) {
   const request = ptoDraftInputSchema.parse(input.request);
   await ensurePtoIndexes();
@@ -231,12 +238,15 @@ export async function createPtoDraft(input: {
         category: request.category,
         collaboratorNote: request.collaboratorNote,
         createdAt: now,
+        createdByPlatformUserId: new ObjectId(input.actorPlatformUserId),
         decidedAt: null,
         decisionNote: null,
         durationUnits: request.durationUnits,
         endDate: request.endDate,
         requesterEmployeeId: new ObjectId(input.employeeId),
-        requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
+        requesterPlatformUserId: new ObjectId(
+          input.requesterPlatformUserId ?? input.actorPlatformUserId,
+        ),
         startDate: request.startDate,
         status: "draft",
         statusHistory: [
@@ -267,6 +277,7 @@ export async function createPtoDraft(input: {
 
 export async function updatePtoDraft(input: {
   actorPlatformUserId: string;
+  administratorOverride?: boolean;
   request: PtoDraftInput;
   requestId: string;
 }) {
@@ -281,7 +292,9 @@ export async function updatePtoDraft(input: {
       updated = await requests.findOneAndUpdate(
         {
           _id: new ObjectId(input.requestId),
-          requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
+          ...(!input.administratorOverride && {
+            requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
+          }),
           status: "draft",
         },
         {
@@ -314,13 +327,11 @@ export async function updatePtoDraft(input: {
 
 export async function submitPtoDraft(input: {
   actorPlatformUserId: string;
+  administratorOverride?: boolean;
   approverPlatformUserId: string | null;
   requestId: string;
 }) {
   objectIdStringSchema.parse(input.requestId);
-  if (input.actorPlatformUserId === input.approverPlatformUserId) {
-    throw new PtoDomainError("self_approval");
-  }
   await ensurePtoIndexes();
   const client = await getMongoClient();
   const { requests } = await getPtoCollections();
@@ -330,12 +341,20 @@ export async function submitPtoDraft(input: {
       const existing = await requests.findOne(
         {
           _id: new ObjectId(input.requestId),
-          requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
+          ...(!input.administratorOverride && {
+            requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
+          }),
           status: "draft",
         },
         { session },
       );
       if (!existing) throw new PtoDomainError("stale_status");
+      if (
+        input.approverPlatformUserId &&
+        existing.requesterPlatformUserId.equals(input.approverPlatformUserId)
+      ) {
+        throw new PtoDomainError("self_approval");
+      }
       const now = new Date();
       updated = await requests.findOneAndUpdate(
         { _id: existing._id, status: "draft" },
@@ -376,6 +395,7 @@ export async function submitPtoDraft(input: {
 
 export async function cancelPtoRequest(input: {
   actorPlatformUserId: string;
+  administratorOverride?: boolean;
   requestId: string;
 }) {
   objectIdStringSchema.parse(input.requestId);
@@ -388,7 +408,9 @@ export async function cancelPtoRequest(input: {
       const existing = await requests.findOne(
         {
           _id: new ObjectId(input.requestId),
-          requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
+          ...(!input.administratorOverride && {
+            requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
+          }),
           status: { $in: ["draft", "pending"] },
         },
         { session },
@@ -638,6 +660,35 @@ export async function listPtoRequestsForRequester(employeeId: string) {
   const documents = await requests
     .find({ requesterEmployeeId: new ObjectId(employeeId) })
     .sort({ createdAt: -1 })
+    .toArray();
+  return documents.map(toPtoRequest);
+}
+
+export async function listUpcomingApprovedProxyPtoRequests({
+  limit = 5,
+  platformUserId,
+  today,
+}: {
+  limit?: number;
+  platformUserId: string;
+  today: string;
+}) {
+  objectIdStringSchema.parse(platformUserId);
+  await ensurePtoIndexes();
+  const { requests } = await getPtoCollections();
+  const requesterPlatformUserId = new ObjectId(platformUserId);
+  const documents = await requests
+    .find({
+      createdByPlatformUserId: {
+        $exists: true,
+        $ne: requesterPlatformUserId,
+      },
+      endDate: { $gte: today },
+      requesterPlatformUserId,
+      status: "approved",
+    })
+    .sort({ startDate: 1, createdAt: 1 })
+    .limit(limit)
     .toArray();
   return documents.map(toPtoRequest);
 }

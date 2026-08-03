@@ -10,7 +10,10 @@ import {
   TextAreaField,
   TextField,
 } from "@/components/ui/form-field/form-field";
-import { savePtoDraftAction } from "@/features/pto/actions/pto-actions";
+import {
+  saveEmployeePtoDraftAction,
+  savePtoDraftAction,
+} from "@/features/pto/actions/pto-actions";
 import {
   formatPtoDays,
   ptoCategoryLabels,
@@ -29,10 +32,25 @@ type EditablePtoRequest = {
   startDate: string;
 };
 
-export function PtoRequestForm({ request }: { request?: EditablePtoRequest }) {
-  const [state, action] = useActionState(savePtoDraftAction, initialPtoActionState);
+export function PtoRequestForm({
+  employeeId,
+  request,
+}: {
+  employeeId?: string;
+  request?: EditablePtoRequest;
+}) {
+  const saveAction = employeeId ? saveEmployeePtoDraftAction : savePtoDraftAction;
+  const [state, action] = useActionState(saveAction, initialPtoActionState);
+  const cancelHref = employeeId
+    ? request
+      ? `/ausencias/${request.id}`
+      : `/admin/colaboradores/${employeeId}/ausencias`
+    : request
+      ? `/ausencias/${request.id}`
+      : "/ausencias";
   return (
     <ElevatedSurface action={action} as="form" className={styles.formCard}>
+      {employeeId && <input name="employeeId" type="hidden" value={employeeId} />}
       {request && <input name="requestId" type="hidden" value={request.id} />}
       {state.message && (
         <p className={styles.error} role="alert">
@@ -60,7 +78,6 @@ export function PtoRequestForm({ request }: { request?: EditablePtoRequest }) {
         />
         <TextField
           defaultValue={request ? formatPtoDays(request.durationUnits) : "1"}
-          description="Usá incrementos de medio día."
           error={state.errors?.durationDays}
           id="durationDays"
           label="Duración (días)"
@@ -100,11 +117,10 @@ export function PtoRequestForm({ request }: { request?: EditablePtoRequest }) {
         </div>
       </div>
       <div className={styles.actions}>
-        <SubmitButton pendingLabel="Guardando…">Guardar borrador</SubmitButton>
-        <ButtonLink
-          href={request ? `/ausencias/${request.id}` : "/ausencias"}
-          variant="quiet"
-        >
+        <SubmitButton pendingLabel="Guardando…">
+          {employeeId && !request ? "Crear solicitud" : "Guardar borrador"}
+        </SubmitButton>
+        <ButtonLink href={cancelHref} variant="quiet">
           Cancelar
         </ButtonLink>
       </div>

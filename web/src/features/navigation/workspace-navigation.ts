@@ -27,15 +27,26 @@ const ptoAdministrationNavigationItem: NavigationItem = {
   label: "Gestionar ausencias",
 };
 
-export function getWorkspaceNavigation(role: PlatformRole): readonly NavigationItem[] {
+export function getWorkspaceNavigation(
+  role: PlatformRole,
+  unreadNotificationCount = 0,
+): readonly NavigationItem[] {
+  const navigationItems = baseNavigationItems.map((item) =>
+    item.href === "/" && unreadNotificationCount > 0
+      ? {
+          ...item,
+          badge: unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount),
+        }
+      : item,
+  );
   return role === "administrator"
     ? [
-        ...baseNavigationItems,
+        ...navigationItems,
         administratorNavigationItem,
         employeeNavigationItem,
         ptoAdministrationNavigationItem,
       ]
-    : baseNavigationItems;
+    : navigationItems;
 }
 
 export function getActiveNavigationHref(

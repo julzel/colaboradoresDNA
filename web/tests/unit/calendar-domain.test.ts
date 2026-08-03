@@ -100,6 +100,7 @@ describe("calendar event input", () => {
       description: "  Reunión   general ",
       endDate: "2026-07-15",
       endDateTime: "",
+      eventType: "training",
       inviteePlatformUserIds: [],
       location: "",
       meetingUrl: "",
@@ -122,6 +123,7 @@ describe("calendar event input", () => {
       description: "",
       endDate: "",
       endDateTime: "2026-07-14T10:30",
+      eventType: "one_on_one",
       inviteePlatformUserIds: [],
       location: "",
       meetingUrl: "",
@@ -142,6 +144,7 @@ describe("calendar event input", () => {
       description: "",
       endDate: "2026-07-14",
       endDateTime: "",
+      eventType: "custom",
       inviteePlatformUserIds: [],
       location: "",
       meetingUrl: "",
@@ -155,5 +158,27 @@ describe("calendar event input", () => {
     if (!result.success) {
       expect(result.error.issues[0]?.path).toEqual(["inviteePlatformUserIds"]);
     }
+  });
+
+  it("keeps specifically added employees for company events", () => {
+    const inviteeId = "507f1f77bcf86cd799439011";
+    const parsed = calendarEventInputSchema.parse({
+      allDay: true,
+      departmentId: null,
+      description: "",
+      endDate: "2026-07-14",
+      endDateTime: "",
+      eventType: "celebration",
+      inviteePlatformUserIds: [inviteeId, inviteeId],
+      location: "",
+      meetingUrl: "",
+      startDate: "2026-07-14",
+      startDateTime: "",
+      title: "Aniversario",
+      visibility: "company",
+    });
+
+    expect(parsed.inviteePlatformUserIds).toEqual([inviteeId]);
+    expect(parsed.eventType).toBe("celebration");
   });
 });

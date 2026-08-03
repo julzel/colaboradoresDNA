@@ -13,6 +13,7 @@ const event: CalendarEvent = {
   endDate: "2026-07-14",
   endLocal: "2026-07-14",
   endsAt: "2026-07-15T06:00:00.000Z",
+  eventType: "custom",
   id: "507f1f77bcf86cd799439010",
   inviteePlatformUserIds: [],
   location: null,

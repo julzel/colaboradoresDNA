@@ -50,6 +50,10 @@ const ptoIndexes: Readonly<Record<string, readonly IndexDescription[]>> = {
       name: "pto_requests_requester_range",
     },
     {
+      key: { requesterPlatformUserId: 1, status: 1, endDate: 1, startDate: 1 },
+      name: "pto_requests_requester_notifications",
+    },
+    {
       key: { assignedApproverPlatformUserId: 1, status: 1, submittedAt: 1 },
       name: "pto_requests_approver_queue",
       partialFilterExpression: {

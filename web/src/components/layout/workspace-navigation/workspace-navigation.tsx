@@ -12,14 +12,16 @@ import {
 type WorkspaceNavigationProps = {
   label?: string;
   role: PlatformRole;
+  unreadNotificationCount?: number;
 };
 
 export function WorkspaceNavigation({
   label = "Navegación principal",
   role,
+  unreadNotificationCount = 0,
 }: WorkspaceNavigationProps) {
   const pathname = usePathname();
-  const items = getWorkspaceNavigation(role);
+  const items = getWorkspaceNavigation(role, unreadNotificationCount);
 
   return (
     <SideNavigation

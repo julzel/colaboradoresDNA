@@ -84,12 +84,12 @@ describe("calendar event form", () => {
     });
     expect(allDay).toBeChecked();
     expect(screen.getByLabelText("Fecha inicial")).toBeEnabled();
-    expect(screen.getByLabelText("Inicio")).toBeDisabled();
+    expect(screen.queryByLabelText("Inicio")).not.toBeInTheDocument();
 
     await user.click(allDay);
 
     expect(allDay).not.toBeChecked();
-    expect(screen.getByLabelText("Fecha inicial")).toBeDisabled();
+    expect(screen.queryByLabelText("Fecha inicial")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Inicio")).toBeEnabled();
   });
 
@@ -117,6 +117,55 @@ describe("calendar event form", () => {
     );
 
     expect(screen.getByRole("checkbox", { name: "Ana Mora" })).toBeEnabled();
+  });
+
+  it("offers predefined event types", () => {
+    render(
+      <CalendarEventForm
+        cancelHref="/calendario"
+        mode="create"
+        options={{
+          departments: [],
+          people: [
+            {
+              displayName: "Ana Mora",
+              id: "507f1f77bcf86cd799439011",
+            },
+          ],
+        }}
+      />,
+    );
+
+    const eventType = screen.getByRole("combobox", { name: "Tipo de evento" });
+    expect(eventType).toHaveTextContent("Capacitación");
+    expect(eventType).toHaveTextContent("1:1");
+    expect(eventType).toHaveTextContent("Celebración");
+    expect(eventType).toHaveTextContent("Evento personalizado");
+    expect(
+      screen.queryByRole("checkbox", { name: "Ana Mora" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("toggles optional event details without removing their fields", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarEventForm
+        cancelHref="/calendario"
+        mode="create"
+        options={{ departments: [], people: [] }}
+      />,
+    );
+
+    const location = screen.getByLabelText("Lugar");
+    expect(location).not.toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Más" }));
+
+    expect(location).toBeVisible();
+    expect(screen.getByRole("button", { name: "Menos" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
   });
 
   it("closes a modal form through browser history", async () => {

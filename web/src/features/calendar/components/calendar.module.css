@@ -390,6 +390,17 @@
   min-width: 0;
 }
 
+.eventDetailsFields,
+.eventLocationFields {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.eventDetailsFields[hidden] {
+  display: none;
+}
+
 .formHint {
   margin: 0;
   color: var(--color-text-muted);
@@ -605,8 +616,17 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .eventInformationGrid {
+    grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 1.2fr);
+  }
+
   .fullWidth {
     grid-column: 1 / -1;
+  }
+
+  .eventDetailsFields {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 1.2fr);
   }
 
   .peopleGrid {

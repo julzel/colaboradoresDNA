@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, type ChangeEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
@@ -16,7 +17,10 @@ import {
   updateCalendarEventAction,
 } from "@/features/calendar/actions/calendar-event-actions";
 import { initialCalendarActionState } from "@/features/calendar/domain/calendar-action-state";
-import type { CalendarEvent } from "@/features/calendar/domain/calendar-event";
+import {
+  calendarEventTypeOptions,
+  type CalendarEvent,
+} from "@/features/calendar/domain/calendar-event";
 import { getTodayInCostaRica } from "@/features/calendar/domain/calendar-utils";
 import type { CalendarEventTargetOptions } from "@/features/calendar/server/calendar-event-repository";
 import { useGuardedForm } from "@/features/employees/components/use-guarded-form";
@@ -47,6 +51,7 @@ export function CalendarEventForm({
     mode === "create" ? createCalendarEventAction : updateCalendarEventAction;
   const [state, formAction] = useActionState(action, initialCalendarActionState);
   const [allDay, setAllDay] = useState(event?.allDay ?? true);
+  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
   const [visibility, setVisibility] = useState(event?.visibility ?? "company");
   const { dirty, formRef, handleCancel, handleChange, handleSubmit } = useGuardedForm(
     cancelHref,
@@ -55,6 +60,10 @@ export function CalendarEventForm({
   );
   const today = getTodayInCostaRica();
   const selectedInvitees = new Set(event?.inviteePlatformUserIds ?? []);
+  const hasOptionalDetailErrors = Boolean(
+    state.errors?.description || state.errors?.location || state.errors?.meetingUrl,
+  );
+  const optionalDetailsVisible = showOptionalDetails || hasOptionalDetailErrors;
 
   function handleAllDayChange(changeEvent: ChangeEvent<HTMLInputElement>) {
     setAllDay(changeEvent.currentTarget.checked);
@@ -87,8 +96,25 @@ export function CalendarEventForm({
 
       <fieldset className={styles.formSection}>
         <legend>Información del evento</legend>
-        <div className={styles.formGrid}>
-          <div className={styles.fullWidth}>
+        <div className={`${styles.formGrid} ${styles.eventInformationGrid}`}>
+          <div>
+            <SelectField
+              defaultValue={event?.eventType ?? "custom"}
+              description="Seleccioná la categoría que mejor describe la actividad."
+              error={state.errors?.eventType}
+              id="eventType"
+              label="Tipo de evento"
+              name="eventType"
+              required
+            >
+              {calendarEventTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+          <div>
             <TextField
               defaultValue={event?.title ?? ""}
               error={state.errors?.title}
@@ -100,6 +126,48 @@ export function CalendarEventForm({
             />
           </div>
           <div className={styles.fullWidth}>
+            <Button
+              aria-controls="event-optional-details"
+              aria-expanded={optionalDetailsVisible}
+              onClick={() => setShowOptionalDetails((visible) => !visible)}
+              size="small"
+              variant="quiet"
+            >
+              {optionalDetailsVisible ? (
+                <EyeOff aria-hidden="true" size={16} />
+              ) : (
+                <Eye aria-hidden="true" size={16} />
+              )}
+              {optionalDetailsVisible ? "Menos" : "Más"}
+            </Button>
+          </div>
+          <div
+            className={styles.eventDetailsFields}
+            hidden={!optionalDetailsVisible}
+            id="event-optional-details"
+          >
+            <div className={styles.eventLocationFields}>
+              <TextField
+                defaultValue={event?.location ?? ""}
+                error={state.errors?.location}
+                id="location"
+                label="Lugar"
+                maxLength={200}
+                name="location"
+                optional
+              />
+              <TextField
+                defaultValue={event?.meetingUrl ?? ""}
+                error={state.errors?.meetingUrl}
+                id="meetingUrl"
+                label="Enlace de reunión"
+                maxLength={500}
+                name="meetingUrl"
+                optional
+                placeholder="https://"
+                type="url"
+              />
+            </div>
             <TextAreaField
               defaultValue={event?.description ?? ""}
               error={state.errors?.description}
@@ -111,26 +179,6 @@ export function CalendarEventForm({
               rows={4}
             />
           </div>
-          <TextField
-            defaultValue={event?.location ?? ""}
-            error={state.errors?.location}
-            id="location"
-            label="Lugar"
-            maxLength={200}
-            name="location"
-            optional
-          />
-          <TextField
-            defaultValue={event?.meetingUrl ?? ""}
-            error={state.errors?.meetingUrl}
-            id="meetingUrl"
-            label="Enlace de reunión"
-            maxLength={500}
-            name="meetingUrl"
-            optional
-            placeholder="https://"
-            type="url"
-          />
         </div>
       </fieldset>
 
@@ -144,53 +192,58 @@ export function CalendarEventForm({
           name="allDay"
           onChange={handleAllDayChange}
         />
-        <div className={styles.formGrid} hidden={!allDay}>
-          <TextField
-            defaultValue={event?.allDay ? event.startLocal : today}
-            disabled={!allDay}
-            error={state.errors?.startDate}
-            id="startDate"
-            label="Fecha inicial"
-            name="startDate"
-            required={allDay}
-            type="date"
-          />
-          <TextField
-            defaultValue={event?.allDay ? event.endLocal : today}
-            disabled={!allDay}
-            error={state.errors?.endDate}
-            id="endDate"
-            label="Fecha final"
-            name="endDate"
-            required={allDay}
-            type="date"
-          />
-        </div>
-        <div className={styles.formGrid} hidden={allDay}>
-          <TextField
-            defaultValue={event && !event.allDay ? event.startLocal : `${today}T09:00`}
-            disabled={allDay}
-            error={state.errors?.startDateTime}
-            id="startDateTime"
-            label="Inicio"
-            name="startDateTime"
-            required={!allDay}
-            type="datetime-local"
-          />
-          <TextField
-            defaultValue={event && !event.allDay ? event.endLocal : `${today}T10:00`}
-            disabled={allDay}
-            error={state.errors?.endDateTime}
-            id="endDateTime"
-            label="Final"
-            name="endDateTime"
-            required={!allDay}
-            type="datetime-local"
-          />
-        </div>
-        <p className={styles.formHint}>
-          Las horas se interpretan en la zona horaria de Costa Rica.
-        </p>
+        {allDay ? (
+          <div className={styles.formGrid}>
+            <TextField
+              defaultValue={event?.allDay ? event.startLocal : today}
+              error={state.errors?.startDate}
+              id="startDate"
+              label="Fecha inicial"
+              name="startDate"
+              required
+              type="date"
+            />
+            <TextField
+              defaultValue={event?.allDay ? event.endLocal : today}
+              error={state.errors?.endDate}
+              id="endDate"
+              label="Fecha final"
+              name="endDate"
+              required
+              type="date"
+            />
+          </div>
+        ) : (
+          <>
+            <div className={styles.formGrid}>
+              <TextField
+                defaultValue={
+                  event && !event.allDay ? event.startLocal : `${today}T09:00`
+                }
+                error={state.errors?.startDateTime}
+                id="startDateTime"
+                label="Inicio"
+                name="startDateTime"
+                required
+                type="datetime-local"
+              />
+              <TextField
+                defaultValue={
+                  event && !event.allDay ? event.endLocal : `${today}T10:00`
+                }
+                error={state.errors?.endDateTime}
+                id="endDateTime"
+                label="Final"
+                name="endDateTime"
+                required
+                type="datetime-local"
+              />
+            </div>
+            <p className={styles.formHint}>
+              Las horas se interpretan en la zona horaria de Costa Rica.
+            </p>
+          </>
+        )}
       </fieldset>
 
       <fieldset className={styles.formSection}>
@@ -227,17 +280,17 @@ export function CalendarEventForm({
           </SelectField>
         </div>
 
-        <div hidden={visibility !== "invited"}>
+        {visibility === "invited" && (
           <fieldset className={styles.peopleFieldset}>
-            <legend>Personas invitadas</legend>
+            <legend>Personas agregadas</legend>
             <p className={styles.formHint}>
-              Seleccioná al menos una persona que podrá consultar el evento.
+              Las personas seleccionadas verán el evento en su calendario y recibirán
+              una notificación en Inicio. Seleccioná al menos una persona.
             </p>
             <div className={styles.peopleGrid}>
               {options.people.map((person) => (
                 <CheckboxField
                   defaultChecked={selectedInvitees.has(person.id)}
-                  disabled={visibility !== "invited"}
                   id={`invitee-${person.id}`}
                   key={person.id}
                   label={person.displayName}
@@ -252,7 +305,7 @@ export function CalendarEventForm({
               </p>
             )}
           </fieldset>
-        </div>
+        )}
       </fieldset>
 
       <div className={styles.formActions}>
