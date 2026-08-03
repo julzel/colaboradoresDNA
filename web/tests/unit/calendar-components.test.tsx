@@ -29,6 +29,39 @@ describe("calendar views", () => {
     ).toBeInTheDocument();
   });
 
+  it("carries an event type into the agenda color hook", () => {
+    render(
+      <CalendarAgenda
+        entries={[
+          {
+            allDay: false,
+            canManage: false,
+            description: null,
+            detailHref: "/calendario/eventos/event-1",
+            endAt: "2026-07-13T16:00:00.000Z",
+            endDate: "2026-07-13",
+            eventType: "one_on_one",
+            id: "event:event-1",
+            kind: "event",
+            label: "1:1",
+            location: null,
+            meetingUrl: null,
+            note: null,
+            startAt: "2026-07-13T15:00:00.000Z",
+            startDate: "2026-07-13",
+            title: "Seguimiento semanal",
+          },
+        ]}
+        month="2026-07"
+      />,
+    );
+
+    expect(screen.getByText("1:1").closest("article")).toHaveAttribute(
+      "data-event-type",
+      "one_on_one",
+    );
+  });
+
   it("renders a six-week month grid and selected-day details", () => {
     render(
       <CalendarMonth

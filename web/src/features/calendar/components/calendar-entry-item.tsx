@@ -50,14 +50,27 @@ export function CalendarEntryItem({ entry }: CalendarEntryItemProps) {
   );
 
   return (
-    <article className={styles.entry}>
-      <span className={styles.entryIcon} data-kind={entry.kind}>
+    <article
+      className={styles.entry}
+      data-event-type={entry.eventType ?? undefined}
+      data-kind={entry.kind}
+    >
+      <span
+        className={styles.entryIcon}
+        data-event-type={entry.eventType ?? undefined}
+        data-kind={entry.kind}
+      >
         <Icon aria-hidden="true" size={19} />
       </span>
       <div className={styles.entryContent}>
         <div className={styles.entryHeading}>
           <div>
-            <span className={styles.entryLabel}>{entry.label}</span>
+            <span
+              className={styles.entryLabel}
+              data-event-type={entry.eventType ?? undefined}
+            >
+              {entry.label}
+            </span>
             <h3>{title}</h3>
           </div>
           {entry.canManage && <span className={styles.manageBadge}>Gestionable</span>}

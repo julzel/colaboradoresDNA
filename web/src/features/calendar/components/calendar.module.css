@@ -143,6 +143,26 @@
   color: var(--color-info);
 }
 
+.entryIcon[data-kind="event"][data-event-type="training"] {
+  background: var(--color-event-training-soft);
+  color: var(--color-event-training);
+}
+
+.entryIcon[data-kind="event"][data-event-type="one_on_one"] {
+  background: var(--color-event-one-on-one-soft);
+  color: var(--color-event-one-on-one);
+}
+
+.entryIcon[data-kind="event"][data-event-type="celebration"] {
+  background: var(--color-event-celebration-soft);
+  color: var(--color-event-celebration);
+}
+
+.entryIcon[data-kind="event"][data-event-type="custom"] {
+  background: var(--color-event-custom-soft);
+  color: var(--color-event-custom);
+}
+
 .entryContent {
   min-width: 0;
 }
@@ -176,6 +196,22 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.entryLabel[data-event-type="training"] {
+  color: var(--color-event-training);
+}
+
+.entryLabel[data-event-type="one_on_one"] {
+  color: var(--color-event-one-on-one);
+}
+
+.entryLabel[data-event-type="celebration"] {
+  color: var(--color-event-celebration);
+}
+
+.entryLabel[data-event-type="custom"] {
+  color: var(--color-event-custom);
 }
 
 .manageBadge {
@@ -306,8 +342,8 @@
 }
 
 .dayNumber[aria-current="date"] {
-  background: var(--color-accent);
-  color: #fff;
+  color: var(--color-brand-text);
+  font-weight: 850;
 }
 
 .mobileIndicators {
@@ -324,6 +360,22 @@
 
 .mobileIndicators [data-kind="pto"] {
   color: var(--color-info);
+}
+
+.mobileIndicators [data-event-type="training"] {
+  color: var(--color-event-training);
+}
+
+.mobileIndicators [data-event-type="one_on_one"] {
+  color: var(--color-event-one-on-one);
+}
+
+.mobileIndicators [data-event-type="celebration"] {
+  color: var(--color-event-celebration);
+}
+
+.mobileIndicators [data-event-type="custom"] {
+  color: var(--color-event-custom);
 }
 
 .desktopPreviews {
@@ -605,6 +657,31 @@
   .eventPreview[data-kind="birthday"] {
     background: var(--color-accent-soft);
     color: var(--color-accent);
+  }
+
+  .eventPreview[data-kind="pto"] {
+    background: var(--color-success-soft);
+    color: var(--color-success);
+  }
+
+  .eventPreview[data-kind="event"][data-event-type="training"] {
+    background: var(--color-event-training-soft);
+    color: var(--color-event-training);
+  }
+
+  .eventPreview[data-kind="event"][data-event-type="one_on_one"] {
+    background: var(--color-event-one-on-one-soft);
+    color: var(--color-event-one-on-one);
+  }
+
+  .eventPreview[data-kind="event"][data-event-type="celebration"] {
+    background: var(--color-event-celebration-soft);
+    color: var(--color-event-celebration);
+  }
+
+  .eventPreview[data-kind="event"][data-event-type="custom"] {
+    background: var(--color-event-custom-soft);
+    color: var(--color-event-custom);
   }
 
   .moreEvents {

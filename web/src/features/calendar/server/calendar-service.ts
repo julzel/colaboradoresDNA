@@ -90,6 +90,7 @@ function eventToEntry(actor: CalendarActor, event: CalendarEvent): CalendarEntry
     detailHref: `/calendario/eventos/${event.id}`,
     endAt: event.endsAt,
     endDate: event.endDate,
+    eventType: event.eventType,
     id: `event:${event.id}`,
     kind: "event",
     label: calendarEventTypeLabels[event.eventType],
