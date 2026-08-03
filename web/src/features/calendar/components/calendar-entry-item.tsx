@@ -1,11 +1,4 @@
-import {
-  CakeSlice,
-  CalendarDays,
-  Clock3,
-  ExternalLink,
-  MapPin,
-  Umbrella,
-} from "lucide-react";
+import { CakeSlice, CalendarDays, Clock3, MapPin, Umbrella } from "lucide-react";
 import Link from "next/link";
 
 import type { CalendarEntry } from "@/features/calendar/domain/calendar-entry";
@@ -88,17 +81,6 @@ export function CalendarEntryItem({ entry }: CalendarEntryItemProps) {
           )}
         </div>
         {entry.note && <p className={styles.entryNote}>{entry.note}</p>}
-        {entry.meetingUrl && (
-          <a
-            className={styles.meetingLink}
-            href={entry.meetingUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Abrir enlace
-            <ExternalLink aria-hidden="true" size={14} />
-          </a>
-        )}
       </div>
     </article>
   );

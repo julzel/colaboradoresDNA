@@ -40,11 +40,16 @@ import {
 } from "@/features/dashboard/server/notification-read-repository";
 import { formatPtoDays, ptoCategoryLabels } from "@/features/pto/domain/pto";
 import {
+  getPtoRequestDetail,
   listUpcomingProxyPtoNotifications,
   listVisibleApprovedPtoForCalendar,
 } from "@/features/pto/server/pto-service";
 
 const dashboardNotificationLimit = 100;
+
+function getBirthdayCalendarId(employeeId: string) {
+  return createHash("sha256").update(employeeId).digest("hex").slice(0, 16);
+}
 
 async function resolveCalendarActor(
   platformUser: PlatformUser,
@@ -122,13 +127,13 @@ function birthdayToEntry({
   ).padStart(2, "0")}`;
   const startsAt = calendarDateToUtc(date);
   const endsAt = calendarDateToUtc(addCalendarDays(date, 1));
-  const opaqueId = createHash("sha256").update(employeeId).digest("hex").slice(0, 16);
+  const opaqueId = getBirthdayCalendarId(employeeId);
 
   return {
     allDay: true,
     canManage: false,
     description: null,
-    detailHref: null,
+    detailHref: `/calendario/cumpleanos/${opaqueId}/${year}`,
     endAt: endsAt.toISOString(),
     endDate: date,
     id: `birthday:${opaqueId}:${year}`,
@@ -154,7 +159,7 @@ function ptoToEntry(pto: {
     allDay: true,
     canManage: false,
     description: null,
-    detailHref: `/ausencias/${pto.id}`,
+    detailHref: `/calendario/ausencias/${pto.id}`,
     endAt: calendarDateToUtc(addCalendarDays(pto.endDate, 1)).toISOString(),
     endDate: pto.endDate,
     id: `pto:${pto.id}`,
@@ -207,6 +212,45 @@ export async function getCalendarEntries(month: string) {
 export async function getVisibleCalendarEventDetail(eventId: string) {
   const actor = await requireCalendarActor();
   return getCalendarEventDetail({ actor, eventId });
+}
+
+export async function getVisibleCalendarPtoDetail(requestId: string) {
+  const detail = await getPtoRequestDetail(requestId);
+  if (!detail || detail.request.status !== "approved") return null;
+  const { request } = detail;
+
+  return {
+    category: request.category,
+    durationUnits: request.durationUnits,
+    endDate: request.endDate,
+    id: request.id,
+    requesterName: request.requesterName,
+    startDate: request.startDate,
+    status: "approved" as const,
+  };
+}
+
+export async function getVisibleCalendarBirthdayDetail({
+  birthdayId,
+  year,
+}: {
+  birthdayId: string;
+  year: number;
+}) {
+  if (!Number.isInteger(year) || year < 1900 || year > 2100) return null;
+  const actor = await requireCalendarActor();
+  const birthdays = await listBirthdayCalendarEntries({ viewerRole: actor.role });
+  const birthday = birthdays.find(
+    (candidate) => getBirthdayCalendarId(candidate.employeeId) === birthdayId,
+  );
+  if (!birthday) return null;
+  const entry = birthdayToEntry({ ...birthday, year });
+
+  return {
+    date: entry.startDate,
+    displayName: birthday.displayName,
+    note: entry.note,
+  };
 }
 
 export async function getCalendarEventFormOptions() {

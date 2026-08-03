@@ -4,6 +4,8 @@ import {
   createCalendarEventForActor,
   getCalendarDashboardNotifications,
   getCalendarEntries,
+  getVisibleCalendarBirthdayDetail,
+  getVisibleCalendarPtoDetail,
   readDashboardNotification,
 } from "@/features/calendar/server/calendar-service";
 
@@ -11,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   createCalendarEvent: vi.fn(),
   findEffectiveEmployeeAssignment: vi.fn(),
   findEmployeeByPlatformUserId: vi.fn(),
+  getPtoRequestDetail: vi.fn(),
   listBirthdayCalendarEntries: vi.fn(),
   listCalendarEventTargetOptions: vi.fn(),
   listReadNotificationKeys: vi.fn(),
@@ -53,6 +56,7 @@ vi.mock("@/features/dashboard/server/notification-read-repository", () => ({
 }));
 
 vi.mock("@/features/pto/server/pto-service", () => ({
+  getPtoRequestDetail: mocks.getPtoRequestDetail,
   listUpcomingProxyPtoNotifications: mocks.listUpcomingProxyPtoNotifications,
   listVisibleApprovedPtoForCalendar: mocks.listVisibleApprovedPtoForCalendar,
 }));
@@ -120,9 +124,76 @@ describe("calendar service authorization and aggregation", () => {
       role: "supervisor",
     });
     expect(result.entries[0]).toMatchObject({
+      detailHref: expect.stringMatching(
+        /^\/calendario\/cumpleanos\/[a-f0-9]{16}\/2026$/,
+      ),
       kind: "birthday",
       startDate: "2026-07-06",
       title: "Ana Mora",
+    });
+  });
+
+  it("routes approved leave through a calendar summary", async () => {
+    mocks.listVisibleApprovedPtoForCalendar.mockResolvedValue([
+      {
+        durationUnits: 3,
+        endDate: "2026-07-12",
+        id: "507f1f77bcf86cd799439099",
+        requesterName: "Ana Mora",
+        startDate: "2026-07-11",
+      },
+    ]);
+
+    const result = await getCalendarEntries("2026-07");
+
+    expect(result.entries.find((entry) => entry.kind === "pto")).toMatchObject({
+      detailHref: "/calendario/ausencias/507f1f77bcf86cd799439099",
+      title: "Ana Mora",
+    });
+  });
+
+  it("returns a calendar-safe birthday summary from its opaque id", async () => {
+    const calendar = await getCalendarEntries("2026-07");
+    const href = calendar.entries.find(
+      (entry) => entry.kind === "birthday",
+    )?.detailHref;
+    const birthdayId = href?.split("/").at(-2);
+
+    const detail = await getVisibleCalendarBirthdayDetail({
+      birthdayId: birthdayId ?? "",
+      year: 2026,
+    });
+
+    expect(detail).toEqual({
+      date: "2026-07-06",
+      displayName: "Ana Mora",
+      note: null,
+    });
+  });
+
+  it("returns only approved leave fields needed by the calendar summary", async () => {
+    mocks.getPtoRequestDetail.mockResolvedValue({
+      request: {
+        category: "vacation",
+        durationUnits: 2,
+        endDate: "2026-07-12",
+        id: "507f1f77bcf86cd799439099",
+        requesterName: "Ana Mora",
+        startDate: "2026-07-11",
+        status: "approved",
+      },
+    });
+
+    await expect(
+      getVisibleCalendarPtoDetail("507f1f77bcf86cd799439099"),
+    ).resolves.toEqual({
+      category: "vacation",
+      durationUnits: 2,
+      endDate: "2026-07-12",
+      id: "507f1f77bcf86cd799439099",
+      requesterName: "Ana Mora",
+      startDate: "2026-07-11",
+      status: "approved",
     });
   });
 
