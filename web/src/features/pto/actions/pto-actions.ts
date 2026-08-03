@@ -17,12 +17,14 @@ import type { PtoActionState } from "@/features/pto/domain/pto-action-state";
 import {
   adjustEmployeePtoBalance,
   cancelOwnPtoRequest,
+  createEmployeePtoDraftAsAdministrator,
   createOwnPtoDraft,
   decideAssignedPtoRequest,
   getPtoRequestDetail,
   openEmployeePtoBalance,
   reassignOrphanedPtoApprover,
   submitOwnPtoDraft,
+  updateEmployeePtoDraftAsAdministrator,
   updateOwnPtoDraft,
 } from "@/features/pto/server/pto-service";
 
@@ -95,15 +97,38 @@ export async function savePtoDraftAction(
   redirect(`/ausencias/${request.id}`);
 }
 
+export async function saveEmployeePtoDraftAction(
+  _state: PtoActionState,
+  formData: FormData,
+): Promise<PtoActionState> {
+  const employeeId = objectIdStringSchema.safeParse(getText(formData, "employeeId"));
+  if (!employeeId.success) return zodState(employeeId.error);
+  let request;
+  try {
+    const input = parseDraft(formData);
+    const requestId = getText(formData, "requestId");
+    request = requestId
+      ? await updateEmployeePtoDraftAsAdministrator(employeeId.data, requestId, input)
+      : await createEmployeePtoDraftAsAdministrator(employeeId.data, input);
+  } catch (error) {
+    return ptoErrorState(error);
+  }
+  revalidatePath("/ausencias");
+  revalidatePath(`/admin/colaboradores/${employeeId.data}/ausencias`);
+  redirect(`/ausencias/${request.id}`);
+}
+
 export async function submitPtoRequestAction(
   _state: PtoActionState,
   formData: FormData,
 ): Promise<PtoActionState> {
   const parsedId = objectIdStringSchema.safeParse(getText(formData, "requestId"));
   if (!parsedId.success) return zodState(parsedId.error);
+  let proxyEmployeeId: string | null = null;
   try {
     const detail = await getPtoRequestDetail(parsedId.data);
     if (!detail) throw new PtoDomainError("request_missing");
+    proxyEmployeeId = detail.proxyEmployeeId;
     const hasWarnings = detail.warnings.hasOverlap || detail.warnings.wouldBeNegative;
     if (hasWarnings && getText(formData, "confirmWarnings") !== "true") {
       return {
@@ -118,6 +143,10 @@ export async function submitPtoRequestAction(
     return ptoErrorState(error);
   }
   revalidatePath("/ausencias");
+  revalidatePath("/admin/ausencias");
+  if (proxyEmployeeId) {
+    revalidatePath(`/admin/colaboradores/${proxyEmployeeId}/ausencias`);
+  }
   revalidatePath(`/ausencias/${parsedId.data}`);
   redirect(`/ausencias/${parsedId.data}`);
 }
@@ -133,6 +162,7 @@ export async function cancelPtoRequestAction(
     return ptoErrorState(error);
   }
   revalidatePath("/ausencias");
+  revalidatePath("/admin/ausencias");
   revalidatePath(`/ausencias/${requestId}`);
   redirect(`/ausencias/${requestId}`);
 }
@@ -168,6 +198,7 @@ export async function decidePtoRequestAction(
     return ptoErrorState(error);
   }
   revalidatePath("/ausencias");
+  revalidatePath("/admin/ausencias");
   revalidatePath(`/ausencias/${parsed.data.requestId}`);
   revalidatePath("/calendario");
   redirect(`/ausencias/${parsed.data.requestId}`);

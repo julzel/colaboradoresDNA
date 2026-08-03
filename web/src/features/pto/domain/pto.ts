@@ -133,6 +133,7 @@ export type PtoRequestDocument = {
   category: PtoCategory;
   collaboratorNote: string | null;
   createdAt: Date;
+  createdByPlatformUserId?: ObjectId;
   decidedAt: Date | null;
   decisionNote: string | null;
   durationUnits: number;

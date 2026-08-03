@@ -30,6 +30,7 @@ export default async function EditPtoRequestPage({
           </div>
         </header>
         <PtoRequestForm
+          {...(detail.proxyEmployeeId ? { employeeId: detail.proxyEmployeeId } : {})}
           request={{
             category: detail.request.category,
             collaboratorNote: detail.request.collaboratorNote,

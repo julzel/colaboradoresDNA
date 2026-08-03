@@ -283,28 +283,34 @@ and cancelling approved requests.
 
 ## Authorization matrix
 
-| Capability                           | Collaborator | Supervisor | Administrator |
-| ------------------------------------ | ------------ | ---------- | ------------- |
-| View own requests and balance        | Yes          | Yes        | Yes           |
-| Create/edit own draft                | Yes          | Yes        | Yes           |
-| Submit/cancel own eligible request   | Yes          | Yes        | Yes           |
-| View requests assigned to them       | No           | Yes        | Yes           |
-| Approve/deny assigned request        | No           | Yes        | Yes           |
-| Approve/deny own request             | No           | No         | No            |
-| View all balances and ledger         | No           | No         | Yes           |
-| Enter opening balance                | No           | No         | Yes           |
-| Adjust a balance                     | No           | No         | Yes           |
-| Reassign an orphaned pending request | No           | No         | Yes           |
-| View all requests for audit          | No           | No         | Yes           |
+| Capability                            | Collaborator | Supervisor | Administrator |
+| ------------------------------------- | ------------ | ---------- | ------------- |
+| View own requests and balance         | Yes          | Yes        | Yes           |
+| Create/edit own draft                 | Yes          | Yes        | Yes           |
+| Submit/cancel own eligible request    | Yes          | Yes        | Yes           |
+| Create/manage a draft for an employee | No           | No         | Yes           |
+| View requests assigned to them        | No           | Yes        | Yes           |
+| Approve/deny authorized request       | No           | Yes        | Yes           |
+| Approve/deny own request              | No           | No         | No            |
+| View all balances and ledger          | No           | No         | Yes           |
+| Enter opening balance                 | No           | No         | Yes           |
+| Adjust a balance                      | No           | No         | Yes           |
+| Reassign an orphaned pending request  | No           | No         | Yes           |
+| View all requests for audit           | No           | No         | Yes           |
 
-An administrator's broad read access does not grant an approval override.
-Administrators can approve or deny only requests assigned to them. Hiding a
-button is never the authorization boundary.
+An active administrator may approve or deny any pending request except their
+own, including a request they created on behalf of another employee. The
+employee—not the proxy creator—is the requester for the self-approval rule.
+Hiding a button is never the authorization boundary.
 
 ## Approver resolution rules
 
-Resolve the requester from the authenticated `platformUserId`; never accept a
-requester ID from the client.
+For a self-service request, resolve the requester from the authenticated
+`platformUserId`; never accept a requester platform-user ID from the client.
+For an administrator-created request, accept only an employee ID, verify the
+administrator on the server, load the active employee and their linked platform
+user, and derive both requester IDs from those server-owned records. Keep the
+employee as requester and record the administrator separately as the creator.
 
 ### Collaborator requester
 
@@ -407,6 +413,7 @@ type PtoRequestDocument = {
   _id: ObjectId;
   requesterEmployeeId: ObjectId;
   requesterPlatformUserId: ObjectId;
+  createdByPlatformUserId: ObjectId;
   startDate: string;
   endDate: string;
   durationUnits: number;
@@ -655,9 +662,11 @@ consumer without creating an unused schedule UI in this delivery.
    `requirePlatformUser()`.
 2. Signed-out, deactivated, unlinked, and MFA-incomplete privileged users cannot
    obtain PTO data or mutate it.
-3. The requester is always derived from the authenticated platform user.
-4. Client-submitted requester, actor, status, balance, history, and snapshot
-   fields are ignored or rejected.
+3. A self-service requester is derived from the authenticated platform user.
+   For an administrator proxy request, requester identity is derived server-side
+   from the selected employee record and its active linked platform user.
+4. Client-submitted platform-user requester, actor, status, balance, history,
+   and snapshot fields are ignored or rejected.
 5. Direct Server Action invocation enforces the same authorization as the UI.
 
 ### 2. Balance initialization
@@ -692,6 +701,13 @@ consumer without creating an unused schedule UI in this delivery.
 6. A requester cannot edit another person's draft.
 7. Pending and terminal requests cannot be edited.
 8. Unsaved changes use the existing guarded-form behavior.
+9. An administrator can create, edit, submit, or cancel a draft on behalf of an
+   employee; the employee remains the requester for balance, overlap, routing,
+   calendars, and self-approval rules.
+10. A proxy-created request stores the administrator as creator and displays a
+    small attribution note with that administrator's name.
+11. An active employee's app-account activation state does not block an
+    administrator from recording a proxy request for that employee.
 
 ### 5. Submission and routing
 

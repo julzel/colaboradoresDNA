@@ -51,6 +51,11 @@ export default async function PtoRequestDetailPage({
             <p>
               {request.startDate} a {request.endDate}
             </p>
+            {request.createdByName && (
+              <p className={styles.muted}>
+                Solicitud creada por {request.createdByName} en nombre del colaborador.
+              </p>
+            )}
           </div>
           <StatusBadge tone={statusTones[request.status]}>
             {ptoStatusLabels[request.status]}
