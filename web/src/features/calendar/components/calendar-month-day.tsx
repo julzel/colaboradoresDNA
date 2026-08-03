@@ -65,7 +65,14 @@ export function CalendarMonthDay({
               : entry.kind === "pto"
                 ? Umbrella
                 : CalendarDays;
-          return <Icon data-kind={entry.kind} key={entry.id} size={12} />;
+          return (
+            <Icon
+              data-event-type={entry.eventType ?? undefined}
+              data-kind={entry.kind}
+              key={entry.id}
+              size={12}
+            />
+          );
         })}
       </div>
       <div className={styles.desktopPreviews}>
@@ -73,6 +80,7 @@ export function CalendarMonthDay({
           entry.detailHref ? (
             <Link
               className={styles.eventPreview}
+              data-event-type={entry.eventType ?? undefined}
               data-kind={entry.kind}
               href={entry.detailHref}
               key={entry.id}
@@ -80,7 +88,12 @@ export function CalendarMonthDay({
               {entry.title}
             </Link>
           ) : (
-            <span className={styles.eventPreview} data-kind={entry.kind} key={entry.id}>
+            <span
+              className={styles.eventPreview}
+              data-event-type={entry.eventType ?? undefined}
+              data-kind={entry.kind}
+              key={entry.id}
+            >
               {entry.title}
             </span>
           ),

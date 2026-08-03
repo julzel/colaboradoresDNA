@@ -1,3 +1,5 @@
+import type { CalendarEventType } from "@/features/calendar/domain/calendar-event";
+
 export type CalendarEntryKind = "birthday" | "event" | "pto";
 
 export type CalendarEntry = {
@@ -7,6 +9,7 @@ export type CalendarEntry = {
   detailHref: string | null;
   endAt: string;
   endDate: string;
+  eventType?: CalendarEventType;
   id: string;
   kind: CalendarEntryKind;
   label: string;

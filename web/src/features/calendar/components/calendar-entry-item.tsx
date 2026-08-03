@@ -1,11 +1,4 @@
-import {
-  CakeSlice,
-  CalendarDays,
-  Clock3,
-  ExternalLink,
-  MapPin,
-  Umbrella,
-} from "lucide-react";
+import { CakeSlice, CalendarDays, Clock3, MapPin, Umbrella } from "lucide-react";
 import Link from "next/link";
 
 import type { CalendarEntry } from "@/features/calendar/domain/calendar-entry";
@@ -50,14 +43,27 @@ export function CalendarEntryItem({ entry }: CalendarEntryItemProps) {
   );
 
   return (
-    <article className={styles.entry}>
-      <span className={styles.entryIcon} data-kind={entry.kind}>
+    <article
+      className={styles.entry}
+      data-event-type={entry.eventType ?? undefined}
+      data-kind={entry.kind}
+    >
+      <span
+        className={styles.entryIcon}
+        data-event-type={entry.eventType ?? undefined}
+        data-kind={entry.kind}
+      >
         <Icon aria-hidden="true" size={19} />
       </span>
       <div className={styles.entryContent}>
         <div className={styles.entryHeading}>
           <div>
-            <span className={styles.entryLabel}>{entry.label}</span>
+            <span
+              className={styles.entryLabel}
+              data-event-type={entry.eventType ?? undefined}
+            >
+              {entry.label}
+            </span>
             <h3>{title}</h3>
           </div>
           {entry.canManage && <span className={styles.manageBadge}>Gestionable</span>}
@@ -75,17 +81,6 @@ export function CalendarEntryItem({ entry }: CalendarEntryItemProps) {
           )}
         </div>
         {entry.note && <p className={styles.entryNote}>{entry.note}</p>}
-        {entry.meetingUrl && (
-          <a
-            className={styles.meetingLink}
-            href={entry.meetingUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Abrir enlace
-            <ExternalLink aria-hidden="true" size={14} />
-          </a>
-        )}
       </div>
     </article>
   );
