@@ -33,7 +33,6 @@ export function CalendarCreateEventTrigger({
       </Button>
       {isOpen && (
         <Modal
-          description="Definí la fecha y quién podrá consultar el evento."
           onClose={handleClose}
           title="Nuevo evento"
         >
