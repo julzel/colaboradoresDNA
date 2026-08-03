@@ -16,6 +16,7 @@ import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surfa
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { DeleteCalendarEventForm } from "@/features/calendar/components/delete-calendar-event-form";
 import styles from "@/features/calendar/components/calendar.module.css";
+import { calendarEventTypeLabels } from "@/features/calendar/domain/calendar-event";
 import {
   formatCalendarDate,
   formatCalendarTime,
@@ -62,7 +63,7 @@ export default async function CalendarEventDetailPage({
 
       <ElevatedSurface as="header" className={styles.eventDetailHeader}>
         <div>
-          <p className="eyebrow">Evento</p>
+          <p className="eyebrow">{calendarEventTypeLabels[event.eventType]}</p>
           <h1>{event.title}</h1>
           <StatusBadge tone="info">{visibilityLabels[event.visibility]}</StatusBadge>
         </div>
@@ -148,7 +149,7 @@ export default async function CalendarEventDetailPage({
           </p>
         </ElevatedSurface>
 
-        {event.visibility === "invited" && (
+        {detail.invitees.length > 0 && (
           <ElevatedSurface as="section" className={styles.detailCard}>
             <h2>
               <UsersRound aria-hidden="true" size={19} />

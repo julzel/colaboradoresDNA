@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createCalendarEventForActor,
+  getCalendarDashboardNotifications,
   getCalendarEntries,
 } from "@/features/calendar/server/calendar-service";
 
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   findEmployeeByPlatformUserId: vi.fn(),
   listBirthdayCalendarEntries: vi.fn(),
   listCalendarEventTargetOptions: vi.fn(),
+  listUpcomingCalendarEventNotifications: vi.fn(),
   listVisibleCalendarEvents: vi.fn(),
   listVisibleApprovedPtoForCalendar: vi.fn(),
   requirePlatformUser: vi.fn(),
@@ -36,6 +38,7 @@ vi.mock("@/features/calendar/server/calendar-event-repository", () => ({
   deleteCalendarEvent: vi.fn(),
   getCalendarEventDetail: vi.fn(),
   listCalendarEventTargetOptions: mocks.listCalendarEventTargetOptions,
+  listUpcomingCalendarEventNotifications: mocks.listUpcomingCalendarEventNotifications,
   listVisibleCalendarEvents: mocks.listVisibleCalendarEvents,
   updateCalendarEvent: vi.fn(),
 }));
@@ -49,6 +52,7 @@ describe("calendar service authorization and aggregation", () => {
     vi.clearAllMocks();
     mocks.requirePlatformUser.mockResolvedValue({
       platformUser: {
+        displayName: "Ana Mora",
         id: "507f1f77bcf86cd799439011",
         role: "supervisor",
       },
@@ -65,6 +69,7 @@ describe("calendar service authorization and aggregation", () => {
       departments: [],
       people: [],
     });
+    mocks.listUpcomingCalendarEventNotifications.mockResolvedValue([]);
     mocks.listBirthdayCalendarEntries.mockResolvedValue([
       {
         birthday: "06/07",
@@ -115,6 +120,7 @@ describe("calendar service authorization and aggregation", () => {
       departmentId: null,
       description: null,
       endsAt: new Date("2026-07-15T06:00:00.000Z"),
+      eventType: "custom" as const,
       inviteePlatformUserIds: [],
       location: null,
       meetingUrl: null,
@@ -153,6 +159,26 @@ describe("calendar service authorization and aggregation", () => {
     expect(result.entries[0]).toMatchObject({
       note: "Fecha registrada: 29 de febrero.",
       startDate: "2026-02-28",
+    });
+  });
+
+  it("returns upcoming events that explicitly include the signed-in employee", async () => {
+    mocks.listUpcomingCalendarEventNotifications.mockResolvedValue([
+      {
+        eventType: "training",
+        id: "event",
+        title: "Seguridad alimentaria",
+      },
+    ]);
+
+    const dashboard = await getCalendarDashboardNotifications();
+
+    expect(mocks.listUpcomingCalendarEventNotifications).toHaveBeenCalledWith({
+      platformUserId: "507f1f77bcf86cd799439011",
+    });
+    expect(dashboard).toMatchObject({
+      displayName: "Ana Mora",
+      notifications: [{ eventType: "training", id: "event" }],
     });
   });
 });

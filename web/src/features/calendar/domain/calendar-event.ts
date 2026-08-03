@@ -17,7 +17,32 @@ export const calendarEventVisibilitySchema = z.enum([
   "invited",
 ]);
 
+export const calendarEventTypeSchema = z.enum([
+  "training",
+  "one_on_one",
+  "celebration",
+  "custom",
+]);
+
+export const calendarEventTypeLabels = {
+  celebration: "Celebración",
+  custom: "Evento personalizado",
+  one_on_one: "1:1",
+  training: "Capacitación",
+} as const satisfies Record<CalendarEventType, string>;
+
+export const calendarEventTypeOptions: ReadonlyArray<{
+  label: string;
+  value: CalendarEventType;
+}> = [
+  { label: calendarEventTypeLabels.training, value: "training" },
+  { label: calendarEventTypeLabels.one_on_one, value: "one_on_one" },
+  { label: calendarEventTypeLabels.celebration, value: "celebration" },
+  { label: calendarEventTypeLabels.custom, value: "custom" },
+];
+
 export type CalendarEventVisibility = z.infer<typeof calendarEventVisibilitySchema>;
+export type CalendarEventType = z.infer<typeof calendarEventTypeSchema>;
 
 export type CalendarEventDocument = {
   _id: ObjectId;
@@ -28,6 +53,7 @@ export type CalendarEventDocument = {
   departmentId: ObjectId | null;
   description: string | null;
   endsAt: Date;
+  eventType?: CalendarEventType;
   inviteePlatformUserIds: ObjectId[];
   location: string | null;
   meetingUrl: string | null;
@@ -48,6 +74,7 @@ export type CalendarEvent = {
   endDate: string;
   endLocal: string;
   endsAt: string;
+  eventType: CalendarEventType;
   id: string;
   inviteePlatformUserIds: string[];
   location: string | null;
@@ -80,6 +107,7 @@ export const calendarEventInputSchema = z
     description: optionalText(2000),
     endDate: z.string().trim().default(""),
     endDateTime: z.string().trim().default(""),
+    eventType: calendarEventTypeSchema,
     inviteePlatformUserIds: z.array(objectIdSchema).default([]),
     location: optionalText(200),
     meetingUrl: z
@@ -192,13 +220,11 @@ export const calendarEventInputSchema = z
       departmentId: event.visibility === "department" ? event.departmentId : null,
       description: event.description,
       endsAt,
-      inviteePlatformUserIds:
-        event.visibility === "invited"
-          ? [...new Set(event.inviteePlatformUserIds)]
-          : [],
+      inviteePlatformUserIds: [...new Set(event.inviteePlatformUserIds)],
       location: event.location,
       meetingUrl: event.meetingUrl,
       startsAt,
+      eventType: event.eventType,
       title: event.title,
       visibility: event.visibility,
     };
@@ -234,6 +260,7 @@ export function toCalendarEvent(document: CalendarEventDocument): CalendarEvent 
       ? utcToCostaRicaDate(inclusiveEnd)
       : utcToCostaRicaDateTime(document.endsAt),
     endsAt: document.endsAt.toISOString(),
+    eventType: document.eventType ?? "custom",
     id: document._id.toHexString(),
     inviteePlatformUserIds: document.inviteePlatformUserIds.map((id) =>
       id.toHexString(),

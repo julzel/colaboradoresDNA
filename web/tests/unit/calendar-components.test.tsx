@@ -119,6 +119,31 @@ describe("calendar event form", () => {
     expect(screen.getByRole("checkbox", { name: "Ana Mora" })).toBeEnabled();
   });
 
+  it("offers predefined event types and employee tagging", () => {
+    render(
+      <CalendarEventForm
+        cancelHref="/calendario"
+        mode="create"
+        options={{
+          departments: [],
+          people: [
+            {
+              displayName: "Ana Mora",
+              id: "507f1f77bcf86cd799439011",
+            },
+          ],
+        }}
+      />,
+    );
+
+    const eventType = screen.getByRole("combobox", { name: "Tipo de evento" });
+    expect(eventType).toHaveTextContent("Capacitación");
+    expect(eventType).toHaveTextContent("1:1");
+    expect(eventType).toHaveTextContent("Celebración");
+    expect(eventType).toHaveTextContent("Evento personalizado");
+    expect(screen.getByRole("checkbox", { name: "Ana Mora" })).toBeEnabled();
+  });
+
   it("closes a modal form through browser history", async () => {
     const user = userEvent.setup();
     render(

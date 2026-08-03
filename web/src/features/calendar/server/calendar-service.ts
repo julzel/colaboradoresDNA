@@ -9,6 +9,7 @@ import type {
   CalendarEvent,
   NormalizedCalendarEventInput,
 } from "@/features/calendar/domain/calendar-event";
+import { calendarEventTypeLabels } from "@/features/calendar/domain/calendar-event";
 import {
   addCalendarDays,
   calendarDateToUtc,
@@ -21,6 +22,7 @@ import {
   deleteCalendarEvent,
   getCalendarEventDetail,
   listCalendarEventTargetOptions,
+  listUpcomingCalendarEventNotifications,
   listVisibleCalendarEvents,
   updateCalendarEvent,
   type CalendarActor,
@@ -79,7 +81,7 @@ function eventToEntry(actor: CalendarActor, event: CalendarEvent): CalendarEntry
     endDate: event.endDate,
     id: `event:${event.id}`,
     kind: "event",
-    label: "Evento",
+    label: calendarEventTypeLabels[event.eventType],
     location: event.location,
     meetingUrl: event.meetingUrl,
     note: null,
@@ -219,4 +221,14 @@ export async function updateCalendarEventForActor({
 export async function deleteCalendarEventForActor(eventId: string) {
   const actor = await requireCalendarActor({ canManage: true });
   return deleteCalendarEvent({ actor, eventId });
+}
+
+export async function getCalendarDashboardNotifications() {
+  const { platformUser } = await requirePlatformUser();
+  return {
+    displayName: platformUser.displayName,
+    notifications: await listUpcomingCalendarEventNotifications({
+      platformUserId: platformUser.id,
+    }),
+  };
 }

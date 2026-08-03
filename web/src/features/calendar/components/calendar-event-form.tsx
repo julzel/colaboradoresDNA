@@ -16,7 +16,10 @@ import {
   updateCalendarEventAction,
 } from "@/features/calendar/actions/calendar-event-actions";
 import { initialCalendarActionState } from "@/features/calendar/domain/calendar-action-state";
-import type { CalendarEvent } from "@/features/calendar/domain/calendar-event";
+import {
+  calendarEventTypeOptions,
+  type CalendarEvent,
+} from "@/features/calendar/domain/calendar-event";
 import { getTodayInCostaRica } from "@/features/calendar/domain/calendar-utils";
 import type { CalendarEventTargetOptions } from "@/features/calendar/server/calendar-event-repository";
 import { useGuardedForm } from "@/features/employees/components/use-guarded-form";
@@ -88,6 +91,20 @@ export function CalendarEventForm({
       <fieldset className={styles.formSection}>
         <legend>Información del evento</legend>
         <div className={styles.formGrid}>
+          <SelectField
+            defaultValue={event?.eventType ?? "custom"}
+            error={state.errors?.eventType}
+            id="eventType"
+            label="Tipo de evento"
+            name="eventType"
+            required
+          >
+            {calendarEventTypeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </SelectField>
           <div className={styles.fullWidth}>
             <TextField
               defaultValue={event?.title ?? ""}
@@ -227,32 +244,31 @@ export function CalendarEventForm({
           </SelectField>
         </div>
 
-        <div hidden={visibility !== "invited"}>
-          <fieldset className={styles.peopleFieldset}>
-            <legend>Personas invitadas</legend>
-            <p className={styles.formHint}>
-              Seleccioná al menos una persona que podrá consultar el evento.
+        <fieldset className={styles.peopleFieldset}>
+          <legend>Personas agregadas</legend>
+          <p className={styles.formHint}>
+            Las personas seleccionadas verán el evento en su calendario y recibirán una
+            notificación en Inicio.
+            {visibility === "invited" && " Seleccioná al menos una persona."}
+          </p>
+          <div className={styles.peopleGrid}>
+            {options.people.map((person) => (
+              <CheckboxField
+                defaultChecked={selectedInvitees.has(person.id)}
+                id={`invitee-${person.id}`}
+                key={person.id}
+                label={person.displayName}
+                name="inviteePlatformUserIds"
+                value={person.id}
+              />
+            ))}
+          </div>
+          {state.errors?.inviteePlatformUserIds && (
+            <p className={styles.fieldError} role="alert">
+              {state.errors.inviteePlatformUserIds}
             </p>
-            <div className={styles.peopleGrid}>
-              {options.people.map((person) => (
-                <CheckboxField
-                  defaultChecked={selectedInvitees.has(person.id)}
-                  disabled={visibility !== "invited"}
-                  id={`invitee-${person.id}`}
-                  key={person.id}
-                  label={person.displayName}
-                  name="inviteePlatformUserIds"
-                  value={person.id}
-                />
-              ))}
-            </div>
-            {state.errors?.inviteePlatformUserIds && (
-              <p className={styles.fieldError} role="alert">
-                {state.errors.inviteePlatformUserIds}
-              </p>
-            )}
-          </fieldset>
-        </div>
+          )}
+        </fieldset>
       </fieldset>
 
       <div className={styles.formActions}>
