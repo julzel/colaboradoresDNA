@@ -46,10 +46,6 @@ function RequestList({
           </p>
           <div className={styles.requestCard}>
             <div>
-              <p className={`${styles.muted} ${styles.requestDate}`}>
-                {formatPtoDateRange(request.startDate, request.endDate)} ·{" "}
-                {formatPtoDays(request.durationUnits)} días
-              </p>
               <div className={styles.requestLinkRow}>
                 <Link className={styles.requestLink} href={`/ausencias/${request.id}`}>
                   {ptoCategoryLabels[request.category]}
@@ -58,6 +54,10 @@ function RequestList({
                   {ptoStatusLabels[request.status]}
                 </StatusBadge>
               </div>
+              <p className={`${styles.muted} ${styles.requestDate}`}>
+                {formatPtoDateRange(request.startDate, request.endDate)} ·{" "}
+                {formatPtoDays(request.durationUnits)} días
+              </p>
             </div>
           </div>
         </li>
