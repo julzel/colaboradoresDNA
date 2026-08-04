@@ -52,7 +52,7 @@
 
 .dashboardSummary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   overflow: hidden;
   padding: var(--space-3);
 }
@@ -103,10 +103,6 @@
 
 .summaryItem[data-summary="pending"] {
   color: var(--color-warning);
-}
-
-.summaryItem[data-summary="review"] {
-  color: var(--color-info);
 }
 
 .twoColumns,
