@@ -2,6 +2,7 @@
 
 import { Download, Share, SquarePlus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { Modal } from "@/components/ui/modal/modal";
 
@@ -100,32 +101,34 @@ export function PwaInstallButton() {
         </button>
       )}
 
-      {showInstructions && (
-        <Modal
-          description="Agregala a tu pantalla de inicio para abrirla como una aplicación."
-          onClose={() => setShowInstructions(false)}
-          title="Instalar Colaboradores DNA"
-        >
-          <ol className={styles.instructions}>
-            <li>
-              <span className={styles.instructionIcon}>
-                <Share aria-hidden="true" size={20} />
-              </span>
-              Tocá el botón Compartir del navegador.
-            </li>
-            <li>
-              <span className={styles.instructionIcon}>
-                <SquarePlus aria-hidden="true" size={20} />
-              </span>
-              Seleccioná “Agregar a pantalla de inicio”.
-            </li>
-            <li>
-              <span className={styles.stepNumber}>3</span>
-              Confirmá tocando “Agregar”.
-            </li>
-          </ol>
-        </Modal>
-      )}
+      {showInstructions &&
+        createPortal(
+          <Modal
+            description="Agregala a tu pantalla de inicio para abrirla como una aplicación."
+            onClose={() => setShowInstructions(false)}
+            title="Instalar Colaboradores DNA"
+          >
+            <ol className={styles.instructions}>
+              <li>
+                <span className={styles.instructionIcon}>
+                  <Share aria-hidden="true" size={20} />
+                </span>
+                Tocá el botón Compartir del navegador.
+              </li>
+              <li>
+                <span className={styles.instructionIcon}>
+                  <SquarePlus aria-hidden="true" size={20} />
+                </span>
+                Seleccioná “Agregar a pantalla de inicio”.
+              </li>
+              <li>
+                <span className={styles.stepNumber}>3</span>
+                Confirmá tocando “Agregar”.
+              </li>
+            </ol>
+          </Modal>,
+          document.body,
+        )}
     </>
   );
 }

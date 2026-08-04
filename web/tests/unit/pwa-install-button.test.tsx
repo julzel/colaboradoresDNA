@@ -38,4 +38,34 @@ describe("PWA installation", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  it("renders iOS instructions at the document root", async () => {
+    const user = userEvent.setup();
+    const originalUserAgent = navigator.userAgent;
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+    });
+
+    try {
+      render(<PwaInstallButton />);
+
+      await user.click(
+        await screen.findByRole("button", { name: "Instalar aplicación" }),
+      );
+
+      const dialog = screen.getByRole("dialog", {
+        name: "Instalar Colaboradores DNA",
+      });
+      expect(dialog.parentElement?.parentElement).toBe(document.body);
+      expect(
+        screen.getByText("Seleccioná “Agregar a pantalla de inicio”."),
+      ).toBeVisible();
+    } finally {
+      Object.defineProperty(navigator, "userAgent", {
+        configurable: true,
+        value: originalUserAgent,
+      });
+    }
+  });
 });
