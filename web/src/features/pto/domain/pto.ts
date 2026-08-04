@@ -203,6 +203,27 @@ export function formatPtoDays(units: number) {
   );
 }
 
+function formatPtoShortDate(value: string) {
+  const formatted = new Intl.DateTimeFormat("es-CR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+    weekday: "short",
+  })
+    .format(new Date(`${value}T12:00:00.000Z`))
+    .replaceAll(".", "");
+
+  return formatted
+    .split(" ")
+    .map((part) => part.charAt(0).toLocaleUpperCase("es-CR") + part.slice(1))
+    .join(" ");
+}
+
+export function formatPtoDateRange(startDate: string, endDate: string) {
+  const start = formatPtoShortDate(startDate);
+  return startDate === endDate ? start : `${start} - ${formatPtoShortDate(endDate)}`;
+}
+
 export function inclusiveCalendarDays(startDate: string, endDate: string) {
   const start = new Date(`${startDate}T00:00:00.000Z`);
   const end = new Date(`${endDate}T00:00:00.000Z`);
