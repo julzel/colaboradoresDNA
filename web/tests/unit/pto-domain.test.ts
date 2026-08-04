@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   canTransitionPtoStatus,
   daysToUnits,
+  formatPtoDateRange,
   formatPtoDays,
   ptoAdjustmentDaysSchema,
   ptoDraftInputSchema,
@@ -20,6 +21,13 @@ describe("PTO domain", () => {
     expect(ptoOpeningBalanceDaysSchema.parse("-1.5")).toBe(-3);
     expect(ptoAdjustmentDaysSchema.parse("0.5")).toBe(1);
     expect(ptoDurationDaysSchema.parse("0.5")).toBe(1);
+  });
+
+  it("formats calendar request dates as compact Spanish labels", () => {
+    expect(formatPtoDateRange("2026-12-16", "2026-12-16")).toBe("Mié, 16 Dic");
+    expect(formatPtoDateRange("2026-11-24", "2026-11-27")).toBe(
+      "Mar, 24 Nov - Vie, 27 Nov",
+    );
   });
 
   it("rejects values outside half-day precision", () => {
