@@ -1,4 +1,4 @@
-const CACHE_NAME = "colaboradores-dna-v1";
+const CACHE_NAME = "colaboradores-dna-v2";
 const PRECACHE_URLS = [
   "/offline.html",
   "/icons/icon-192.png",

@@ -111,27 +111,14 @@ export default async function PtoDashboardPage() {
               }
             </p>
           </div>
-          <div className={styles.summaryItem} data-summary="review">
-            <p className={styles.summaryLabel}>Revisar</p>
-            <p className={styles.summaryValue}>{dashboard.pendingApprovals.length}</p>
-          </div>
         </ElevatedSurface>
 
-        <div className={styles.twoColumns}>
-          <section className={styles.requestSection}>
-            <RequestList
-              empty="Todavía no tenés solicitudes."
-              requests={dashboard.ownRequests}
-            />
-          </section>
-          <section className={styles.requestSection}>
-            <h2>Solicitudes por revisar</h2>
-            <RequestList
-              empty="No tenés solicitudes pendientes de revisión."
-              requests={dashboard.pendingApprovals}
-            />
-          </section>
-        </div>
+        <section className={styles.requestSection}>
+          <RequestList
+            empty="Todavía no tenés solicitudes."
+            requests={dashboard.ownRequests}
+          />
+        </section>
       </main>
     </Container>
   );

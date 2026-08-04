@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { AuthControls } from "@/components/auth/auth-controls";
 import { Logo } from "@/components/brand/logo/logo";
 import { WorkspaceNavigation } from "@/components/layout/workspace-navigation/workspace-navigation";
+import { PwaInstallButton } from "@/components/pwa/pwa-install-button";
 import { Breadcrumbs } from "@/components/ui/navigation/breadcrumbs";
 import { ThemeToggle } from "@/components/ui/theme-toggle/theme-toggle";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
@@ -56,6 +57,7 @@ export function WorkspaceHeader({
         <Breadcrumbs items={getWorkspaceBreadcrumbs(pathname)} />
       </div>
       <div className={styles.tools}>
+        <PwaInstallButton />
         <ThemeToggle />
         <AuthControls displayName={displayName} />
       </div>
