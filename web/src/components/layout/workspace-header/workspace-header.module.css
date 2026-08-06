@@ -21,125 +21,87 @@
   min-width: 0;
 }
 
-.mobileLeading,
-.mobileNav {
+.mobileLeading {
   display: none;
 }
 
 @media (width <= 56rem) {
   .topbar {
     position: sticky;
-    z-index: 8;
+    z-index: 20;
     top: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-3);
-    padding-block: var(--space-3);
+    min-height: 4rem;
+    gap: var(--space-2);
+    padding: var(--space-2) max(var(--space-4), env(safe-area-inset-right))
+      var(--space-2) max(var(--space-4), env(safe-area-inset-left));
+    box-shadow: var(--shadow-sm);
   }
 
   .mobileLeading {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: var(--space-2);
-  }
-
-  .mobileNav {
-    position: relative;
-    display: block;
-  }
-
-  .mobileNav summary {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    padding: 0;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    color: var(--color-text);
-    cursor: pointer;
-    list-style: none;
-  }
-
-  .mobileNav summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .mobileNav summary:hover {
-    border-color: var(--color-brand);
-    color: var(--color-brand);
-  }
-
-  .mobileNav summary:focus-visible {
-    outline: 3px solid var(--color-focus);
-    outline-offset: 2px;
-  }
-
-  .closeIcon {
-    display: none;
-  }
-
-  .mobileNav[open] .menuIcon {
-    display: none;
-  }
-
-  .mobileNav[open] .closeIcon {
-    display: block;
-  }
-
-  .mobileNavPanel {
-    position: absolute;
-    z-index: 20;
-    top: calc(100% + var(--space-2));
-    left: 0;
-    width: min(21rem, calc(100vw - 2rem));
-    padding: var(--space-3);
-    border-radius: var(--radius-lg);
-    background: var(--background-navigation);
-    box-shadow: var(--shadow-md);
-  }
-
-  .mobileNavPanel > p {
-    margin: 0 0 var(--space-2) var(--space-3);
-    color: var(--color-sidebar-muted);
-    font-size: 0.625rem;
-    font-weight: 800;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    gap: var(--space-3);
   }
 
   .mobileBrand {
     display: grid;
-    min-width: 3.25rem;
+    width: 2.75rem;
     height: 2.75rem;
+    flex: 0 0 auto;
     place-items: center;
     overflow: hidden;
-    padding-inline: var(--space-2);
-    border-radius: var(--radius-md);
+    padding-inline: 0.35rem;
+    border-radius: var(--radius-lg);
     background: var(--background-navigation);
   }
 
+  .mobileContext {
+    display: grid;
+    min-width: 0;
+    gap: 0.0625rem;
+  }
+
+  .mobileContext span {
+    color: var(--color-text-subtle);
+    font-size: 0.625rem;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .mobileContext strong {
+    overflow: hidden;
+    font-size: var(--text-md);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .breadcrumbs {
-    grid-column: 1 / -1;
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--color-border);
+    display: none;
   }
 
   .tools {
-    grid-column: 2;
-    grid-row: 1;
+    margin-left: auto;
   }
 }
 
 @media (width <= 40rem) {
   .topbar {
     gap: var(--space-2);
-    padding-inline: var(--space-3);
+    padding-inline: max(var(--space-3), env(safe-area-inset-left));
   }
 
   .tools {
     gap: var(--space-2);
+  }
+}
+
+@media (width <= 24rem) {
+  .mobileContext span {
+    display: none;
   }
 }

@@ -56,10 +56,15 @@
   .mainColumn {
     margin-left: 0;
   }
+
+  .content {
+    min-height: calc(100svh - 4rem);
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
 }
 
 @media (width <= 40rem) {
   .content {
-    padding: var(--space-4);
+    padding: var(--space-5) var(--space-4) calc(6rem + env(safe-area-inset-bottom));
   }
 }
