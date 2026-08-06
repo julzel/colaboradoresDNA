@@ -7,7 +7,6 @@ import { AuthControls } from "@/components/auth/auth-controls";
 import { Logo } from "@/components/brand/logo/logo";
 import { PwaInstallButton } from "@/components/pwa/pwa-install-button";
 import { Breadcrumbs } from "@/components/ui/navigation/breadcrumbs";
-import { ThemeToggle } from "@/components/ui/theme-toggle/theme-toggle";
 import { getWorkspaceBreadcrumbs } from "@/features/navigation/workspace-navigation";
 
 import styles from "./workspace-header.module.css";
@@ -41,7 +40,6 @@ export function WorkspaceHeader({ displayName }: WorkspaceHeaderProps) {
       </div>
       <div className={styles.tools}>
         <PwaInstallButton />
-        <ThemeToggle />
         <AuthControls displayName={displayName} />
       </div>
     </header>

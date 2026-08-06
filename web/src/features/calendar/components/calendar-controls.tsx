@@ -31,11 +31,7 @@ export function CalendarControls({
 
   return (
     <header className={styles.pageHeader}>
-      <div className={styles.heading}>
-        <p className="eyebrow">Planificación</p>
-        <h1>Calendario</h1>
-        <p>Consultá cumpleaños, ausencias y eventos importantes de la organización.</p>
-      </div>
+      <h1 className="sr-only">Calendario</h1>
 
       {canCreateEvents && eventFormOptions && (
         <CalendarCreateEventTrigger options={eventFormOptions} />
