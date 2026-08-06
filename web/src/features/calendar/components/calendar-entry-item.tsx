@@ -61,6 +61,7 @@ export function CalendarEntryItem({ entry }: CalendarEntryItemProps) {
             <span
               className={styles.entryLabel}
               data-event-type={entry.eventType ?? undefined}
+              data-kind={entry.kind}
             >
               {entry.label}
             </span>

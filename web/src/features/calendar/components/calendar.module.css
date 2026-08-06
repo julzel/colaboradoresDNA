@@ -200,6 +200,10 @@
   color: var(--color-event-custom);
 }
 
+.entryLabel[data-kind="pto"] {
+  color: var(--color-info);
+}
+
 .manageBadge {
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-full);
@@ -252,10 +256,7 @@
 }
 
 .monthSurface {
-  width: calc(100% + 2rem);
   overflow: hidden;
-  margin-inline: -1rem;
-  border-radius: 0;
 }
 
 .weekdayGrid,
