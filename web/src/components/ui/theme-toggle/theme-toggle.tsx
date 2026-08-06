@@ -2,6 +2,24 @@ import { Moon, Sun } from "lucide-react";
 
 import styles from "./theme-toggle.module.css";
 
+type Theme = "dark" | "light";
+
+const storageKey = "colaboradores-theme";
+
+function isTheme(value: string | undefined): value is Theme {
+  return value === "light" || value === "dark";
+}
+
+export function toggleTheme() {
+  const root = document.documentElement;
+  const currentTheme = isTheme(root.dataset.theme) ? root.dataset.theme : "light";
+  const nextTheme = currentTheme === "light" ? "dark" : "light";
+
+  root.dataset.theme = nextTheme;
+  root.style.colorScheme = nextTheme;
+  window.localStorage.setItem(storageKey, nextTheme);
+}
+
 export function ThemeToggle() {
   return (
     <button

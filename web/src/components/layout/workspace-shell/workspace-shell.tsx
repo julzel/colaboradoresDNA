@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Logo } from "@/components/brand/logo/logo";
+import { MobileNavigation } from "@/components/layout/mobile-navigation/mobile-navigation";
 import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-header";
 import { WorkspaceNavigation } from "@/components/layout/workspace-navigation/workspace-navigation";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
@@ -41,15 +42,12 @@ export function WorkspaceShell({
       </aside>
 
       <div className={styles.mainColumn}>
-        <WorkspaceHeader
-          displayName={displayName}
-          role={role}
-          unreadNotificationCount={unreadNotificationCount}
-        />
+        <WorkspaceHeader displayName={displayName} />
         <main className={styles.content} id="main-content">
           {children}
         </main>
       </div>
+      <MobileNavigation role={role} unreadNotificationCount={unreadNotificationCount} />
     </div>
   );
 }

@@ -48,7 +48,7 @@ export function ToastProvider() {
           success: <CircleCheck aria-hidden="true" />,
           warning: <CircleAlert aria-hidden="true" />,
         }}
-        mobileOffset={{ bottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+        mobileOffset={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
         position={isMobile ? "bottom-center" : "top-right"}
         toastOptions={{
           closeButtonAriaLabel: "Cerrar notificación",
