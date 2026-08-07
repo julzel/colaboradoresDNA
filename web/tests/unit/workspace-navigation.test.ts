@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { getWorkspaceNavigation } from "@/features/navigation/workspace-navigation";
+import {
+  getActiveNavigationHref,
+  getWorkspaceNavigation,
+} from "@/features/navigation/workspace-navigation";
 
 describe("workspace notification badge", () => {
   it("adds the unread count to Inicio for desktop and mobile navigation consumers", () => {
@@ -18,5 +21,20 @@ describe("workspace notification badge", () => {
       getWorkspaceNavigation("administrator", 0).find((item) => item.href === "/")
         ?.badge,
     ).toBeUndefined();
+  });
+});
+
+describe("administrator navigation", () => {
+  it("uses the administration hub instead of exposing its modules directly", () => {
+    const items = getWorkspaceNavigation("administrator");
+
+    expect(items.map((item) => item.href)).toEqual([
+      "/",
+      "/calendario",
+      "/admin",
+      "/ausencias",
+    ]);
+    expect(getActiveNavigationHref("/admin/colaboradores", items)).toBe("/admin");
+    expect(getActiveNavigationHref("/admin/ausencias", items)).toBe("/admin");
   });
 });

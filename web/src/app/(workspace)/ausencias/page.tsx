@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus } from "lucide-react";
+import { ClipboardClock, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { ButtonLink } from "@/components/ui/button/button";
@@ -72,22 +72,32 @@ export default async function PtoDashboardPage() {
     <Container>
       <main className={styles.page} id="main-content">
         <header className={styles.header}>
-          <div className={styles.actions}>
-            {dashboard.canManage && (
-              <ButtonLink href="/admin/ausencias" variant="secondary">
-                Administrar solicitudes
-              </ButtonLink>
-            )}
-            {dashboard.canRequest && (
-              <ButtonLink
-                aria-label="Nueva solicitud"
-                className={styles.newRequestButton}
-                href="/ausencias/nueva"
-              >
-                <Plus aria-hidden="true" className={styles.newRequestIcon} size={22} />
-                <span className={styles.newRequestLabel}>Nueva solicitud</span>
-              </ButtonLink>
-            )}
+          <div className={styles.headerContent}>
+            <p className="eyebrow">Ausencias</p>
+            <div className={styles.moduleTitle}>
+              <span className={styles.moduleIcon}>
+                <ClipboardClock aria-hidden="true" size={24} strokeWidth={1.8} />
+              </span>
+              <h1>Solicitudes</h1>
+              <div className={styles.moduleActions}>
+                {dashboard.canManage && (
+                  <ButtonLink href="/admin/ausencias" size="small" variant="secondary">
+                    Administrar solicitudes
+                  </ButtonLink>
+                )}
+                {dashboard.canRequest && (
+                  <ButtonLink
+                    aria-label="Nueva solicitud"
+                    className={styles.newRequestButton}
+                    href="/ausencias/nueva"
+                    size="small"
+                    title="Nueva solicitud"
+                  >
+                    <Plus aria-hidden="true" size={18} />
+                  </ButtonLink>
+                )}
+              </div>
+            </div>
           </div>
         </header>
 

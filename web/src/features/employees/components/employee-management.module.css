@@ -18,6 +18,34 @@
   line-height: var(--line-tight);
 }
 
+.moduleTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.headerContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.moduleIcon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  background: var(--color-event-one-on-one-soft);
+  color: var(--color-event-one-on-one);
+  place-items: center;
+}
+
+.newEmployeeButton {
+  margin-left: auto;
+  width: var(--control-height-sm);
+  padding-inline: 0;
+}
+
 .header p,
 .muted {
   margin: var(--space-2) 0 0;
@@ -542,6 +570,10 @@
   .header > :last-child {
     grid-column: auto;
     justify-self: start;
+  }
+
+  .header > .headerContent {
+    justify-self: stretch;
   }
 
   .detailHeader > :last-child {

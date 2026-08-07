@@ -49,15 +49,30 @@ describe("mobile workspace navigation", () => {
     render(<MobileNavigation displayName="Julio Zeledon" role="administrator" />);
 
     const moreButton = screen.getByRole("button", { name: "Más" });
-    expect(moreButton).toHaveAttribute("aria-current", "page");
+    expect(moreButton).not.toHaveAttribute("aria-current");
+
+    const mobileNavigation = screen.getByRole("navigation", {
+      name: "Navegación móvil",
+    });
+    expect(mobileNavigation).toHaveTextContent("Inicio");
+    expect(mobileNavigation).toHaveTextContent("Calendario");
+    expect(mobileNavigation).toHaveTextContent("Administración");
+    expect(mobileNavigation).not.toHaveTextContent("Ausencias");
+    expect(screen.getByRole("link", { name: "Administración" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
 
     await user.click(moreButton);
 
     expect(screen.getByRole("dialog", { name: "Más opciones" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Colaboradores" })).toHaveAttribute(
-      "aria-current",
-      "page",
+    expect(screen.getByRole("link", { name: "Ausencias" })).toHaveAttribute(
+      "href",
+      "/ausencias",
     );
+    expect(
+      screen.queryByRole("link", { name: "Colaboradores" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Julio Zeledon")).toBeVisible();
     expect(screen.getByRole("link", { name: "Mi perfil" })).toHaveAttribute(
       "href",

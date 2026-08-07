@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClipboardClock } from "lucide-react";
 import Link from "next/link";
 
 import { ButtonLink } from "@/components/ui/button/button";
@@ -56,12 +57,13 @@ export default async function PtoAdministrationPage({
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Administración</p>
-            <h1>Solicitudes de ausencia</h1>
-            <p>Revisá y gestioná las solicitudes de toda la organización.</p>
+            <div className={styles.moduleTitle}>
+              <span className={styles.moduleIcon}>
+                <ClipboardClock aria-hidden="true" size={24} strokeWidth={1.8} />
+              </span>
+              <h1>Ausencias</h1>
+            </div>
           </div>
-          <ButtonLink href="/ausencias" variant="secondary">
-            Mi saldo y solicitudes
-          </ButtonLink>
         </header>
 
         <div className={styles.summaryGrid}>
