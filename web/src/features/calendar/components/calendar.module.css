@@ -315,10 +315,14 @@
 }
 
 .dayNumber {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: grid;
   width: 2.75rem;
   height: 2.75rem;
-  place-items: center;
+  place-items: start;
+  padding: var(--space-2);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   font-weight: 750;
@@ -331,10 +335,14 @@
 }
 
 .mobileIndicators {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
   display: flex;
   justify-content: center;
   gap: 0.125rem;
-  margin-top: var(--space-1);
+  width: max-content;
+  margin: 0;
   color: var(--color-brand-text);
 }
 
@@ -696,6 +704,12 @@
   .monthDay {
     min-height: 6rem;
     padding: var(--space-2);
+  }
+
+  .dayNumber {
+    position: static;
+    place-items: center;
+    padding: 0;
   }
 
   .mobileIndicators {
