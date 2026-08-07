@@ -52,8 +52,14 @@
 }
 
 .controlActions > a,
-.viewSelector a {
+.viewSelector a,
+.createEventButton {
   min-height: 2.75rem;
+}
+
+.createEventButton {
+  width: 2.75rem;
+  padding: 0;
 }
 
 .viewSelector {
@@ -66,6 +72,12 @@
 .viewSelector [aria-current="page"] {
   background: var(--background-primary-action);
   color: var(--neutral-0);
+}
+
+@media (width < 40rem) {
+  .controlActions {
+    order: -1;
+  }
 }
 
 .agenda {

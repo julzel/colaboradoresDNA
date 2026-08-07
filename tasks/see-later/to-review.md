@@ -1,1 +1,2 @@
 - When a department is selected, send a calendar event notification to all members of that department.
+- Avoid refetching for event preview (the page already loads the event data, so we can use that instead of making another request).
