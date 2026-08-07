@@ -5,6 +5,7 @@ import { requirePlatformUser } from "@/features/auth/server/require-platform-use
 import { getCalendarDashboardUnreadCount } from "@/features/calendar/server/calendar-service";
 import { formatEmployeePreferredDisplayName } from "@/features/employees/domain/employee";
 import { findEmployeeByPlatformUserId } from "@/features/employees/server/employee-repository";
+import { getDashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 
 export default async function WorkspaceLayout({
   children,
@@ -18,11 +19,13 @@ export default async function WorkspaceLayout({
   const displayName = employee
     ? formatEmployeePreferredDisplayName(employee)
     : platformUser.displayName;
+  const greeting = getDashboardGreeting();
 
   return (
     <>
       <WorkspaceShell
         displayName={displayName}
+        greeting={greeting}
         role={platformUser.role}
         unreadNotificationCount={unreadNotificationCount}
       >

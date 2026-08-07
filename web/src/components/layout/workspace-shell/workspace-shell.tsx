@@ -7,12 +7,14 @@ import { MobileNavigation } from "@/components/layout/mobile-navigation/mobile-n
 import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-header";
 import { WorkspaceNavigation } from "@/components/layout/workspace-navigation/workspace-navigation";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
+import type { DashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 
 import styles from "./workspace-shell.module.css";
 
 type WorkspaceShellProps = {
   children: ReactNode;
   displayName: string;
+  greeting: DashboardGreeting;
   role: PlatformRole;
   unreadNotificationCount: number;
 };
@@ -20,6 +22,7 @@ type WorkspaceShellProps = {
 export function WorkspaceShell({
   children,
   displayName,
+  greeting,
   role,
   unreadNotificationCount,
 }: WorkspaceShellProps) {
@@ -47,7 +50,7 @@ export function WorkspaceShell({
       </aside>
 
       <div className={styles.mainColumn}>
-        <WorkspaceHeader />
+        <WorkspaceHeader displayName={displayName} greeting={greeting} />
         <main className={styles.content} id="main-content">
           {children}
         </main>
