@@ -5,7 +5,6 @@
   justify-content: space-between;
   gap: var(--space-5);
   padding: var(--space-3) clamp(var(--space-5), 4vw, var(--space-10));
-  border-bottom: 1px solid var(--color-border);
   background: var(--color-topbar);
   backdrop-filter: blur(0.75rem);
 }
@@ -91,18 +90,6 @@
 
   .tools {
     margin-left: auto;
-  }
-}
-
-@media (width <= 42rem) {
-  .topbar[data-overlay="true"] {
-    position: absolute;
-    inset: 0 0 auto;
-    width: 100%;
-    border-bottom: 0;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
   }
 }
 

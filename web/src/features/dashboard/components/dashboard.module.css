@@ -14,7 +14,9 @@
 .header {
   position: relative;
   overflow: hidden;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: clamp(var(--space-5), 4vw, var(--space-8));
   background:
     radial-gradient(
@@ -34,35 +36,32 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: var(--space-4);
+  justify-content: center;
+  gap: var(--space-3);
 }
 
 .greetingIcon {
   display: grid;
-  width: 3.5rem;
-  height: 3.5rem;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 1.1rem;
-  background: linear-gradient(145deg, #ff9d3d, var(--color-accent));
-  color: #fff;
-  box-shadow: 0 0.75rem 1.75rem rgb(255 111 0 / 24%);
-  transform: rotate(-3deg);
+  color: #f59e0b;
+}
+
+.greetingIcon svg {
+  width: clamp(1.5rem, 4vw, 2rem);
+  height: clamp(1.5rem, 4vw, 2rem);
 }
 
 .greetingIcon[data-period="afternoon"] {
-  background: var(--background-primary-action);
-  box-shadow: 0 0.75rem 1.75rem rgb(7 187 199 / 22%);
+  color: var(--color-brand-text);
 }
 
 .greetingIcon[data-period="night"] {
-  background: linear-gradient(145deg, #3846a8, #7540a0);
-  box-shadow: 0 0.75rem 1.75rem rgb(72 64 160 / 24%);
+  color: #6376d9;
 }
 
 .greetingIcon[data-period="late-night"] {
-  background: linear-gradient(145deg, #5d397f, #202951);
-  box-shadow: 0 0.75rem 1.75rem rgb(43 36 92 / 28%);
+  color: #8b5bb2;
 }
 
 .greeting h1 {
@@ -70,11 +69,12 @@
   font-size: clamp(1.75rem, 5vw, 3rem);
   letter-spacing: -0.045em;
   line-height: 1.05;
+  text-align: center;
 }
 
 .salutation {
   color: var(--color-brand-text);
-  font-size: clamp(var(--text-sm), 2vw, var(--text-lg));
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
   font-weight: 800;
   letter-spacing: 0;
 }
@@ -186,17 +186,7 @@
     width: calc(100% + 2 * var(--workspace-content-inset-inline));
     margin-top: calc(-1 * var(--workspace-content-inset-top));
     margin-inline: calc(-1 * var(--workspace-content-inset-inline));
-    padding: calc(4rem + var(--space-8)) var(--space-5) var(--space-8);
-  }
-
-  .greeting {
-    align-items: flex-start;
-  }
-
-  .greetingIcon {
-    width: 3rem;
-    height: 3rem;
-    border-radius: var(--radius-lg);
+    padding: 0.75rem;
   }
 
   .notifications {

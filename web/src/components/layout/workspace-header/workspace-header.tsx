@@ -16,10 +16,7 @@ export function WorkspaceHeader() {
   const pageTitle = breadcrumbs.at(-1)?.label ?? "Inicio";
 
   return (
-    <header
-      className={styles.topbar}
-      data-overlay={pathname === "/" ? "true" : undefined}
-    >
+    <header className={styles.topbar}>
       <div className={styles.mobileLeading}>
         <Link
           aria-label="Inicio de Colaboradores DNA"

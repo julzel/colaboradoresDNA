@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -10,10 +11,8 @@ vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
 }));
 
-vi.mock("@/components/auth/auth-controls", () => ({
-  AuthControls: ({ displayName }: { displayName: string }) => (
-    <div>Cuenta de {displayName}</div>
-  ),
+vi.mock("@clerk/nextjs", () => ({
+  SignOutButton: ({ children }: { children: ReactNode }) => children,
 }));
 
 describe("mobile workspace navigation", () => {
@@ -59,7 +58,11 @@ describe("mobile workspace navigation", () => {
       "aria-current",
       "page",
     );
-    expect(screen.getByText("Cuenta de Julio Zeledon")).toBeVisible();
+    expect(screen.getByText("Julio Zeledon")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Mi perfil" })).toHaveAttribute(
+      "href",
+      "/perfil",
+    );
 
     await user.click(screen.getByRole("button", { name: "Cerrar menú" }));
     expect(document.querySelector("dialog")).not.toHaveAttribute("open");

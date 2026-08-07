@@ -1,11 +1,19 @@
 "use client";
 
-import { MoreHorizontal, X } from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
+import {
+  LogOut,
+  MoreHorizontal,
+  ShieldCheck,
+  SunMoon,
+  UserRound,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { AuthControls } from "@/components/auth/auth-controls";
+import { toggleTheme } from "@/components/ui/theme-toggle/theme-toggle";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
 import {
   getActiveNavigationHref,
@@ -133,7 +141,56 @@ export function MobileNavigation({
           <p className={styles.accountLabel} id={`${sheetId}-account`}>
             Cuenta
           </p>
-          <AuthControls displayName={displayName} />
+          <div className={styles.accountSummary}>
+            <span className={styles.accountAvatar}>
+              <UserRound aria-hidden="true" size={20} />
+            </span>
+            <strong>{displayName}</strong>
+          </div>
+          <ul className={styles.accountList}>
+            <li>
+              <Link
+                className={styles.accountAction}
+                href="/perfil"
+                onClick={() => setIsMoreOpen(false)}
+              >
+                <UserRound aria-hidden="true" size={18} />
+                Mi perfil
+              </Link>
+            </li>
+            <li>
+              <Link
+                className={styles.accountAction}
+                href="/account"
+                onClick={() => setIsMoreOpen(false)}
+              >
+                <ShieldCheck aria-hidden="true" size={18} />
+                Cuenta y seguridad
+              </Link>
+            </li>
+            <li>
+              <button
+                className={styles.accountAction}
+                onClick={toggleTheme}
+                type="button"
+              >
+                <SunMoon aria-hidden="true" size={18} />
+                Cambiar tema
+              </button>
+            </li>
+            <li>
+              <SignOutButton redirectUrl="/sign-in">
+                <button
+                  className={styles.accountAction}
+                  data-tone="danger"
+                  type="button"
+                >
+                  <LogOut aria-hidden="true" size={18} />
+                  Cerrar sesión
+                </button>
+              </SignOutButton>
+            </li>
+          </ul>
         </section>
       </dialog>
 

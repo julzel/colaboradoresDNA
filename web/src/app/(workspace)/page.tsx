@@ -56,7 +56,7 @@ export default async function HomePage() {
           </span>
           <h1>
             <span className={styles.salutation}>{greeting.label}</span>{" "}
-            <span>{firstName}</span>
+            <span className={styles.salutation}>{firstName}</span>
           </h1>
         </div>
       </header>
