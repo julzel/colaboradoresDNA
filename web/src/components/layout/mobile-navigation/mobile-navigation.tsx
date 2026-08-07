@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { AuthControls } from "@/components/auth/auth-controls";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
 import {
   getActiveNavigationHref,
@@ -14,6 +15,7 @@ import {
 import styles from "./mobile-navigation.module.css";
 
 type MobileNavigationProps = {
+  displayName: string;
   role: PlatformRole;
   unreadNotificationCount?: number;
 };
@@ -21,6 +23,7 @@ type MobileNavigationProps = {
 const visibleTabCount = 3;
 
 export function MobileNavigation({
+  displayName,
   role,
   unreadNotificationCount = 0,
 }: MobileNavigationProps) {
@@ -32,7 +35,10 @@ export function MobileNavigation({
   const currentHref = getActiveNavigationHref(pathname, items);
   const visibleItems = items.slice(0, visibleTabCount);
   const overflowItems = items.slice(visibleTabCount);
-  const isOverflowCurrent = overflowItems.some((item) => item.href === currentHref);
+  const isOverflowCurrent =
+    overflowItems.some((item) => item.href === currentHref) ||
+    pathname.startsWith("/perfil") ||
+    pathname.startsWith("/account");
 
   useEffect(() => {
     const sheet = sheetRef.current;
@@ -120,6 +126,15 @@ export function MobileNavigation({
             })}
           </ul>
         </nav>
+        <section
+          aria-labelledby={`${sheetId}-account`}
+          className={styles.accountSection}
+        >
+          <p className={styles.accountLabel} id={`${sheetId}-account`}>
+            Cuenta
+          </p>
+          <AuthControls displayName={displayName} />
+        </section>
       </dialog>
 
       <nav aria-label="Navegación móvil" className={styles.tabBar}>
@@ -152,23 +167,21 @@ export function MobileNavigation({
               </li>
             );
           })}
-          {overflowItems.length > 0 && (
-            <li>
-              <button
-                aria-controls={sheetId}
-                aria-current={isOverflowCurrent ? "page" : undefined}
-                aria-expanded={isMoreOpen}
-                className={styles.tab}
-                onClick={() => setIsMoreOpen((isOpen) => !isOpen)}
-                type="button"
-              >
-                <span className={styles.tabIcon}>
-                  <MoreHorizontal aria-hidden="true" size={22} />
-                </span>
-                <span>Más</span>
-              </button>
-            </li>
-          )}
+          <li>
+            <button
+              aria-controls={sheetId}
+              aria-current={isOverflowCurrent ? "page" : undefined}
+              aria-expanded={isMoreOpen}
+              className={styles.tab}
+              onClick={() => setIsMoreOpen((isOpen) => !isOpen)}
+              type="button"
+            >
+              <span className={styles.tabIcon}>
+                <MoreHorizontal aria-hidden="true" size={22} />
+              </span>
+              <span>Más</span>
+            </button>
+          </li>
         </ul>
       </nav>
     </>

@@ -94,6 +94,18 @@
   }
 }
 
+@media (width <= 42rem) {
+  .topbar[data-overlay="true"] {
+    position: absolute;
+    inset: 0 0 auto;
+    width: 100%;
+    border-bottom: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+}
+
 @media (width <= 40rem) {
   .topbar {
     gap: var(--space-2);

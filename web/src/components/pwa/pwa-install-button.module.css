@@ -4,20 +4,18 @@
   height: 2.75rem;
   flex: 0 0 auto;
   padding: 0;
-  border: 1px solid var(--color-border);
+  border: 0;
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
   transition:
     background-color 150ms ease,
-    border-color 150ms ease,
     color 150ms ease;
   place-items: center;
 }
 
 .installButton:hover {
-  border-color: var(--color-brand);
   background: var(--color-surface-muted);
   color: var(--color-brand);
 }

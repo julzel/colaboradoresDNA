@@ -10,13 +10,25 @@ vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
 }));
 
+vi.mock("@/components/auth/auth-controls", () => ({
+  AuthControls: ({ displayName }: { displayName: string }) => (
+    <div>Cuenta de {displayName}</div>
+  ),
+}));
+
 describe("mobile workspace navigation", () => {
   beforeEach(() => {
     pathname = "/";
   });
 
   it("keeps everyday destinations directly available to collaborators", () => {
-    render(<MobileNavigation role="collaborator" unreadNotificationCount={2} />);
+    render(
+      <MobileNavigation
+        displayName="Julio Zeledon"
+        role="collaborator"
+        unreadNotificationCount={2}
+      />,
+    );
 
     const navigation = screen.getByRole("navigation", {
       name: "Navegación móvil",
@@ -25,7 +37,7 @@ describe("mobile workspace navigation", () => {
     expect(navigation).toHaveTextContent("Inicio");
     expect(navigation).toHaveTextContent("Calendario");
     expect(navigation).toHaveTextContent("Ausencias");
-    expect(screen.queryByRole("button", { name: "Más" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Más" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Inicio/ })).toHaveAttribute(
       "aria-current",
       "page",
@@ -35,7 +47,7 @@ describe("mobile workspace navigation", () => {
   it("opens administrator destinations in an accessible more sheet", async () => {
     pathname = "/admin/colaboradores";
     const user = userEvent.setup();
-    render(<MobileNavigation role="administrator" />);
+    render(<MobileNavigation displayName="Julio Zeledon" role="administrator" />);
 
     const moreButton = screen.getByRole("button", { name: "Más" });
     expect(moreButton).toHaveAttribute("aria-current", "page");
@@ -47,6 +59,7 @@ describe("mobile workspace navigation", () => {
       "aria-current",
       "page",
     );
+    expect(screen.getByText("Cuenta de Julio Zeledon")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Cerrar menú" }));
     expect(document.querySelector("dialog")).not.toHaveAttribute("open");
