@@ -209,7 +209,10 @@ describe("calendar event form", () => {
       screen.queryByRole("dialog", { name: "Nuevo evento" }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Nuevo evento" }));
+    const createEventButton = screen.getByRole("button", { name: "Nuevo evento" });
+    expect(createEventButton).not.toHaveTextContent("Nuevo evento");
+
+    await user.click(createEventButton);
 
     expect(screen.getByRole("dialog", { name: "Nuevo evento" })).toBeInTheDocument();
     expect(navigationMocks.back).not.toHaveBeenCalled();

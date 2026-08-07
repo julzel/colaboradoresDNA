@@ -33,10 +33,6 @@ export function CalendarControls({
     <header className={styles.pageHeader}>
       <h1 className="sr-only">Calendario</h1>
 
-      {canCreateEvents && eventFormOptions && (
-        <CalendarCreateEventTrigger options={eventFormOptions} />
-      )}
-
       <ElevatedSurface as="section" className={styles.controls}>
         <div className={styles.periodNavigation}>
           <ButtonLink
@@ -94,6 +90,12 @@ export function CalendarControls({
               Mes
             </ButtonLink>
           </nav>
+          {canCreateEvents && eventFormOptions && (
+            <CalendarCreateEventTrigger
+              className={styles.createEventButton}
+              options={eventFormOptions}
+            />
+          )}
         </div>
       </ElevatedSurface>
     </header>

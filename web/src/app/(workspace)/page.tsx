@@ -1,6 +1,6 @@
-import { Bell, CalendarDays, Clock3 } from "lucide-react";
+import { Bell, Clock3, Coffee, MoonStar, Sun, Sunset } from "lucide-react";
 
-import { Button, ButtonLink } from "@/components/ui/button/button";
+import { Button } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import {
@@ -13,6 +13,7 @@ import {
   readAllDashboardNotificationsAction,
 } from "@/features/dashboard/actions/dashboard-notification-actions";
 import styles from "@/features/dashboard/components/dashboard.module.css";
+import { getDashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 
 function eventSchedule(notification: {
   allDay: boolean;
@@ -36,22 +37,31 @@ function eventSchedule(notification: {
 
 export default async function HomePage() {
   const dashboard = await getCalendarDashboardNotifications();
+  const greeting = getDashboardGreeting();
+  const firstName =
+    dashboard.displayName.trim().split(/\s+/)[0] || dashboard.displayName;
+  const GreetingIcon = {
+    afternoon: Sunset,
+    "late-night": Coffee,
+    morning: Sun,
+    night: MoonStar,
+  }[greeting.period];
 
   return (
-    <Container>
-      <main className={styles.page} id="main-content">
-        <header className={styles.header}>
-          <div>
-            <p className="eyebrow">Colaboradores DNA</p>
-            <h1>Hola, {dashboard.displayName}</h1>
-            <p>Revisá tus próximas actividades y accesos principales.</p>
-          </div>
-          <ButtonLink href="/calendario" variant="secondary">
-            <CalendarDays aria-hidden="true" size={18} />
-            Ver calendario
-          </ButtonLink>
-        </header>
+    <main className={styles.page} id="main-content">
+      <header className={styles.header}>
+        <div className={styles.greeting}>
+          <span className={styles.greetingIcon} data-period={greeting.period}>
+            <GreetingIcon aria-hidden="true" size={25} />
+          </span>
+          <h1>
+            <span className={styles.salutation}>{greeting.label}</span>{" "}
+            <span className={styles.salutation}>{firstName}</span>
+          </h1>
+        </div>
+      </header>
 
+      <Container>
         <ElevatedSurface as="section" className={styles.notifications}>
           <div className={styles.sectionHeader}>
             <div>
@@ -110,7 +120,7 @@ export default async function HomePage() {
             </ul>
           )}
         </ElevatedSurface>
-      </main>
-    </Container>
+      </Container>
+    </main>
   );
 }

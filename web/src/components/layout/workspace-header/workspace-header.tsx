@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { AuthControls } from "@/components/auth/auth-controls";
 import { Logo } from "@/components/brand/logo/logo";
 import { PwaInstallButton } from "@/components/pwa/pwa-install-button";
 import { Breadcrumbs } from "@/components/ui/navigation/breadcrumbs";
@@ -11,11 +10,7 @@ import { getWorkspaceBreadcrumbs } from "@/features/navigation/workspace-navigat
 
 import styles from "./workspace-header.module.css";
 
-type WorkspaceHeaderProps = {
-  displayName: string;
-};
-
-export function WorkspaceHeader({ displayName }: WorkspaceHeaderProps) {
+export function WorkspaceHeader() {
   const pathname = usePathname();
   const breadcrumbs = getWorkspaceBreadcrumbs(pathname);
   const pageTitle = breadcrumbs.at(-1)?.label ?? "Inicio";
@@ -40,7 +35,6 @@ export function WorkspaceHeader({ displayName }: WorkspaceHeaderProps) {
       </div>
       <div className={styles.tools}>
         <PwaInstallButton />
-        <AuthControls displayName={displayName} />
       </div>
     </header>
   );

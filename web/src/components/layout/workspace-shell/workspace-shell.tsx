@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AuthControls } from "@/components/auth/auth-controls";
 import { Logo } from "@/components/brand/logo/logo";
 import { MobileNavigation } from "@/components/layout/mobile-navigation/mobile-navigation";
 import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-header";
@@ -39,15 +40,23 @@ export function WorkspaceShell({
           role={role}
           unreadNotificationCount={unreadNotificationCount}
         />
+        <div className={styles.sidebarAccount}>
+          <p className={styles.navLabel}>Cuenta</p>
+          <AuthControls displayName={displayName} />
+        </div>
       </aside>
 
       <div className={styles.mainColumn}>
-        <WorkspaceHeader displayName={displayName} />
+        <WorkspaceHeader />
         <main className={styles.content} id="main-content">
           {children}
         </main>
       </div>
-      <MobileNavigation role={role} unreadNotificationCount={unreadNotificationCount} />
+      <MobileNavigation
+        displayName={displayName}
+        role={role}
+        unreadNotificationCount={unreadNotificationCount}
+      />
     </div>
   );
 }

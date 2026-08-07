@@ -9,10 +9,12 @@ import { CalendarEventForm } from "@/features/calendar/components/calendar-event
 import type { CalendarEventTargetOptions } from "@/features/calendar/server/calendar-event-repository";
 
 type CalendarCreateEventTriggerProps = {
+  className?: string | undefined;
   options: CalendarEventTargetOptions;
 };
 
 export function CalendarCreateEventTrigger({
+  className,
   options,
 }: CalendarCreateEventTriggerProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,15 +29,17 @@ export function CalendarCreateEventTrigger({
 
   return (
     <>
-      <Button onClick={handleOpen}>
-        <CalendarPlus aria-hidden="true" size={18} />
-        Nuevo evento
+      <Button
+        aria-label="Nuevo evento"
+        className={className}
+        onClick={handleOpen}
+        size="small"
+        title="Nuevo evento"
+      >
+        <CalendarPlus aria-hidden="true" size={20} />
       </Button>
       {isOpen && (
-        <Modal
-          onClose={handleClose}
-          title="Nuevo evento"
-        >
+        <Modal onClose={handleClose} title="Nuevo evento">
           <CalendarEventForm
             cancelBehavior="callback"
             cancelHref="/calendario"
