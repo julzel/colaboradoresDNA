@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { UserRoundPlus } from "lucide-react";
+import { UserRoundPlus, Users } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
@@ -23,14 +23,24 @@ export default async function EmployeeDirectoryPage() {
     <Container>
       <main className={styles.page} id="main-content">
         <header className={styles.header}>
-          <div>
+          <div className={styles.headerContent}>
             <p className="eyebrow">Administración</p>
-            <h1>Colaboradores</h1>
+            <div className={styles.moduleTitle}>
+              <span className={styles.moduleIcon}>
+                <Users aria-hidden="true" size={24} strokeWidth={1.8} />
+              </span>
+              <h1>Colaboradores</h1>
+              <ButtonLink
+                aria-label="Nuevo colaborador"
+                className={styles.newEmployeeButton}
+                href="/admin/colaboradores/nuevo"
+                size="small"
+                title="Nuevo colaborador"
+              >
+                <UserRoundPlus aria-hidden="true" size={18} />
+              </ButtonLink>
+            </div>
           </div>
-          <ButtonLink href="/admin/colaboradores/nuevo">
-            <UserRoundPlus aria-hidden="true" size={18} />
-            Nuevo colaborador
-          </ButtonLink>
         </header>
 
         {directory.total === 0 ? (

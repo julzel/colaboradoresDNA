@@ -1,0 +1,123 @@
+.page {
+  display: grid;
+  gap: var(--space-8);
+  padding-block: var(--space-6) var(--space-12);
+}
+
+.moduleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moduleCard {
+  display: grid;
+  min-height: 11rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-elevation-1);
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.moduleCard:hover {
+  border-color: var(--color-brand);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-0.125rem);
+}
+
+.moduleIcon {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-md);
+  place-items: center;
+}
+
+.moduleIcon[data-tone="accent"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.moduleIcon[data-tone="brand"] {
+  background: var(--color-event-one-on-one-soft);
+  color: var(--color-event-one-on-one);
+}
+
+.moduleContent {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+
+.moduleContent strong {
+  font-size: var(--text-lg);
+  letter-spacing: -0.015em;
+}
+
+.moduleContent > span {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+}
+
+.arrow {
+  margin-top: var(--space-3);
+  color: var(--color-text-subtle);
+  transition: transform 150ms ease;
+}
+
+.moduleCard:hover .arrow {
+  color: var(--color-brand-text);
+  transform: translateX(var(--space-1));
+}
+
+@media (width <= 48rem) {
+  .moduleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .moduleCard {
+    min-height: auto;
+  }
+}
+
+@media (width <= 30rem) {
+  .page {
+    gap: var(--space-6);
+    padding-top: var(--space-3);
+  }
+
+  .moduleCard {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: var(--space-5);
+  }
+
+  .arrow {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moduleCard,
+  .arrow {
+    transition: none;
+  }
+
+  .moduleCard:hover,
+  .moduleCard:hover .arrow {
+    transform: none;
+  }
+}

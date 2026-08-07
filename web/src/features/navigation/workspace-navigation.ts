@@ -1,4 +1,4 @@
-import { CalendarDays, ClipboardClock, House, Settings, Users } from "lucide-react";
+import { CalendarDays, ClipboardClock, House, Settings } from "lucide-react";
 
 import type { NavigationItem } from "@/components/ui/navigation/side-navigation";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
@@ -15,18 +15,6 @@ const administratorNavigationItem: NavigationItem = {
   label: "Administración",
 };
 
-const employeeNavigationItem: NavigationItem = {
-  href: "/admin/colaboradores",
-  icon: Users,
-  label: "Colaboradores",
-};
-
-const ptoAdministrationNavigationItem: NavigationItem = {
-  href: "/admin/ausencias",
-  icon: ClipboardClock,
-  label: "Gestionar ausencias",
-};
-
 export function getWorkspaceNavigation(
   role: PlatformRole,
   unreadNotificationCount = 0,
@@ -39,14 +27,15 @@ export function getWorkspaceNavigation(
         }
       : item,
   );
-  return role === "administrator"
-    ? [
-        ...navigationItems,
-        administratorNavigationItem,
-        employeeNavigationItem,
-        ptoAdministrationNavigationItem,
-      ]
-    : navigationItems;
+  if (role !== "administrator") {
+    return navigationItems;
+  }
+
+  return [
+    ...navigationItems.slice(0, 2),
+    administratorNavigationItem,
+    ...navigationItems.slice(2),
+  ];
 }
 
 export function getActiveNavigationHref(

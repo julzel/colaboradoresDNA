@@ -19,16 +19,47 @@
   justify-content: space-between;
 }
 
-.newRequestIcon {
-  display: none;
-}
-
 .header h1,
 .sectionHeader h2,
 .card h2,
 .card h3 {
   margin: 0;
   line-height: var(--line-tight);
+}
+
+.moduleTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.headerContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.moduleIcon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  place-items: center;
+}
+
+.moduleActions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+a.newRequestButton {
+  width: var(--control-height-sm);
+  padding-inline: 0;
 }
 
 .header p,
@@ -283,26 +314,6 @@
   .header {
     display: grid;
     justify-content: stretch;
-  }
-
-  .actions {
-    width: 100%;
-  }
-
-  a.newRequestButton {
-    width: var(--control-height-lg);
-    min-height: var(--control-height-lg);
-    margin-left: auto;
-    padding: 0;
-    border-radius: var(--radius-full);
-  }
-
-  .newRequestIcon {
-    display: block;
-  }
-
-  .newRequestLabel {
-    display: none;
   }
 
   .requestItem,
