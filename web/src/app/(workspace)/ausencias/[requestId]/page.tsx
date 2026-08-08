@@ -41,7 +41,7 @@ export default async function PtoRequestDetailPage({
   const { request, warnings } = detail;
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href="/ausencias">Volver a solicitudes</BackLink>
         <header className={styles.header}>
           <div>
@@ -166,7 +166,7 @@ export default async function PtoRequestDetailPage({
             />
           </ElevatedSurface>
         )}
-      </main>
+      </div>
     </Container>
   );
 }

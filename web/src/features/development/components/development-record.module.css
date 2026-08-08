@@ -1,0 +1,344 @@
+.page {
+  display: grid;
+  gap: var(--space-5);
+  padding-block: var(--space-4) var(--space-12);
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.avatar {
+  display: grid;
+  width: 4rem;
+  height: 4rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  background: var(--color-module-development-soft);
+  color: var(--color-module-development);
+  font-size: var(--text-xl);
+  font-weight: 850;
+  place-items: center;
+}
+
+.identityText {
+  min-width: 0;
+}
+
+.eyebrowRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hero h1,
+.attention h2,
+.timelineSection h2,
+.empty h3 {
+  margin: 0;
+  line-height: 1.15;
+}
+
+.hero h1 {
+  overflow-wrap: anywhere;
+  font-size: var(--text-2xl);
+  letter-spacing: -0.04em;
+}
+
+.heroDescription {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.sectionNav {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+}
+
+.sectionNav a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sectionNav a:hover,
+.sectionNav a[aria-current="page"] {
+  background: var(--color-module-development-soft);
+  color: var(--color-module-development);
+}
+
+.sectionNav a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}
+
+.inactiveNote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+
+.inactiveNote strong {
+  color: var(--color-text);
+}
+
+.attention {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: linear-gradient(
+    120deg,
+    var(--color-module-development-soft),
+    var(--color-surface) 72%
+  );
+}
+
+.attentionIcon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-module-development);
+  place-items: center;
+}
+
+.attention h2 {
+  font-size: var(--text-lg);
+}
+
+.attention p:last-child {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.summaryCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-4);
+}
+
+.summaryCard svg {
+  grid-row: 1 / 3;
+  color: var(--color-module-development);
+}
+
+.summaryCard span {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 750;
+}
+
+.summaryCard strong {
+  font-size: var(--text-md);
+}
+
+.timelineSection {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.sectionHeading p:last-child {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.timeline {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timelineItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 4.5rem;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.timelineItem:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-muted);
+}
+
+.timelineItem:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}
+
+.timelineIcon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-module-development-soft);
+  color: var(--color-module-development);
+  place-items: center;
+}
+
+.timelineText {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.timelineText small {
+  overflow-wrap: anywhere;
+  color: var(--color-text-muted);
+}
+
+.timelineArrow {
+  color: var(--color-text-muted);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 8rem;
+  padding: var(--space-5);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.empty > svg {
+  color: var(--color-module-development);
+}
+
+.empty h3 {
+  font-size: var(--text-md);
+}
+
+.emptyDescription {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+@media (width <= 58rem) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .heroActions {
+    width: 100%;
+    margin-left: 5rem;
+  }
+}
+
+@media (width <= 40rem) {
+  .page {
+    padding-top: var(--space-2);
+  }
+
+  .hero {
+    padding: var(--space-4);
+  }
+
+  .avatar {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .heroActions {
+    display: grid;
+    width: 100%;
+    margin: 0;
+  }
+
+  .attention {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .attention > a {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .timelineItem {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .timelineItem > span:nth-last-child(2) {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .timelineArrow {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timelineItem {
+    scroll-behavior: auto;
+  }
+}

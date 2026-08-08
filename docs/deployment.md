@@ -56,6 +56,23 @@ Mark `CLERK_SECRET_KEY` and `MONGODB_URI` as secret. Do not mark
 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` as secret because it is intentionally
 included in browser assets.
 
+The collaborator-development module has a separate application-encryption
+boundary. Configure these **Functions-only** secrets solely in a trusted,
+synthetic-data environment when testing encrypted records:
+
+| Variable                                    | Purpose                                       |
+| ------------------------------------------- | --------------------------------------------- |
+| `DEVELOPMENT_ENCRYPTION_ACTIVE_KEY_VERSION` | Active version identifier, initially `v1`     |
+| `DEVELOPMENT_ENCRYPTION_KEY_V1`             | Base64-encoded, random 32-byte encryption key |
+
+Generate a development key with `openssl rand -base64 32`. Never commit the
+value, expose it to the browser, store it in MongoDB, or provide it to an
+untrusted Deploy Preview. The module shell can render without this key; any
+operation that encrypts or decrypts a development narrative fails closed when
+the key is absent or invalid. A real production environment requires a
+separate managed-key, backup-recovery, rotation, and access review before it
+may contain HR data.
+
 For this site, set `APP_BASE_URL` in the Netlify **Production** context to
 `https://colaboradoresdna.netlify.app` with the Functions scope. Remove any
 Production value that points to `localhost`. The invitation service also uses

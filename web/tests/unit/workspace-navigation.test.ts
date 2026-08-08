@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getActiveNavigationHref,
+  getWorkspaceBreadcrumbs,
   getWorkspaceNavigation,
 } from "@/features/navigation/workspace-navigation";
 
@@ -36,5 +37,14 @@ describe("administrator navigation", () => {
     ]);
     expect(getActiveNavigationHref("/admin/colaboradores", items)).toBe("/admin");
     expect(getActiveNavigationHref("/admin/ausencias", items)).toBe("/admin");
+    expect(getActiveNavigationHref("/admin/desarrollo", items)).toBe("/admin");
+  });
+
+  it("keeps Desarrollo inside the administration hierarchy", () => {
+    expect(getWorkspaceBreadcrumbs("/admin/desarrollo")).toEqual([
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Desarrollo" },
+    ]);
   });
 });

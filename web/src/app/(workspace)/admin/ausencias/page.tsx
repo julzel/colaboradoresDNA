@@ -53,7 +53,7 @@ export default async function PtoAdministrationPage({
 
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Administración</p>
@@ -144,7 +144,7 @@ export default async function PtoAdministrationPage({
             <p className={styles.muted}>No hay solicitudes con este estado.</p>
           )}
         </ElevatedSurface>
-      </main>
+      </div>
     </Container>
   );
 }

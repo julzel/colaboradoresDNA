@@ -146,7 +146,12 @@ describe("calendar event detail", () => {
       organizerName: "Julio Zeledon",
     };
 
-    render(<CalendarEventDetailContent detail={detail} />);
+    render(
+      <CalendarEventDetailContent
+        detail={detail}
+        developmentHref="/admin/colaboradores/employee/desarrollo/1-a-1/meeting"
+      />,
+    );
 
     expect(screen.getByText("1:1")).toBeInTheDocument();
     expect(screen.getByText("Julio Zeledon")).toBeInTheDocument();
@@ -159,6 +164,9 @@ describe("calendar event detail", () => {
       "/calendario/eventos/507f1f77bcf86cd799439012/editar",
     );
     expect(screen.getByText("Eliminar evento")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Abrir registro de desarrollo" }),
+    ).toHaveAttribute("href", "/admin/colaboradores/employee/desarrollo/1-a-1/meeting");
   });
 });
 
@@ -204,6 +212,46 @@ describe("calendar quick details", () => {
 });
 
 describe("calendar event form", () => {
+  it("simplifies a Development-linked 1:1 editor to its protected schedule", () => {
+    render(
+      <CalendarEventForm
+        cancelHref="/calendario/eventos/507f1f77bcf86cd799439012"
+        developmentOneOnOne
+        event={{
+          allDay: false,
+          createdAt: "2026-08-01T12:00:00.000Z",
+          departmentId: null,
+          description: null,
+          endDate: "2026-08-10",
+          endLocal: "2026-08-10T09:30",
+          endsAt: "2026-08-10T15:30:00.000Z",
+          eventType: "one_on_one",
+          id: "507f1f77bcf86cd799439012",
+          inviteePlatformUserIds: ["507f1f77bcf86cd799439013"],
+          location: null,
+          meetingUrl: null,
+          organizerPlatformUserId: "507f1f77bcf86cd799439011",
+          startDate: "2026-08-10",
+          startLocal: "2026-08-10T09:00",
+          startsAt: "2026-08-10T15:00:00.000Z",
+          title: "Reunión 1:1",
+          updatedAt: "2026-08-01T12:00:00.000Z",
+          visibility: "invited",
+        }}
+        mode="edit"
+        options={{ departments: [], people: [] }}
+      />,
+    );
+
+    expect(screen.getByText("Evento privado vinculado a Desarrollo")).toBeVisible();
+    expect(screen.getByLabelText("Inicio")).toHaveValue("2026-08-10T09:00");
+    expect(screen.getByLabelText("Final")).toHaveValue("2026-08-10T09:30");
+    expect(screen.queryByLabelText("Tipo de evento")).toBeNull();
+    expect(screen.queryByLabelText("Título")).toBeNull();
+    expect(screen.queryByLabelText("¿Quién puede verlo?")).toBeNull();
+    expect(screen.queryByLabelText("Evento de todo el día")).toBeNull();
+  });
+
   it("opens and closes event creation without navigating", async () => {
     const user = userEvent.setup();
     render(<CalendarCreateEventTrigger options={{ departments: [], people: [] }} />);

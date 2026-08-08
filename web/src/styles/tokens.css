@@ -74,6 +74,8 @@
   --color-event-training-soft: var(--blue-50);
   --color-event-one-on-one: #7540a0;
   --color-event-one-on-one-soft: #f3ecfc;
+  --color-module-development: #2864b4;
+  --color-module-development-soft: #eaf2ff;
   --color-event-celebration: var(--color-accent);
   --color-event-celebration-soft: var(--color-accent-soft);
   --color-event-custom: var(--color-brand-text);
@@ -157,6 +159,8 @@
   --color-event-training-soft: #132e4c;
   --color-event-one-on-one: #d2b5ff;
   --color-event-one-on-one-soft: #37244e;
+  --color-module-development: #91bdff;
+  --color-module-development-soft: #183154;
   --color-event-celebration: #ffad6c;
   --color-event-celebration-soft: #3c200d;
   --color-event-custom: #58dce4;
@@ -215,6 +219,8 @@
     --color-event-training-soft: #132e4c;
     --color-event-one-on-one: #d2b5ff;
     --color-event-one-on-one-soft: #37244e;
+    --color-module-development: #91bdff;
+    --color-module-development-soft: #183154;
     --color-event-celebration: #ffad6c;
     --color-event-celebration-soft: #3c200d;
     --color-event-custom: #58dce4;

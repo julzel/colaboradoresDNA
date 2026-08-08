@@ -19,6 +19,7 @@ import {
   PenLine,
   Phone,
   ShieldCheck,
+  Sprout,
   UserCheck,
   UserRound,
   UsersRound,
@@ -39,6 +40,8 @@ import { ScheduleSummary } from "@/features/employees/components/schedule-summar
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeeDetailForAdministration } from "@/features/employees/server/employee-read-repository";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { DevelopmentDomainError } from "@/features/development/domain/shared";
+import { getDevelopmentSummaryForAdministration } from "@/features/development/server/development-service";
 
 export const metadata: Metadata = { title: "Detalle del colaborador" };
 
@@ -53,6 +56,27 @@ const roleLabels = {
   collaborator: "Colaborador",
   supervisor: "Supervisor",
 } as const;
+
+function formatDevelopmentDate(value: string | null) {
+  if (!value) return "Sin registro";
+  return new Intl.DateTimeFormat("es-CR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${value}T12:00:00.000Z`));
+}
+
+async function loadDevelopmentSummary(employeeId: string) {
+  try {
+    return await getDevelopmentSummaryForAdministration(employeeId);
+  } catch (error) {
+    if (error instanceof DevelopmentDomainError && error.code === "forbidden") {
+      return null;
+    }
+    throw error;
+  }
+}
 
 async function getProfileImageUrl(clerkUserId: string | null) {
   if (!clerkUserId) return null;
@@ -76,7 +100,10 @@ export default async function EmployeeDetailPage({
   const { employeeId } = await params;
   const detail = await getEmployeeDetailForAdministration(employeeId);
   if (!detail) notFound();
-  const profileImageUrl = await getProfileImageUrl(detail.access.clerkUserId);
+  const [profileImageUrl, development] = await Promise.all([
+    getProfileImageUrl(detail.access.clerkUserId),
+    loadDevelopmentSummary(employeeId),
+  ]);
   const displayName = [
     detail.employee.givenNames,
     detail.employee.firstSurname,
@@ -87,7 +114,7 @@ export default async function EmployeeDetailPage({
 
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href="/admin/colaboradores">Volver a colaboradores</BackLink>
         <ElevatedSurface
           as="header"
@@ -143,6 +170,50 @@ export default async function EmployeeDetailPage({
         </ElevatedSurface>
 
         <div className={styles.detailGrid}>
+          <EmployeeDetailCard
+            action={
+              <ButtonLink
+                href={`/admin/colaboradores/${employeeId}/desarrollo`}
+                size="small"
+                variant="quiet"
+              >
+                Abrir registro
+              </ButtonLink>
+            }
+            icon={Sprout}
+            title="Desarrollo"
+          >
+            {development ? (
+              <dl className={styles.summary}>
+                <div>
+                  <dt>Último 1:1</dt>
+                  <dd>
+                    {formatDevelopmentDate(development.summary.lastFinalizedOneOnOneOn)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Próximo seguimiento</dt>
+                  <dd>
+                    {formatDevelopmentDate(development.summary.nextOneOnOneDueOn)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Acciones abiertas</dt>
+                  <dd>{development.summary.openActionCount}</dd>
+                </div>
+                <div>
+                  <dt>Cadencia</dt>
+                  <dd>Cada {development.summary.oneOnOneCadenceDays ?? 30} días</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className={styles.muted}>
+                Activá la autenticación en dos pasos para consultar información de
+                desarrollo.
+              </p>
+            )}
+          </EmployeeDetailCard>
+
           <EmployeeDetailCard
             action={
               <ButtonLink
@@ -310,7 +381,7 @@ export default async function EmployeeDetailPage({
             <p className={styles.muted}>Sin historial de asignaciones.</p>
           )}
         </EmployeeDetailCard>
-      </main>
+      </div>
     </Container>
   );
 }

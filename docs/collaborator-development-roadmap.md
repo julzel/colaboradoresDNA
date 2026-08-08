@@ -1,8 +1,40 @@
 # Collaborator development — implementation roadmap
 
-**Status:** Proposed  
-**Date:** 2026-08-07  
+**Status:** In progress — useful administrator 1:1 workflow available for synthetic data
+
+**Date:** 2026-08-07
+
 **Source PRD:** [Collaborator development](./collaborator-development-prd.md)
+
+## Implementation progress
+
+The first useful administrator workflow is implemented for synthetic data:
+
+- administrator-only `Administración → Desarrollo` entry with an urgency-sorted
+  collaborator directory, responsive record summary, and a compact entry point
+  from the existing collaborator detail;
+- focused 1:1 draft and finalization flow with structured prompts, safe-writing
+  guidance, dynamic agreed actions, optimistic concurrency, and immutable
+  finalized narrative content;
+- newest-first 1:1 history, authorized narrative detail reads, and actionable
+  open/completed agreement tracking;
+- optional private `Reunión 1:1` calendar event created in the same transaction
+  as the development record, with links in both directions and a schedule-only
+  calendar editor that preserves its invited-only privacy contract;
+- feature-owned schemas and Mongo document types for profiles, 1:1s, skills,
+  assessments, goals, updates, and content-free audit;
+- versioned AES-256-GCM narrative encryption bound to stable resource identity;
+- MFA-gated administrator policy, metadata-only list projections, narrow
+  authorized narrative projections, and fail-closed read audits;
+- migration-only indexes for all eight approved collections;
+- private, non-cacheable Desarrollo responses and service-worker cache checks;
+- one workspace main landmark with a regression test.
+
+The remainder of Phase 3 (amendments, voiding, and collaborator transparency),
+plus skill assessment and development-goal workflows, remains intentionally
+unavailable. Production use remains blocked by the governance, retention,
+environment, key-management, audit-storage, privacy/legal, and pilot gates in
+Phase 7. Until those gates pass, use synthetic records only.
 
 ## 1. Delivery recommendation
 
@@ -272,7 +304,7 @@ what needs attention without exposing narrative content in the list.
 ### Routes and navigation
 
 - Add a third **Desarrollo** card to `/admin` with copy:
-  `Documentá reuniones 1:1, habilidades y planes de desarrollo.`
+  `Priorizá seguimientos, documentá 1:1 y cerrá acciones acordadas.`
 - Use a dedicated module color distinct from Ausencias orange and Colaboradores
   purple; define semantic light/dark tokens rather than reusing a status color.
 - Change the admin module grid to three columns at wide widths, two at

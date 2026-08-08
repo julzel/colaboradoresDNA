@@ -1,4 +1,20 @@
 export const feedbackMessages = {
+  development_one_on_one_action_failed: {
+    message: "No fue posible actualizar la acción acordada.",
+    tone: "error",
+  },
+  development_one_on_one_action_updated: {
+    message: "La acción acordada fue actualizada.",
+    tone: "success",
+  },
+  development_one_on_one_draft_saved: {
+    message: "El borrador del 1:1 fue guardado.",
+    tone: "success",
+  },
+  development_one_on_one_finalized: {
+    message: "El 1:1 fue finalizado.",
+    tone: "success",
+  },
   calendar_event_created: {
     message: "El evento fue creado.",
     tone: "success",

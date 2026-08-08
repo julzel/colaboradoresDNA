@@ -22,7 +22,7 @@ export default async function EditAccessPage({
 
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href={`/admin/colaboradores/${employeeId}`}>
           Volver al detalle
         </BackLink>
@@ -40,7 +40,7 @@ export default async function EditAccessPage({
           employmentActive={detail.employee.employmentStatus === "active"}
           role={detail.access.role}
         />
-      </main>
+      </div>
     </Container>
   );
 }

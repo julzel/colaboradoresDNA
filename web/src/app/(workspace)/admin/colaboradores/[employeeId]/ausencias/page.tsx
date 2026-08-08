@@ -31,7 +31,7 @@ export default async function EmployeePtoAdministrationPage({
   if (!detail) notFound();
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href={`/admin/colaboradores/${employeeId}`}>
           Volver al colaborador
         </BackLink>
@@ -90,7 +90,7 @@ export default async function EmployeePtoAdministrationPage({
             )}
           </ElevatedSurface>
         </div>
-      </main>
+      </div>
     </Container>
   );
 }

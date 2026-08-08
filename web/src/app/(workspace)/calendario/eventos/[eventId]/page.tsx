@@ -18,6 +18,9 @@ export default async function CalendarEventDetailPage({
   const detail = await getVisibleCalendarEventDetail(eventId);
   if (!detail) notFound();
   const { event } = detail;
+  const developmentHref = detail.developmentLink
+    ? `/admin/colaboradores/${detail.developmentLink.employeeId}/desarrollo/1-a-1/${detail.developmentLink.meetingId}`
+    : null;
 
   return (
     <div className={styles.page}>
@@ -29,7 +32,7 @@ export default async function CalendarEventDetailPage({
         <header className={styles.eventDetailPageHeader}>
           <h1>{event.title}</h1>
         </header>
-        <CalendarEventDetailContent detail={detail} />
+        <CalendarEventDetailContent detail={detail} developmentHref={developmentHref} />
       </ElevatedSurface>
     </div>
   );

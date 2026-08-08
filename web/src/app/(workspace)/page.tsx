@@ -48,7 +48,7 @@ export default async function HomePage() {
   }[greeting.period];
 
   return (
-    <main className={styles.page} id="main-content">
+    <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.greeting}>
           <span className={styles.greetingIcon} data-period={greeting.period}>
@@ -121,6 +121,6 @@ export default async function HomePage() {
           )}
         </ElevatedSurface>
       </Container>
-    </main>
+    </div>
   );
 }

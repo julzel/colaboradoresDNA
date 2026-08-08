@@ -21,7 +21,7 @@ export default async function EmployeeDirectoryPage() {
 
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <header className={styles.header}>
           <div className={styles.headerContent}>
             <p className="eyebrow">Administración</p>
@@ -51,7 +51,7 @@ export default async function EmployeeDirectoryPage() {
         ) : (
           <EmployeeDirectory items={directory.items} />
         )}
-      </main>
+      </div>
     </Container>
   );
 }

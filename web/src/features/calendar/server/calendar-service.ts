@@ -10,7 +10,10 @@ import type {
   CalendarEvent,
   NormalizedCalendarEventInput,
 } from "@/features/calendar/domain/calendar-event";
-import { calendarEventTypeLabels } from "@/features/calendar/domain/calendar-event";
+import {
+  CalendarDomainError,
+  calendarEventTypeLabels,
+} from "@/features/calendar/domain/calendar-event";
 import {
   addCalendarDays,
   calendarDateToUtc,
@@ -44,6 +47,7 @@ import {
   listUpcomingProxyPtoNotifications,
   listVisibleApprovedPtoForCalendar,
 } from "@/features/pto/server/pto-service";
+import { findDevelopmentLinkForCalendarIntegration } from "@/features/development/server/development-service";
 
 const dashboardNotificationLimit = 100;
 
@@ -211,7 +215,17 @@ export async function getCalendarEntries(month: string) {
 
 export async function getVisibleCalendarEventDetail(eventId: string) {
   const actor = await requireCalendarActor();
-  return getCalendarEventDetail({ actor, eventId });
+  const detail = await getCalendarEventDetail({ actor, eventId });
+  if (!detail) return null;
+  const developmentLink =
+    detail.event.eventType === "one_on_one"
+      ? await findDevelopmentLinkForCalendarIntegration({
+          actorRole: actor.role,
+          calendarEventId: detail.event.id,
+        })
+      : null;
+
+  return { ...detail, developmentLink, viewerRole: actor.role };
 }
 
 export async function getVisibleCalendarPtoDetail(requestId: string) {
@@ -271,6 +285,30 @@ export async function updateCalendarEventForActor({
   input: NormalizedCalendarEventInput;
 }) {
   const actor = await requireCalendarActor({ canManage: true });
+  const developmentLink = await findDevelopmentLinkForCalendarIntegration({
+    actorRole: actor.role,
+    calendarEventId: eventId,
+  });
+  if (developmentLink) {
+    const existing = await getCalendarEventDetail({ actor, eventId });
+    const currentInvitees = [...(existing?.event.inviteePlatformUserIds ?? [])].sort();
+    const nextInvitees = [...input.inviteePlatformUserIds].sort();
+    const keepsPrivateOneOnOneContract =
+      existing !== null &&
+      input.allDay === false &&
+      input.departmentId === null &&
+      input.description === null &&
+      input.eventType === "one_on_one" &&
+      input.location === null &&
+      input.meetingUrl === null &&
+      input.title === "Reunión 1:1" &&
+      input.visibility === "invited" &&
+      currentInvitees.length === nextInvitees.length &&
+      currentInvitees.every((invitee, index) => invitee === nextInvitees[index]);
+    if (!keepsPrivateOneOnOneContract) {
+      throw new CalendarDomainError("event_forbidden");
+    }
+  }
   return updateCalendarEvent({ actor, eventId, input });
 }
 

@@ -70,7 +70,7 @@ export default async function PtoDashboardPage() {
   const dashboard = await getPtoDashboard();
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <header className={styles.header}>
           <div className={styles.headerContent}>
             <p className="eyebrow">Ausencias</p>
@@ -129,7 +129,7 @@ export default async function PtoDashboardPage() {
             requests={dashboard.ownRequests}
           />
         </section>
-      </main>
+      </div>
     </Container>
   );
 }
