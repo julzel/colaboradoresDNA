@@ -13,8 +13,12 @@ import {
 import {
   endEmployeeEmploymentAction,
   updateEmployeeAccessAction,
+  updateEmployeeEmailAction,
 } from "@/features/employees/actions/employee-actions";
-import type { PlatformRole } from "@/features/auth/domain/platform-user";
+import type {
+  PlatformRole,
+  PlatformUserStatus,
+} from "@/features/auth/domain/platform-user";
 import { initialEmployeeActionState } from "@/features/employees/domain/employee-action-state";
 
 import styles from "./employee-management.module.css";
@@ -22,16 +26,24 @@ import { FormErrorSummary } from "./form-error-summary";
 import { useGuardedForm } from "./use-guarded-form";
 
 type AccessManagementFormProps = {
+  accessStatus: PlatformUserStatus;
+  email: string;
   employeeId: string;
   employmentActive: boolean;
   role: PlatformRole;
 };
 
 export function AccessManagementForm({
+  accessStatus,
+  email,
   employeeId,
   employmentActive,
   role,
 }: AccessManagementFormProps) {
+  const [emailState, emailAction] = useActionState(
+    updateEmployeeEmailAction,
+    initialEmployeeActionState,
+  );
   const [accessState, accessAction] = useActionState(
     updateEmployeeAccessAction,
     initialEmployeeActionState,
@@ -41,6 +53,12 @@ export function AccessManagementForm({
     initialEmployeeActionState,
   );
   const cancelHref = `/admin/colaboradores/${employeeId}`;
+  const {
+    formRef: emailFormRef,
+    handleCancel: handleEmailCancel,
+    handleChange: handleEmailChange,
+    handleSubmit: handleEmailSubmit,
+  } = useGuardedForm(cancelHref);
   const {
     formRef: accessFormRef,
     handleCancel: handleAccessCancel,
@@ -56,6 +74,44 @@ export function AccessManagementForm({
 
   return (
     <>
+      <ElevatedSurface
+        action={emailAction}
+        as="form"
+        className={styles.formCard}
+        onChange={handleEmailChange}
+        onSubmit={handleEmailSubmit}
+        ref={emailFormRef}
+      >
+        <input name="employeeId" type="hidden" value={employeeId} />
+        <h2>Correo de acceso</h2>
+        <p className={styles.muted}>
+          Solo administración puede cambiar este correo. Se actualizará también en el
+          proveedor de acceso y el cambio quedará auditado.
+        </p>
+        <FormErrorSummary state={emailState} />
+        <TextField
+          autoComplete="email"
+          defaultValue={email}
+          disabled={accessStatus === "deactivated"}
+          error={emailState.errors?.email}
+          id="email"
+          label="Correo personal"
+          name="email"
+          required
+          type="email"
+        />
+        {accessStatus !== "deactivated" && (
+          <div className={styles.actions}>
+            <SubmitButton pendingLabel="Actualizando correo…">
+              Actualizar correo
+            </SubmitButton>
+            <Button onClick={handleEmailCancel} variant="quiet">
+              Cancelar
+            </Button>
+          </div>
+        )}
+      </ElevatedSurface>
+
       <ElevatedSurface
         action={accessAction}
         as="form"

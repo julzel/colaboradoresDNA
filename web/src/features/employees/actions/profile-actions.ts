@@ -79,6 +79,7 @@ export async function updateOwnProfileAction(
   }
 
   revalidatePath("/perfil");
+  revalidatePath("/");
   revalidatePath("/calendario");
   return { message: "Tu perfil fue actualizado.", status: "success" };
 }
@@ -98,6 +99,7 @@ export async function updateOwnProfileImageAction(
   }
 
   revalidatePath("/perfil");
+  revalidatePath("/");
   return { message: "La foto de perfil fue actualizada.", status: "success" };
 }
 
@@ -109,5 +111,6 @@ export async function removeOwnProfileImageAction(): Promise<ProfileActionState>
   }
 
   revalidatePath("/perfil");
+  revalidatePath("/");
   return { message: "La foto fue eliminada.", status: "success" };
 }

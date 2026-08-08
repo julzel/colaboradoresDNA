@@ -78,6 +78,9 @@ describe("mobile workspace navigation", () => {
       "href",
       "/perfil",
     );
+    expect(
+      screen.getByRole("link", { name: "Seguridad de la cuenta" }),
+    ).toHaveAttribute("href", "/account/security");
 
     await user.click(screen.getByRole("button", { name: "Cerrar menú" }));
     expect(document.querySelector("dialog")).not.toHaveAttribute("open");

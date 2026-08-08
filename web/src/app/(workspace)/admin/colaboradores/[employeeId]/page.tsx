@@ -1,3 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
+
+import { clerkClient } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -50,6 +53,19 @@ const roleLabels = {
   supervisor: "Supervisor",
 } as const;
 
+async function getProfileImageUrl(clerkUserId: string | null) {
+  if (!clerkUserId) return null;
+
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(clerkUserId);
+    return user.hasImage ? user.imageUrl : null;
+  } catch {
+    // The collaborator detail remains available with its initials fallback.
+    return null;
+  }
+}
+
 export default async function EmployeeDetailPage({
   params,
 }: {
@@ -59,6 +75,7 @@ export default async function EmployeeDetailPage({
   const { employeeId } = await params;
   const detail = await getEmployeeDetailForAdministration(employeeId);
   if (!detail) notFound();
+  const profileImageUrl = await getProfileImageUrl(detail.access.clerkUserId);
   const displayName = [
     detail.employee.givenNames,
     detail.employee.firstSurname,
@@ -78,7 +95,11 @@ export default async function EmployeeDetailPage({
           className={`${styles.section} ${styles.detailHeader}`}
         >
           <span aria-hidden="true" className={styles.avatar}>
-            {detail.employee.initials}
+            {profileImageUrl ? (
+              <img alt="" src={profileImageUrl} />
+            ) : (
+              detail.employee.initials
+            )}
           </span>
           <div>
             <p className={`eyebrow ${styles.detailEyebrow}`}>Colaborador</p>

@@ -28,6 +28,13 @@ visibility must be enforced by server projections.
 `platform_users` remains authoritative for platform role, personal login email,
 invitation state, access status, and the stable Clerk identifier.
 
+The employee record is the canonical source for legal and preferred names.
+Updating a preferred name also synchronizes the derived display name into
+`platform_users` in the same MongoDB transaction so legacy notification and
+audit views use the same name. Clerk is the canonical profile-image store;
+`/perfil` is the only application UI that writes it, and all application avatar
+surfaces read the same Clerk image.
+
 ## Initial database setup
 
 Run against a non-production Atlas database:
@@ -51,3 +58,7 @@ migration procedure.
 - Role, department, and position never imply one another.
 - Employment deactivation must use the existing fail-closed access lifecycle
   when the CRUD workflow is implemented.
+- Self-service profile writes derive their employee and Clerk targets from the
+  authenticated server identity; clients never submit a target user ID.
+- Login-email updates require the administrator role and synchronize Clerk with
+  `platform_users`; employees cannot change their own login email in `/perfil`.

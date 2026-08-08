@@ -7,6 +7,7 @@ import { getDatabase } from "@/lib/server/mongodb";
 export type AuthAuditAction =
   | "account_deactivated"
   | "account_reactivated"
+  | "email_updated"
   | "invitation_created"
   | "invitation_failed"
   | "invitation_resent"

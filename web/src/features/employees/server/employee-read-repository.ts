@@ -105,6 +105,7 @@ export type EmployeeSelfServiceProfileDetail = {
 
 export type EmployeeDetail = {
   access: {
+    clerkUserId: string | null;
     email: string;
     invitationStatus: "pending" | "accepted" | "failed";
     role: PlatformRole;
@@ -501,6 +502,7 @@ export async function getEmployeeDetailForAdministration(
 
   return {
     access: {
+      clerkUserId: access.clerkUserId ?? null,
       email: String(access.normalizedEmail),
       invitationStatus: access.invitation.status,
       role: access.role,

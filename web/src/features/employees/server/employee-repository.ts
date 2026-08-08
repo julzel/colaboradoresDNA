@@ -181,7 +181,7 @@ export async function updateEmployeePersonalInformation({
           { _id: document.platformUserId },
           {
             $set: {
-              displayName: formatEmployeeDisplayName(document),
+              displayName: formatEmployeePreferredDisplayName(document),
               updatedAt: new Date(),
             },
           },
@@ -405,6 +405,17 @@ export async function updateEmployeeSelfServiceProfile({
       }
 
       employee = toEmployee(document);
+
+      await database.collection("platform_users").updateOne(
+        { _id: document.platformUserId },
+        {
+          $set: {
+            displayName: formatEmployeePreferredDisplayName(document),
+            updatedAt: new Date(),
+          },
+        },
+        { session },
+      );
 
       if ((existing.preferredName ?? null) !== profile.preferredName) {
         await recordEmployeeAudit({

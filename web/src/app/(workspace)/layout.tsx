@@ -11,7 +11,7 @@ export default async function WorkspaceLayout({
   children,
   modal,
 }: Readonly<{ children: ReactNode; modal?: ReactNode }>) {
-  const { platformUser } = await requirePlatformUser();
+  const { clerkHasImage, clerkImageUrl, platformUser } = await requirePlatformUser();
   const [employee, unreadNotificationCount] = await Promise.all([
     findEmployeeByPlatformUserId(platformUser.id),
     getCalendarDashboardUnreadCount(platformUser.id),
@@ -26,6 +26,7 @@ export default async function WorkspaceLayout({
       <WorkspaceShell
         displayName={displayName}
         greeting={greeting}
+        profileImageUrl={clerkHasImage ? clerkImageUrl : null}
         role={platformUser.role}
         unreadNotificationCount={unreadNotificationCount}
       >

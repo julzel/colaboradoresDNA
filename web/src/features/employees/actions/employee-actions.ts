@@ -8,6 +8,10 @@ import { z } from "zod";
 import { platformRoleSchema } from "@/features/auth/domain/platform-user";
 import { recordAuthAudit } from "@/features/auth/server/auth-audit-repository";
 import {
+  AdminEmailUpdateError,
+  updateEmployeeEmailAsAdministrator,
+} from "@/features/auth/server/admin-email-service";
+import {
   safelySendPlatformInvitation,
   sendPlatformInvitation,
 } from "@/features/auth/server/invitation-service";
@@ -391,6 +395,66 @@ export async function updateEmployeeAccessAction(
       `/admin/colaboradores/${employeeId}`,
       "notice",
       "employee_access_updated",
+    ),
+  );
+}
+
+export async function updateEmployeeEmailAction(
+  _state: EmployeeActionState,
+  formData: FormData,
+): Promise<EmployeeActionState> {
+  const parsed = z
+    .object({
+      email: z.email().max(254),
+      employeeId: objectIdStringSchema,
+    })
+    .safeParse({
+      email: formData.get("email"),
+      employeeId: formData.get("employeeId"),
+    });
+  if (!parsed.success) return zodState(parsed.error);
+
+  let result;
+  try {
+    result = await updateEmployeeEmailAsAdministrator(parsed.data);
+  } catch (error) {
+    if (error instanceof AdminEmailUpdateError) {
+      const messages: Record<AdminEmailUpdateError["code"], string> = {
+        account_not_editable:
+          "El correo no se puede cambiar mientras la cuenta está desactivada.",
+        email_exists: "Ese correo ya está asignado a otra cuenta.",
+        employee_not_found: "No encontramos el colaborador solicitado.",
+        identity_sync_failed:
+          "No fue posible sincronizar el correo con el proveedor de acceso.",
+      };
+      const message = messages[error.code];
+      return {
+        ...(error.code === "email_exists" && { errors: { email: message } }),
+        message,
+        status: "error",
+      };
+    }
+
+    return {
+      message: "No fue posible actualizar el correo. Intentá nuevamente.",
+      status: "error",
+    };
+  }
+
+  const employeeId = parsed.data.employeeId;
+  revalidatePath(`/admin/colaboradores/${employeeId}`);
+
+  if (!result.changed) {
+    redirect(`/admin/colaboradores/${employeeId}`);
+  }
+
+  redirect(
+    createFeedbackUrl(
+      `/admin/colaboradores/${employeeId}`,
+      "notice",
+      result.invitationSent
+        ? "employee_email_updated"
+        : "employee_email_updated_invitation_pending",
     ),
   );
 }

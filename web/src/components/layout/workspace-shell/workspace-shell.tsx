@@ -15,6 +15,7 @@ type WorkspaceShellProps = {
   children: ReactNode;
   displayName: string;
   greeting: DashboardGreeting;
+  profileImageUrl: string | null;
   role: PlatformRole;
   unreadNotificationCount: number;
 };
@@ -23,6 +24,7 @@ export function WorkspaceShell({
   children,
   displayName,
   greeting,
+  profileImageUrl,
   role,
   unreadNotificationCount,
 }: WorkspaceShellProps) {
@@ -57,6 +59,7 @@ export function WorkspaceShell({
       </div>
       <MobileNavigation
         displayName={displayName}
+        profileImageUrl={profileImageUrl}
         role={role}
         unreadNotificationCount={unreadNotificationCount}
       />

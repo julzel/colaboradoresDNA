@@ -38,6 +38,8 @@ export default async function EditAccessPage({
           </div>
         </header>
         <AccessManagementForm
+          accessStatus={detail.access.status}
+          email={detail.access.email}
           employeeId={employeeId}
           employmentActive={detail.employee.employmentStatus === "active"}
           role={detail.access.role}
