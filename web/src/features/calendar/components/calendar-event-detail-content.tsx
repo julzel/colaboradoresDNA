@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
+import { DeleteCalendarEventForm } from "@/features/calendar/components/delete-calendar-event-form";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { calendarEventTypeLabels } from "@/features/calendar/domain/calendar-event";
 import {
@@ -133,15 +134,19 @@ export function CalendarEventDetailContent({
             </ButtonLink>
           )}
           {detail.canManage && (
-            <ButtonLink
-              href={`/calendario/eventos/${event.id}/editar`}
-              variant="secondary"
-            >
+            <ButtonLink href={`/calendario/eventos/${event.id}/editar`}>
               <Pencil aria-hidden="true" size={17} />
               Editar evento
             </ButtonLink>
           )}
         </div>
+      )}
+
+      {detail.canDelete && (
+        <DeleteCalendarEventForm
+          eventId={event.id}
+          month={event.startDate.slice(0, 7)}
+        />
       )}
     </div>
   );

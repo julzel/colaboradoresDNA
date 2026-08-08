@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { BackLink } from "@/components/ui/navigation/back-link";
 import { CalendarEventDetailContent } from "@/features/calendar/components/calendar-event-detail-content";
-import { DeleteCalendarEventForm } from "@/features/calendar/components/delete-calendar-event-form";
 import styles from "@/features/calendar/components/calendar.module.css";
 import { getVisibleCalendarEventDetail } from "@/features/calendar/server/calendar-service";
 
@@ -32,13 +31,6 @@ export default async function CalendarEventDetailPage({
         </header>
         <CalendarEventDetailContent detail={detail} />
       </ElevatedSurface>
-
-      {detail.canManage && (
-        <DeleteCalendarEventForm
-          eventId={event.id}
-          month={event.startDate.slice(0, 7)}
-        />
-      )}
     </div>
   );
 }
