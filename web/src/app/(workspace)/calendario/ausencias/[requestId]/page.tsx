@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import styles from "@/features/calendar/components/calendar.module.css";
 import { CalendarPtoQuickDetailContent } from "@/features/calendar/components/calendar-quick-detail-content";
 import { getVisibleCalendarPtoDetail } from "@/features/calendar/server/calendar-service";
@@ -20,9 +20,7 @@ export default async function CalendarPtoDetailPage({
 
   return (
     <div className={styles.page}>
-      <ButtonLink href="/calendario" size="small" variant="quiet">
-        ← Volver al calendario
-      </ButtonLink>
+      <BackLink href="/calendario">Volver al calendario</BackLink>
       <ElevatedSurface as="section" className={styles.eventDetailPage}>
         <header className={styles.eventDetailPageHeader}>
           <h1>{detail.requesterName}</h1>

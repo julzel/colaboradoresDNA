@@ -29,6 +29,7 @@ import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { resendEmployeeInvitation } from "@/features/employees/actions/employee-actions";
 import { EmployeeDetailCard } from "@/features/employees/components/employee-detail-card";
@@ -87,9 +88,7 @@ export default async function EmployeeDetailPage({
   return (
     <Container>
       <main className={styles.page} id="main-content">
-        <ButtonLink href="/admin/colaboradores" size="small" variant="quiet">
-          ← Volver a colaboradores
-        </ButtonLink>
+        <BackLink href="/admin/colaboradores">Volver a colaboradores</BackLink>
         <ElevatedSurface
           as="header"
           className={`${styles.section} ${styles.detailHeader}`}

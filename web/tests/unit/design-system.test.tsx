@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { Button } from "@/components/ui/button/button";
 import { TextField } from "@/components/ui/form-field/form-field";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import { SideNavigation } from "@/components/ui/navigation/side-navigation";
 
 describe("design-system foundations", () => {
@@ -42,5 +43,13 @@ describe("design-system foundations", () => {
       "aria-current",
       "page",
     );
+  });
+
+  it("renders a reusable back destination with one accessible label", () => {
+    render(<BackLink href="/colaboradores">Volver a colaboradores</BackLink>);
+
+    expect(
+      screen.getByRole("link", { name: "Volver a colaboradores" }),
+    ).toHaveAttribute("href", "/colaboradores");
   });
 });
