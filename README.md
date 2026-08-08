@@ -139,6 +139,8 @@ Never configure Clerk live keys or a production database on this site. See the
 - [Deployment guide](./docs/deployment.md)
 - [Design system](./docs/design-system.md)
 - [Employee model](./docs/employee-model.md)
+- [Collaborator development PRD](./docs/collaborator-development-prd.md)
+- [Collaborator development roadmap](./docs/collaborator-development-roadmap.md)
 - [Technology-stack decision](./tasks/done/tech-stack.md)
 
 ## Repository layout
