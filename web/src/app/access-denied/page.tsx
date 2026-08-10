@@ -4,6 +4,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button/button";
 
 const messages = {
+  account_policy: {
+    description:
+      "No fue posible aplicar las políticas de protección de la cuenta. Intentá nuevamente o contactá a una persona administradora.",
+    title: "La cuenta requiere una revisión de seguridad.",
+  },
   deactivated: {
     description:
       "Tu cuenta está desactivada. Contactá a una persona administradora si necesitás recuperar el acceso.",
@@ -13,6 +18,11 @@ const messages = {
     description:
       "Tu cuenta está activa, pero no tiene permiso para entrar a esta sección.",
     title: "No tenés permiso para ver esta página.",
+  },
+  email_mismatch: {
+    description:
+      "El correo principal de tu identidad no coincide con el correo autorizado. Cerrá sesión y solicitá a una persona administradora que revise tu cuenta.",
+    title: "El correo de acceso requiere revisión.",
   },
   invitation_pending: {
     description:

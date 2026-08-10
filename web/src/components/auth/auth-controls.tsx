@@ -1,7 +1,7 @@
 "use client";
 
 import { Show, UserButton } from "@clerk/nextjs";
-import { SunMoon, UserRound } from "lucide-react";
+import { ShieldCheck, SunMoon, UserRound } from "lucide-react";
 
 import { toggleTheme } from "@/components/ui/theme-toggle/theme-toggle";
 
@@ -28,12 +28,16 @@ export function AuthControls({ displayName }: { displayName: string }) {
               label="Mi perfil"
               labelIcon={<UserRound aria-hidden="true" size={16} />}
             />
+            <UserButton.Link
+              href="/account/security"
+              label="Seguridad de la cuenta"
+              labelIcon={<ShieldCheck aria-hidden="true" size={16} />}
+            />
             <UserButton.Action
               label="Cambiar tema"
               labelIcon={<SunMoon aria-hidden="true" size={16} />}
               onClick={toggleTheme}
             />
-            <UserButton.Action label="manageAccount" />
             <UserButton.Action label="signOut" />
           </UserButton.MenuItems>
         </UserButton>

@@ -214,7 +214,7 @@ export default async function ProfilePage() {
                 <dd>{accessLabels[profile.access.status]}</dd>
               </div>
             </dl>
-            <Link className={styles.securityLink} href="/account">
+            <Link className={styles.securityLink} href="/account/security">
               <KeyRound aria-hidden="true" size={18} /> Administrar seguridad de la
               cuenta
             </Link>

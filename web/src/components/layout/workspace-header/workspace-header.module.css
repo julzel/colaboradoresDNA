@@ -16,6 +16,35 @@
   gap: var(--space-3);
 }
 
+.desktopGreeting {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-brand-text);
+}
+
+.desktopGreeting strong {
+  font-size: var(--text-sm);
+  letter-spacing: -0.01em;
+}
+
+.desktopGreeting svg {
+  flex: 0 0 auto;
+  color: #f59e0b;
+}
+
+.desktopGreeting svg[data-period="afternoon"] {
+  color: var(--color-brand-text);
+}
+
+.desktopGreeting svg[data-period="night"] {
+  color: #6376d9;
+}
+
+.desktopGreeting svg[data-period="late-night"] {
+  color: #8b5bb2;
+}
+
 .breadcrumbs {
   min-width: 0;
 }
@@ -90,6 +119,10 @@
 
   .tools {
     margin-left: auto;
+  }
+
+  .desktopGreeting {
+    display: none;
   }
 }
 

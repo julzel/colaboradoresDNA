@@ -53,9 +53,19 @@ export default async function AccountPage({
       )}
 
       <div className={styles.profile}>
-        <UserProfile path="/account" routing="path">
-          <UserProfile.Page label="security" />
-        </UserProfile>
+        <UserProfile
+          __experimental_startPath="/security"
+          appearance={{
+            elements: {
+              navbar: { display: "none" },
+              navbarMobileMenuRow: { display: "none" },
+              profilePage__account: { display: "none" },
+              profileSection__danger: { display: "none" },
+            },
+          }}
+          path="/account"
+          routing="path"
+        />
       </div>
     </main>
   );

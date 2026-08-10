@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { ButtonLink } from "@/components/ui/button/button";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import { CalendarEventForm } from "@/features/calendar/components/calendar-event-form";
 import styles from "@/features/calendar/components/calendar.module.css";
 import {
@@ -25,9 +25,7 @@ export default async function EditCalendarEventPage({
 
   return (
     <div className={styles.page}>
-      <ButtonLink href={cancelHref} size="small" variant="quiet">
-        ← Volver al evento
-      </ButtonLink>
+      <BackLink href={cancelHref}>Volver al evento</BackLink>
       <header className={styles.heading}>
         <p className="eyebrow">Calendario</p>
         <h1>Editar evento</h1>

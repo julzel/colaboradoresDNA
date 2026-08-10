@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { SignOutButton } from "@clerk/nextjs";
 import {
   LogOut,
@@ -24,6 +26,7 @@ import styles from "./mobile-navigation.module.css";
 
 type MobileNavigationProps = {
   displayName: string;
+  profileImageUrl?: string | null;
   role: PlatformRole;
   unreadNotificationCount?: number;
 };
@@ -32,6 +35,7 @@ const visibleTabCount = 3;
 
 export function MobileNavigation({
   displayName,
+  profileImageUrl = null,
   role,
   unreadNotificationCount = 0,
 }: MobileNavigationProps) {
@@ -143,7 +147,11 @@ export function MobileNavigation({
           </p>
           <div className={styles.accountSummary}>
             <span className={styles.accountAvatar}>
-              <UserRound aria-hidden="true" size={20} />
+              {profileImageUrl ? (
+                <img alt="" src={profileImageUrl} />
+              ) : (
+                <UserRound aria-hidden="true" size={20} />
+              )}
             </span>
             <strong>{displayName}</strong>
           </div>
@@ -161,11 +169,11 @@ export function MobileNavigation({
             <li>
               <Link
                 className={styles.accountAction}
-                href="/account"
+                href="/account/security"
                 onClick={() => setIsMoreOpen(false)}
               >
                 <ShieldCheck aria-hidden="true" size={18} />
-                Cuenta y seguridad
+                Seguridad de la cuenta
               </Link>
             </li>
             <li>

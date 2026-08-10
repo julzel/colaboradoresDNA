@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import { CalendarEventDetailContent } from "@/features/calendar/components/calendar-event-detail-content";
-import { DeleteCalendarEventForm } from "@/features/calendar/components/delete-calendar-event-form";
 import styles from "@/features/calendar/components/calendar.module.css";
 import { getVisibleCalendarEventDetail } from "@/features/calendar/server/calendar-service";
 
@@ -22,13 +21,9 @@ export default async function CalendarEventDetailPage({
 
   return (
     <div className={styles.page}>
-      <ButtonLink
-        href={`/calendario?vista=agenda&mes=${event.startDate.slice(0, 7)}`}
-        size="small"
-        variant="quiet"
-      >
-        ← Volver al calendario
-      </ButtonLink>
+      <BackLink href={`/calendario?vista=agenda&mes=${event.startDate.slice(0, 7)}`}>
+        Volver al calendario
+      </BackLink>
 
       <ElevatedSurface as="section" className={styles.eventDetailPage}>
         <header className={styles.eventDetailPageHeader}>
@@ -36,13 +31,6 @@ export default async function CalendarEventDetailPage({
         </header>
         <CalendarEventDetailContent detail={detail} />
       </ElevatedSurface>
-
-      {detail.canManage && (
-        <DeleteCalendarEventForm
-          eventId={event.id}
-          month={event.startDate.slice(0, 7)}
-        />
-      )}
     </div>
   );
 }

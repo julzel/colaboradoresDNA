@@ -3,7 +3,11 @@ import "server-only";
 import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import type { PlatformRole, PlatformUser } from "@/features/auth/domain/platform-user";
+import {
+  normalizeEmail,
+  type PlatformRole,
+  type PlatformUser,
+} from "@/features/auth/domain/platform-user";
 import { getAccessDecision } from "@/features/auth/lib/access-policy";
 import {
   claimInvitedPlatformUser,
@@ -27,12 +31,37 @@ function getVerifiedEmails(
     .map((email) => email.emailAddress);
 }
 
+function getVerifiedPrimaryEmail(
+  clerkUser: NonNullable<Awaited<ReturnType<typeof currentUser>>>,
+) {
+  const primary = clerkUser.emailAddresses.find(
+    (email) => email.id === clerkUser.primaryEmailAddressId,
+  );
+
+  return primary?.verification?.status === "verified"
+    ? normalizeEmail(primary.emailAddress)
+    : null;
+}
+
 async function revokeCurrentSession(sessionId: string) {
   try {
     const client = await clerkClient();
     await client.sessions.revokeSession(sessionId);
   } catch {
     // MongoDB still denies access. A later administrator action can retry Clerk sync.
+  }
+}
+
+async function enforceManagedAccountPolicy(
+  clerkUser: NonNullable<Awaited<ReturnType<typeof currentUser>>>,
+) {
+  if (!clerkUser.deleteSelfEnabled) return;
+
+  try {
+    const client = await clerkClient();
+    await client.users.updateUser(clerkUser.id, { deleteSelfEnabled: false });
+  } catch {
+    redirect("/access-denied?reason=account_policy");
   }
 }
 
@@ -54,6 +83,8 @@ export async function requirePlatformUser({
   if (!clerkUser) {
     return authState.redirectToSignIn();
   }
+
+  await enforceManagedAccountPolicy(clerkUser);
 
   let platformUser = await findPlatformUserByClerkId(authState.userId);
 
@@ -92,6 +123,10 @@ export async function requirePlatformUser({
 
   if (!platformUser) {
     redirect("/access-denied?reason=not_invited");
+  }
+
+  if (getVerifiedPrimaryEmail(clerkUser) !== platformUser.normalizedEmail) {
+    redirect("/access-denied?reason=email_mismatch");
   }
 
   if (roles && !roles.includes(platformUser.role)) {

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import {
   PtoBalanceAdjustmentForm,
   PtoOpeningBalanceForm,
@@ -31,13 +32,9 @@ export default async function EmployeePtoAdministrationPage({
   return (
     <Container>
       <main className={styles.page} id="main-content">
-        <ButtonLink
-          href={`/admin/colaboradores/${employeeId}`}
-          size="small"
-          variant="quiet"
-        >
-          ← Volver al colaborador
-        </ButtonLink>
+        <BackLink href={`/admin/colaboradores/${employeeId}`}>
+          Volver al colaborador
+        </BackLink>
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Administración</p>

@@ -1,0 +1,49 @@
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 2.5rem;
+  gap: var(--space-2);
+  margin-block-end: calc(var(--space-3) * -1);
+  margin-inline-start: calc(var(--space-2) * -1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.backLink svg {
+  flex: 0 0 auto;
+}
+
+.backLink:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.backLink:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+@media (width <= 48rem) {
+  .backLink {
+    min-height: 2.75rem;
+    margin-inline-start: 0;
+    padding-inline: var(--space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backLink {
+    transition: none;
+  }
+}

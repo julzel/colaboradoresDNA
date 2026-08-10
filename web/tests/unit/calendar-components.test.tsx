@@ -24,6 +24,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/features/calendar/actions/calendar-event-actions", () => ({
   createCalendarEventAction: vi.fn(),
+  deleteCalendarEventAction: vi.fn(),
   updateCalendarEventAction: vi.fn(),
 }));
 
@@ -117,6 +118,7 @@ describe("calendar views", () => {
 describe("calendar event detail", () => {
   it("shows a concise summary and keeps the meeting link with the event details", () => {
     const detail: CalendarEventDetail = {
+      canDelete: true,
       canManage: true,
       departmentName: "Producción",
       event: {
@@ -156,6 +158,7 @@ describe("calendar event detail", () => {
       "href",
       "/calendario/eventos/507f1f77bcf86cd799439012/editar",
     );
+    expect(screen.getByText("Eliminar evento")).toBeInTheDocument();
   });
 });
 

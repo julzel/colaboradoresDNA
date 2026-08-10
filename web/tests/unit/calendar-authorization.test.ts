@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { CalendarEvent } from "@/features/calendar/domain/calendar-event";
-import { canManageCalendarEvent } from "@/features/calendar/server/calendar-event-repository";
+import {
+  canDeleteCalendarEvent,
+  canManageCalendarEvent,
+} from "@/features/calendar/server/calendar-event-repository";
 
 vi.mock("server-only", () => ({}));
 
@@ -41,6 +44,32 @@ describe("calendar event management policy", () => {
     ).toBe(true);
   });
 
+  it("allows administrators to delete events they organized", () => {
+    expect(
+      canDeleteCalendarEvent(
+        {
+          departmentId: null,
+          platformUserId: event.organizerPlatformUserId,
+          role: "administrator",
+        },
+        event,
+      ),
+    ).toBe(true);
+  });
+
+  it("does not let administrators delete another organizer's event", () => {
+    expect(
+      canDeleteCalendarEvent(
+        {
+          departmentId: null,
+          platformUserId: "507f1f77bcf86cd799439099",
+          role: "administrator",
+        },
+        event,
+      ),
+    ).toBe(false);
+  });
+
   it("allows a supervisor to manage an event they organized", () => {
     expect(
       canManageCalendarEvent(
@@ -65,6 +94,29 @@ describe("calendar event management policy", () => {
         event,
       ),
     ).toBe(true);
+  });
+
+  it("requires supervisors to own an event before deleting it", () => {
+    expect(
+      canDeleteCalendarEvent(
+        {
+          departmentId: event.departmentId,
+          platformUserId: event.organizerPlatformUserId,
+          role: "supervisor",
+        },
+        event,
+      ),
+    ).toBe(true);
+    expect(
+      canDeleteCalendarEvent(
+        {
+          departmentId: event.departmentId,
+          platformUserId: "507f1f77bcf86cd799439099",
+          role: "supervisor",
+        },
+        event,
+      ),
+    ).toBe(false);
   });
 
   it("denies collaborators and unrelated supervisors", () => {

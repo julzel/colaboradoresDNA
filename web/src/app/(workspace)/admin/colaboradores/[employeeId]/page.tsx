@@ -1,3 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
+
+import { clerkClient } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -26,6 +29,7 @@ import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { resendEmployeeInvitation } from "@/features/employees/actions/employee-actions";
 import { EmployeeDetailCard } from "@/features/employees/components/employee-detail-card";
@@ -50,6 +54,19 @@ const roleLabels = {
   supervisor: "Supervisor",
 } as const;
 
+async function getProfileImageUrl(clerkUserId: string | null) {
+  if (!clerkUserId) return null;
+
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(clerkUserId);
+    return user.hasImage ? user.imageUrl : null;
+  } catch {
+    // The collaborator detail remains available with its initials fallback.
+    return null;
+  }
+}
+
 export default async function EmployeeDetailPage({
   params,
 }: {
@@ -59,6 +76,7 @@ export default async function EmployeeDetailPage({
   const { employeeId } = await params;
   const detail = await getEmployeeDetailForAdministration(employeeId);
   if (!detail) notFound();
+  const profileImageUrl = await getProfileImageUrl(detail.access.clerkUserId);
   const displayName = [
     detail.employee.givenNames,
     detail.employee.firstSurname,
@@ -70,15 +88,17 @@ export default async function EmployeeDetailPage({
   return (
     <Container>
       <main className={styles.page} id="main-content">
-        <ButtonLink href="/admin/colaboradores" size="small" variant="quiet">
-          ← Volver a colaboradores
-        </ButtonLink>
+        <BackLink href="/admin/colaboradores">Volver a colaboradores</BackLink>
         <ElevatedSurface
           as="header"
           className={`${styles.section} ${styles.detailHeader}`}
         >
           <span aria-hidden="true" className={styles.avatar}>
-            {detail.employee.initials}
+            {profileImageUrl ? (
+              <img alt="" src={profileImageUrl} />
+            ) : (
+              detail.employee.initials
+            )}
           </span>
           <div>
             <p className={`eyebrow ${styles.detailEyebrow}`}>Colaborador</p>

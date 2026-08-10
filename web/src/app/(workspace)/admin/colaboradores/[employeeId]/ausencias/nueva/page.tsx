@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import styles from "@/features/pto/components/pto.module.css";
 import { PtoRequestForm } from "@/features/pto/components/pto-request-form";
 import { formatPtoDays } from "@/features/pto/domain/pto";
@@ -22,13 +22,9 @@ export default async function NewEmployeePtoRequestPage({
   return (
     <Container>
       <main className={styles.page} id="main-content">
-        <ButtonLink
-          href={`/admin/colaboradores/${employeeId}/ausencias`}
-          size="small"
-          variant="quiet"
-        >
-          ← Volver al saldo de ausencias
-        </ButtonLink>
+        <BackLink href={`/admin/colaboradores/${employeeId}/ausencias`}>
+          Volver al saldo de ausencias
+        </BackLink>
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Administración</p>

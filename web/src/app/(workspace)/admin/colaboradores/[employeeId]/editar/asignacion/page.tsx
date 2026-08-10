@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import { AssignmentForm } from "@/features/employees/components/assignment-form";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { listDepartments } from "@/features/employees/server/department-repository";
@@ -31,13 +31,9 @@ export default async function EditAssignmentPage({
   return (
     <Container>
       <main className={styles.page} id="main-content">
-        <ButtonLink
-          href={`/admin/colaboradores/${employeeId}`}
-          size="small"
-          variant="quiet"
-        >
-          ← Volver al detalle
-        </ButtonLink>
+        <BackLink href={`/admin/colaboradores/${employeeId}`}>
+          Volver al detalle
+        </BackLink>
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Colaborador</p>

@@ -46,6 +46,7 @@ export type CalendarEventNotification = Pick<
 >;
 
 export type CalendarEventDetail = {
+  canDelete: boolean;
   canManage: boolean;
   departmentName: string | null;
   event: CalendarEvent;
@@ -94,6 +95,13 @@ export function canManageCalendarEvent(actor: CalendarActor, event: CalendarEven
     (event.visibility === "department" &&
       Boolean(actor.departmentId) &&
       event.departmentId === actor.departmentId)
+  );
+}
+
+export function canDeleteCalendarEvent(actor: CalendarActor, event: CalendarEvent) {
+  return (
+    (actor.role === "administrator" || actor.role === "supervisor") &&
+    event.organizerPlatformUserId === actor.platformUserId
   );
 }
 
@@ -190,6 +198,7 @@ export async function getCalendarEventDetail({
   }
 
   return {
+    canDelete: canDeleteCalendarEvent(actor, event),
     canManage: canManageCalendarEvent(actor, event),
     departmentName: department?.name ?? null,
     event,
@@ -317,6 +326,26 @@ async function findManageableEvent(
   return event;
 }
 
+async function findDeletableEvent(
+  events: Collection<CalendarEventDocument>,
+  actor: CalendarActor,
+  eventId: string,
+) {
+  if (!ObjectId.isValid(eventId)) {
+    throw new CalendarDomainError("event_not_found");
+  }
+  const document = await events.findOne({
+    _id: new ObjectId(eventId),
+    status: "active",
+  });
+  if (!document) throw new CalendarDomainError("event_not_found");
+  const event = toCalendarEvent(document);
+  if (!canDeleteCalendarEvent(actor, event)) {
+    throw new CalendarDomainError("event_forbidden");
+  }
+  return event;
+}
+
 export async function updateCalendarEvent({
   actor,
   eventId,
@@ -402,7 +431,7 @@ export async function deleteCalendarEvent({
 }) {
   await ensureCalendarIndexes();
   const { events } = await getCalendarCollections();
-  await findManageableEvent(events, actor, eventId);
+  await findDeletableEvent(events, actor, eventId);
   const now = new Date();
   const client = await getMongoClient();
   await client.withSession(async (session) => {

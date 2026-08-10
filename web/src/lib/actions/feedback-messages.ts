@@ -19,6 +19,15 @@ export const feedbackMessages = {
     message: "El rol de plataforma fue actualizado.",
     tone: "success",
   },
+  employee_email_updated: {
+    message: "El correo de acceso fue actualizado.",
+    tone: "success",
+  },
+  employee_email_updated_invitation_pending: {
+    message:
+      "El correo fue actualizado, pero la nueva invitación quedó pendiente para reenviar.",
+    tone: "warning",
+  },
   employee_assignment_updated: {
     message: "La nueva asignación fue guardada.",
     tone: "success",

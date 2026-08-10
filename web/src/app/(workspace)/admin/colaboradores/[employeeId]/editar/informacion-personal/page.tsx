@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import { PersonalInformationForm } from "@/features/employees/components/personal-information-form";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { findEmployeeById } from "@/features/employees/server/employee-repository";
@@ -23,13 +23,9 @@ export default async function EditPersonalInformationPage({
   return (
     <Container>
       <main className={styles.page} id="main-content">
-        <ButtonLink
-          href={`/admin/colaboradores/${employeeId}`}
-          size="small"
-          variant="quiet"
-        >
-          ← Volver al detalle
-        </ButtonLink>
+        <BackLink href={`/admin/colaboradores/${employeeId}`}>
+          Volver al detalle
+        </BackLink>
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Colaborador</p>

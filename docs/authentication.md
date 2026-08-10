@@ -29,19 +29,21 @@ its client and server session caches.
 
 ## Requirement audit
 
-| Requirement                                       | Enforcement                                                                                                                                                                                      |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Invitation-only registration                      | Clerk restricted sign-up mode plus a pre-created `platform_users` record.                                                                                                                        |
-| Google or email verification codes                | Google OAuth and email codes are enabled; password and phone authentication are disabled.                                                                                                        |
-| MFA for administrators and supervisors            | Clerk TOTP and backup codes are enabled. The server checks `twoFactorEnabled` for privileged MongoDB roles before granting access.                                                               |
-| Only invited, active users                        | An authenticated identity is linked atomically by verified email to an invited MongoDB record, then all private resources require `status: active`.                                              |
-| User sign-out and own-session revocation          | Clerk `UserButton` supports sign-out. `/account` embeds `UserProfile`, including active-device and session controls.                                                                             |
-| Deactivation preserves history                    | MongoDB changes the platform status to `deactivated`; the document and historical foreign-key targets remain intact.                                                                             |
-| Expired invitation resend                         | The previous Clerk invitation is revoked when possible, then a new 14-day invitation is issued and its ID replaces the old one.                                                                  |
-| Administrator deactivation and session revocation | `/admin/accounts` marks MongoDB inactive first, then calls Clerk `banUser()`, which blocks sign-in and revokes sessions. A failed Clerk sync remains denied by MongoDB and is audited for retry. |
-| Account recovery                                  | Password authentication is disabled. Recovery remains with the connected Google identity or verified email-code identity.                                                                        |
-| Secret safety                                     | Secrets remain server-only and ignored by Git. Actions and bootstrap code return generic failures and never log credentials, codes, tokens, invitation URLs, or provider errors.                 |
-| Spanish authentication UI and emails              | Clerk components use `es-CR`; six reachable authentication and security email templates are versioned in `web/config/clerk/email-templates/` and applied in Spanish.                             |
+| Requirement                                       | Enforcement                                                                                                                                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Invitation-only registration                      | Clerk restricted sign-up mode plus a pre-created `platform_users` record.                                                                                                                                    |
+| Google or email verification codes                | Google OAuth and email codes are enabled; password and phone authentication are disabled.                                                                                                                    |
+| MFA for administrators and supervisors            | Clerk TOTP and backup codes are enabled. The server checks `twoFactorEnabled` for privileged MongoDB roles before granting access.                                                                           |
+| Only invited, active users                        | An authenticated identity is linked atomically by verified email to an invited MongoDB record, then all private resources require `status: active`.                                                          |
+| User sign-out and own-session revocation          | Clerk `UserButton` supports sign-out. `/account` embeds `UserProfile`, including active-device and session controls.                                                                                         |
+| Deactivation preserves history                    | MongoDB changes the platform status to `deactivated`; the document and historical foreign-key targets remain intact.                                                                                         |
+| Expired invitation resend                         | The previous Clerk invitation is revoked when possible, then a new 14-day invitation is issued and its ID replaces the old one.                                                                              |
+| Administrator deactivation and session revocation | `/admin/accounts` marks MongoDB inactive first, then calls Clerk `banUser()`, which blocks sign-in and revokes sessions. A failed Clerk sync remains denied by MongoDB and is audited for retry.             |
+| Account recovery                                  | Password authentication is disabled. Recovery remains with the connected Google identity or verified email-code identity.                                                                                    |
+| Secret safety                                     | Secrets remain server-only and ignored by Git. Actions and bootstrap code return generic failures and never log credentials, codes, tokens, invitation URLs, or provider errors.                             |
+| Managed profile identity                          | `employees` owns names and profile preferences; Clerk owns the shared profile image and authentication factors. `/perfil` is the only profile editor and `/account/security` exposes security controls only. |
+| Administrator-controlled login email              | Every protected request requires Clerk's verified primary email to match `platform_users.normalizedEmail`. Only the administrator email service can synchronize a new primary address into both systems.     |
+| Spanish authentication UI and emails              | Clerk components use `es-CR`; six reachable authentication and security email templates are versioned in `web/config/clerk/email-templates/` and applied in Spanish.                                         |
 
 Relevant implementation:
 
@@ -104,20 +106,33 @@ self-service changes:
 3. Keep Clerk first and last names disabled as user-editable attributes. The
    application-owned `employees` record is the canonical identity source, and
    employees use `Nombre preferido` under `/perfil` for display-only naming.
-4. Verify `/account?requirement=mfa` still exposes Security, authenticator-app
+4. Turn off **Allow users to delete their account**. The server also reconciles
+   `deleteSelfEnabled` to `false` for every authenticated user, because account
+   deletion would bypass the platform's deactivation and history-preservation
+   workflow.
+5. Verify `/account?requirement=mfa` still exposes Security, authenticator-app
    enrollment, backup codes, and session management.
 
-The application does not enable self-service email changes until a verified
-Clerk-to-`platform_users.normalizedEmail` synchronization flow exists. Hiding a
-field with CSS is not an authorization control; use the Clerk instance
-permission above.
+The application does not permit self-service email changes. Hiding a field with
+CSS is not an authorization control; use the Clerk instance permission above.
+The verified-primary-email guard also denies workspace access if a provider
+identity ever diverges from the administrator-managed platform record.
 
 The application route redirects `/account` and non-security account subroutes
-to `/account/security`. This keeps the prebuilt Clerk component available for
-MFA, backup codes, and sessions without exposing its separate profile-image and
-name editor as a second profile flow. Provider-level identifier permissions
-still remain required because route composition is not a substitute for Clerk
-instance policy.
+to `/account/security`. The embedded Clerk navigation, account profile panel,
+and danger section are removed, while MFA, backup codes, and session management
+remain available. The user menu and mobile account menu link explicitly to
+`/perfil` for profile data and `/account/security` for security. Provider-level
+identifier permissions still remain required because route composition is not
+a substitute for Clerk instance policy.
+
+When an administrator changes a collaborator's email, the server first checks
+MongoDB uniqueness. Active accounts receive a verified Clerk email that becomes
+primary, Clerk sends its primary-address-change notification, and only then is
+`platform_users.normalizedEmail` committed. A failed MongoDB commit triggers a
+best-effort Clerk rollback. Invited accounts are moved to the new email before
+their previous invitation is revoked and replaced, so an old invitation cannot
+claim the updated platform record. Audit metadata never stores either email.
 
 The same desired state must be applied explicitly to the production instance.
 Production Google OAuth also requires production Google credentials and

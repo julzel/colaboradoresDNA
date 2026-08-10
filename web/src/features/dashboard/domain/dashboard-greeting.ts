@@ -1,6 +1,6 @@
 export type DashboardGreetingPeriod = "afternoon" | "late-night" | "morning" | "night";
 
-type DashboardGreeting = {
+export type DashboardGreeting = {
   label: string;
   period: DashboardGreetingPeriod;
 };

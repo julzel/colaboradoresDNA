@@ -198,6 +198,29 @@ export async function updatePlatformUserRole({
   return document ? toPlatformUser(document) : null;
 }
 
+export async function updatePlatformUserEmail({
+  email,
+  id,
+}: {
+  email: string;
+  id: string;
+}) {
+  await ensureAuthIndexes();
+  const collection = await getPlatformUsersCollection();
+  const document = await collection.findOneAndUpdate(
+    { _id: new ObjectId(id), status: { $in: ["active", "invited"] } },
+    {
+      $set: {
+        normalizedEmail: normalizeEmail(email),
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  return document ? toPlatformUser(document) : null;
+}
+
 export async function setPlatformUserInvitation({
   clerkInvitationId,
   expiresAt,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
+import { BackLink } from "@/components/ui/navigation/back-link";
 import { EmployeeCreationForm } from "@/features/employees/components/employee-creation-form";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { listDepartments } from "@/features/employees/server/department-repository";
@@ -20,14 +20,10 @@ export default async function NewEmployeePage() {
   return (
     <Container>
       <main className={styles.page} id="main-content">
-        <ButtonLink href="/admin/colaboradores" size="small" variant="quiet">
-          ← Volver a colaboradores
-        </ButtonLink>
+        <BackLink href="/admin/colaboradores">Volver a colaboradores</BackLink>
         <header className={styles.header}>
           <div>
-            <p className="eyebrow">Administración</p>
             <h1>Nuevo colaborador</h1>
-            <p>Creá el perfil, la asignación, el horario y la invitación.</p>
           </div>
         </header>
         <EmployeeCreationForm departments={departments} managers={managers} />
