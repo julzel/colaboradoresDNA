@@ -29,10 +29,15 @@ export default async function EditCalendarEventPage({
       <header className={styles.heading}>
         <p className="eyebrow">Calendario</p>
         <h1>Editar evento</h1>
-        <p>Actualizá la información o la visibilidad del evento.</p>
+        <p>
+          {detail.developmentLink
+            ? "Actualizá la fecha y la hora. La privacidad se protege desde Desarrollo."
+            : "Actualizá la información o la visibilidad del evento."}
+        </p>
       </header>
       <CalendarEventForm
         cancelHref={cancelHref}
+        developmentOneOnOne={Boolean(detail.developmentLink)}
         event={detail.event}
         mode="edit"
         options={options}

@@ -27,6 +27,11 @@ through its environment-variable settings.
 MongoDB is optional for the current homepage. To enable database-backed features, add
 the MongoDB Atlas values documented in `.env.example` to `.env.local`.
 
+The administrator Desarrollo dashboard is available without an encryption key. Use
+synthetic data only. Before creating or reading encrypted 1:1 narratives, configure the
+server-only keyring from `.env.example` and run `pnpm bootstrap:development-model` with
+migration-capable database credentials.
+
 ## Quality checks
 
 ```bash

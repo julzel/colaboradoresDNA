@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ObjectId, type Collection, type Filter } from "mongodb";
+import { ObjectId, type ClientSession, type Collection, type Filter } from "mongodb";
 
 import type {
   PlatformRole,
@@ -53,6 +53,19 @@ export type CalendarEventDetail = {
   invitees: Array<{ displayName: string; id: string }>;
   organizerName: string;
 };
+
+export type InternalOneOnOneCalendarEventSummary = {
+  endsAt: string;
+  id: string;
+  startsAt: string;
+};
+
+export class InternalCalendarIntegrationError extends Error {
+  constructor(public readonly code: "invalid_schedule" | "transaction_required") {
+    super(code);
+    this.name = "InternalCalendarIntegrationError";
+  }
+}
 
 async function getCalendarCollections() {
   const database = await getDatabase();
@@ -246,6 +259,150 @@ async function validateTargets(
       throw new CalendarDomainError("invitee_not_found");
     }
   }
+}
+
+/**
+ * Transaction-composable calendar write for the development module.
+ *
+ * The caller owns the transaction so the development record, calendar event,
+ * and their audit entries can commit or roll back as one unit.
+ */
+export async function createInternalOneOnOneCalendarEvent({
+  actor,
+  endsAt,
+  session,
+  startsAt,
+  targetEmployeeId,
+}: {
+  actor: CalendarActor;
+  endsAt: Date;
+  session: ClientSession;
+  startsAt: Date;
+  targetEmployeeId: string;
+}): Promise<CalendarEvent> {
+  if (actor.role !== "administrator" || !ObjectId.isValid(actor.platformUserId)) {
+    throw new CalendarDomainError("event_forbidden");
+  }
+  if (!session.inTransaction()) {
+    throw new InternalCalendarIntegrationError("transaction_required");
+  }
+  if (
+    !ObjectId.isValid(targetEmployeeId) ||
+    Number.isNaN(startsAt.getTime()) ||
+    Number.isNaN(endsAt.getTime()) ||
+    endsAt <= startsAt
+  ) {
+    if (!ObjectId.isValid(targetEmployeeId)) {
+      throw new CalendarDomainError("invitee_not_found");
+    }
+    throw new InternalCalendarIntegrationError("invalid_schedule");
+  }
+
+  const { employees, events, platformUsers } = await getCalendarCollections();
+  const employee = await employees.findOne(
+    {
+      _id: new ObjectId(targetEmployeeId),
+      employmentStatus: "active",
+    },
+    { projection: { platformUserId: 1 }, session },
+  );
+  if (!employee) throw new CalendarDomainError("invitee_not_found");
+
+  const platformUser = await platformUsers.findOne(
+    {
+      _id: employee.platformUserId,
+      status: { $in: ["active", "invited"] },
+    },
+    { projection: { _id: 1 }, session },
+  );
+  if (
+    !platformUser ||
+    employee.platformUserId.equals(new ObjectId(actor.platformUserId))
+  ) {
+    throw new CalendarDomainError("invitee_not_found");
+  }
+
+  const now = new Date();
+  const document: CalendarEventDocument = {
+    _id: new ObjectId(),
+    allDay: false,
+    createdAt: now,
+    deletedAt: null,
+    deletedByPlatformUserId: null,
+    departmentId: null,
+    description: null,
+    endsAt,
+    eventType: "one_on_one",
+    inviteePlatformUserIds: [employee.platformUserId],
+    location: null,
+    meetingUrl: null,
+    organizerPlatformUserId: new ObjectId(actor.platformUserId),
+    startsAt,
+    status: "active",
+    timezone: "America/Costa_Rica",
+    title: "Reunión 1:1",
+    updatedAt: now,
+    visibility: "invited",
+  };
+
+  await events.insertOne(document, { session });
+  await recordCalendarAudit({
+    action: "event_created",
+    actorPlatformUserId: actor.platformUserId,
+    changedFields: [
+      "eventType",
+      "title",
+      "startsAt",
+      "endsAt",
+      "visibility",
+      "inviteePlatformUserIds",
+    ],
+    session,
+    targetEventId: document._id.toHexString(),
+  });
+
+  return toCalendarEvent(document);
+}
+
+export async function findInternalOneOnOneCalendarEventSummaryForAdministrator({
+  actor,
+  eventId,
+  session,
+}: {
+  actor: CalendarActor;
+  eventId: string;
+  session?: ClientSession;
+}): Promise<InternalOneOnOneCalendarEventSummary | null> {
+  if (actor.role !== "administrator" || !ObjectId.isValid(actor.platformUserId)) {
+    throw new CalendarDomainError("event_forbidden");
+  }
+  if (!ObjectId.isValid(eventId)) return null;
+
+  const { events } = await getCalendarCollections();
+  const document = await events.findOne(
+    {
+      _id: new ObjectId(eventId),
+      eventType: "one_on_one",
+      status: "active",
+      visibility: "invited",
+    },
+    {
+      projection: {
+        _id: 1,
+        endsAt: 1,
+        startsAt: 1,
+      },
+      ...(session ? { session } : {}),
+    },
+  );
+
+  return document
+    ? {
+        endsAt: document.endsAt.toISOString(),
+        id: document._id.toHexString(),
+        startsAt: document.startsAt.toISOString(),
+      }
+    : null;
 }
 
 export async function createCalendarEvent({

@@ -20,12 +20,17 @@ export default async function EditCalendarEventModal({
 
   return (
     <Modal
-      description="Actualizá la información o la visibilidad del evento."
+      description={
+        detail.developmentLink
+          ? "Actualizá la fecha y la hora. La privacidad se protege desde Desarrollo."
+          : "Actualizá la información o la visibilidad del evento."
+      }
       title="Editar evento"
     >
       <CalendarEventForm
         cancelBehavior="back"
         cancelHref={`/calendario/eventos/${eventId}`}
+        developmentOneOnOne={Boolean(detail.developmentLink)}
         event={detail.event}
         mode="edit"
         options={options}

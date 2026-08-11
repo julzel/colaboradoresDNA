@@ -112,6 +112,21 @@ collaborators, open their administration detail, select **Saldo de ausencias**,
 and manually register the opening balance once. A missing balance is distinct
 from a zero balance and prevents submission, but not draft creation.
 
+### Initialize collaborator development for an environment
+
+The development module includes the administrator dashboard and encrypted 1:1
+workflow. Use synthetic data only. After pointing `.env.local` at the isolated
+development database, create its reviewed indexes with:
+
+```bash
+cd web
+pnpm bootstrap:development-model
+```
+
+Encrypted narrative work additionally requires the server-only key variables
+documented in `web/.env.example`. Do not add those keys to untrusted Deploy
+Previews, and do not use this development deployment for real HR records.
+
 ### Deploy the development site
 
 1. Keep `mvp/main` selected as the production branch and branch deploys disabled.
@@ -139,6 +154,9 @@ Never configure Clerk live keys or a production database on this site. See the
 - [Deployment guide](./docs/deployment.md)
 - [Design system](./docs/design-system.md)
 - [Employee model](./docs/employee-model.md)
+- [Collaborator development PRD](./docs/collaborator-development-prd.md)
+- [Collaborator development roadmap](./docs/collaborator-development-roadmap.md)
+- [Collaborator development security boundary](./docs/collaborator-development-security.md)
 - [Technology-stack decision](./tasks/done/tech-stack.md)
 
 ## Repository layout

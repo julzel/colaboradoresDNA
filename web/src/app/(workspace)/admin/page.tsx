@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowRight, ClipboardClock, Users } from "lucide-react";
+import { ArrowRight, ClipboardClock, Sprout, Users } from "lucide-react";
 import Link from "next/link";
 
 import { Container } from "@/components/ui/container/container";
@@ -24,6 +24,13 @@ const adminModules = [
     icon: Users,
     label: "Colaboradores",
     tone: "brand",
+  },
+  {
+    description: "Priorizá seguimientos, documentá 1:1 y cerrá acciones acordadas.",
+    href: "/admin/desarrollo",
+    icon: Sprout,
+    label: "Desarrollo",
+    tone: "development",
   },
 ] as const;
 

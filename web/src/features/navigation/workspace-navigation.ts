@@ -85,6 +85,23 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
     ] as const;
   }
 
+  if (pathname.startsWith("/admin/desarrollo")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Desarrollo" },
+    ] as const;
+  }
+
+  if (/^\/admin\/colaboradores\/[^/]+\/desarrollo/.test(pathname)) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/desarrollo", label: "Desarrollo" },
+      { label: "Colaborador" },
+    ] as const;
+  }
+
   if (pathname.startsWith("/admin/colaboradores")) {
     return [
       { href: "/", label: "Inicio" },

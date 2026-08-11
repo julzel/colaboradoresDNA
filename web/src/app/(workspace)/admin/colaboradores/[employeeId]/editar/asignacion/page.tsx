@@ -30,7 +30,7 @@ export default async function EditAssignmentPage({
 
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href={`/admin/colaboradores/${employeeId}`}>
           Volver al detalle
         </BackLink>
@@ -47,7 +47,7 @@ export default async function EditAssignmentPage({
           employeeId={employeeId}
           managers={managers}
         />
-      </main>
+      </div>
     </Container>
   );
 }

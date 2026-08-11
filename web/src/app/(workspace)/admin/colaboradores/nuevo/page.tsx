@@ -19,7 +19,7 @@ export default async function NewEmployeePage() {
 
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href="/admin/colaboradores">Volver a colaboradores</BackLink>
         <header className={styles.header}>
           <div>
@@ -27,7 +27,7 @@ export default async function NewEmployeePage() {
           </div>
         </header>
         <EmployeeCreationForm departments={departments} managers={managers} />
-      </main>
+      </div>
     </Container>
   );
 }

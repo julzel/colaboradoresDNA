@@ -22,7 +22,7 @@ export default async function EditPersonalInformationPage({
 
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href={`/admin/colaboradores/${employeeId}`}>
           Volver al detalle
         </BackLink>
@@ -49,7 +49,7 @@ export default async function EditPersonalInformationPage({
             shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
           }}
         />
-      </main>
+      </div>
     </Container>
   );
 }

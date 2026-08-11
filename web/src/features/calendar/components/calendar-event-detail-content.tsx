@@ -5,6 +5,7 @@ import {
   ExternalLink,
   MapPin,
   Pencil,
+  Sprout,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -44,8 +45,10 @@ function getEventSchedule(detail: CalendarEventDetail) {
 }
 
 export function CalendarEventDetailContent({
+  developmentHref,
   detail,
 }: {
+  developmentHref?: string | null;
   detail: CalendarEventDetail;
 }) {
   const { event } = detail;
@@ -125,16 +128,30 @@ export function CalendarEventDetailContent({
         </details>
       )}
 
-      {(event.meetingUrl || detail.canManage) && (
+      {(event.meetingUrl || detail.canManage || developmentHref) && (
         <div className={styles.eventDetailActions}>
+          {developmentHref && (
+            <ButtonLink href={developmentHref}>
+              <Sprout aria-hidden="true" size={17} />
+              Abrir registro de desarrollo
+            </ButtonLink>
+          )}
           {event.meetingUrl && (
-            <ButtonLink href={event.meetingUrl} rel="noreferrer" target="_blank">
+            <ButtonLink
+              href={event.meetingUrl}
+              rel="noreferrer"
+              target="_blank"
+              variant={developmentHref ? "secondary" : "primary"}
+            >
               <ExternalLink aria-hidden="true" size={17} />
               Abrir enlace del evento
             </ButtonLink>
           )}
           {detail.canManage && (
-            <ButtonLink href={`/calendario/eventos/${event.id}/editar`}>
+            <ButtonLink
+              href={`/calendario/eventos/${event.id}/editar`}
+              variant={developmentHref ? "secondary" : "primary"}
+            >
               <Pencil aria-hidden="true" size={17} />
               Editar evento
             </ButtonLink>

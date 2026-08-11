@@ -5,19 +5,14 @@ import styles from "@/features/employees/components/employee-management.module.c
 export default function EmployeeDirectoryLoading() {
   return (
     <Container>
-      <main
-        aria-busy="true"
-        aria-label="Cargando colaboradores"
-        className={styles.page}
-        id="main-content"
-      >
+      <div aria-busy="true" className={styles.page}>
         <span className="sr-only" role="status">
           Cargando colaboradores…
         </span>
         <Skeleton height="4rem" />
         <Skeleton height="7rem" />
         <Skeleton height="24rem" />
-      </main>
+      </div>
     </Container>
   );
 }

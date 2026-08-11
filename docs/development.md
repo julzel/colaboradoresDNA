@@ -22,15 +22,17 @@ available at [http://localhost:3000/api/health](http://localhost:3000/api/health
 
 The local environment uses the following variables:
 
-| Variable                            | Required for            | Notes                                                    |
-| ----------------------------------- | ----------------------- | -------------------------------------------------------- |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Authentication          | Clerk development publishable key; safe for the browser. |
-| `CLERK_SECRET_KEY`                  | Authentication          | Clerk development secret; server-only.                   |
-| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`     | Authentication          | Set to `/sign-in`.                                       |
-| `NEXT_PUBLIC_CLERK_SIGN_UP_URL`     | Authentication          | Set to `/sign-up`.                                       |
-| `APP_BASE_URL`                      | Invitations             | Trusted origin used in Clerk invitation redirects.       |
-| `MONGODB_URI`                       | MongoDB-backed features | Atlas connection URI; must remain server-only.           |
-| `MONGODB_DB`                        | MongoDB-backed features | Database name for the current environment.               |
+| Variable                                    | Required for            | Notes                                                    |
+| ------------------------------------------- | ----------------------- | -------------------------------------------------------- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`         | Authentication          | Clerk development publishable key; safe for the browser. |
+| `CLERK_SECRET_KEY`                          | Authentication          | Clerk development secret; server-only.                   |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`             | Authentication          | Set to `/sign-in`.                                       |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL`             | Authentication          | Set to `/sign-up`.                                       |
+| `APP_BASE_URL`                              | Invitations             | Trusted origin used in Clerk invitation redirects.       |
+| `MONGODB_URI`                               | MongoDB-backed features | Atlas connection URI; must remain server-only.           |
+| `MONGODB_DB`                                | MongoDB-backed features | Database name for the current environment.               |
+| `DEVELOPMENT_ENCRYPTION_ACTIVE_KEY_VERSION` | Development narratives  | Active key identifier, initially `v1`; server-only.      |
+| `DEVELOPMENT_ENCRYPTION_KEY_V1`             | Development narratives  | Base64-encoded random 32-byte key; server-only.          |
 
 Never commit `.env.local`. Do not use the `NEXT_PUBLIC_` prefix for Clerk
 secrets, database credentials, or any other secret.
@@ -79,6 +81,24 @@ The command is idempotent. It creates the employee-domain indexes, inserts
 Gerencia, Nutrición, Producción, and Servicio al cliente only when they do not
 already exist, and backfills a missing employee `preferredName` to `null`. It
 does not create employees, platform accounts, credentials, or invitations.
+
+### Collaborator development
+
+The Desarrollo module is restricted to synthetic data until its governance and
+production security gates are approved. Initialize its reviewed collections and
+indexes with migration-capable development credentials:
+
+```bash
+cd web
+pnpm bootstrap:development-model
+```
+
+The runtime application account should not receive index-management privileges
+in production. Narrative encryption uses the two server-only variables above;
+generate a local key with `openssl rand -base64 32`. The metadata-only dashboard
+does not need the key, while 1:1 narrative reads and writes fail closed if it is
+missing or invalid. Never put the key in a `NEXT_PUBLIC_` variable or an untrusted
+Deploy Preview. See the [security boundary](./collaborator-development-security.md).
 
 ## Daily workflow
 

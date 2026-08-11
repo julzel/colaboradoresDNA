@@ -11,6 +11,33 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/admin/desarrollo/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/admin/colaboradores/:employeeId/desarrollo/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/perfil/desarrollo/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      {
         source: "/sw.js",
         headers: [
           {

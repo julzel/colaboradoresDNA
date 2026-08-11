@@ -12,10 +12,13 @@ export default async function CalendarEventDetailModal({
   const { eventId } = await params;
   const detail = await getVisibleCalendarEventDetail(eventId);
   if (!detail) notFound();
+  const developmentHref = detail.developmentLink
+    ? `/admin/colaboradores/${detail.developmentLink.employeeId}/desarrollo/1-a-1/${detail.developmentLink.meetingId}`
+    : null;
 
   return (
     <Modal title={detail.event.title}>
-      <CalendarEventDetailContent detail={detail} />
+      <CalendarEventDetailContent detail={detail} developmentHref={developmentHref} />
     </Modal>
   );
 }

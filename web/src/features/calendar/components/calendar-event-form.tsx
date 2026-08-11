@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, type ChangeEvent } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
@@ -31,6 +31,7 @@ import styles from "./calendar.module.css";
 type CalendarEventFormProps = {
   cancelBehavior?: "back" | "callback" | "push";
   cancelHref: string;
+  developmentOneOnOne?: boolean;
   event?: CalendarEvent;
   mode: "create" | "edit";
   onCancel?: () => void;
@@ -41,6 +42,7 @@ type CalendarEventFormProps = {
 export function CalendarEventForm({
   cancelBehavior = "push",
   cancelHref,
+  developmentOneOnOne = false,
   event,
   mode,
   onCancel,
@@ -94,104 +96,132 @@ export function CalendarEventForm({
       {event && <input name="eventId" type="hidden" value={event.id} />}
       <CalendarFormErrorSummary state={state} />
 
-      <fieldset className={styles.formSection}>
-        <legend>Información del evento</legend>
-        <div className={`${styles.formGrid} ${styles.eventInformationGrid}`}>
-          <div>
-            <SelectField
-              defaultValue={event?.eventType ?? "custom"}
-              description="Seleccioná la categoría que mejor describe la actividad."
-              error={state.errors?.eventType}
-              id="eventType"
-              label="Tipo de evento"
-              name="eventType"
-              required
-            >
-              {calendarEventTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </SelectField>
-          </div>
-          <div>
-            <TextField
-              defaultValue={event?.title ?? ""}
-              error={state.errors?.title}
-              id="title"
-              label="Título"
-              maxLength={120}
-              name="title"
-              required
+      {developmentOneOnOne && event ? (
+        <>
+          <input name="eventType" type="hidden" value="one_on_one" />
+          <input name="title" type="hidden" value="Reunión 1:1" />
+          <input name="visibility" type="hidden" value="invited" />
+          {event.inviteePlatformUserIds.map((inviteeId) => (
+            <input
+              key={inviteeId}
+              name="inviteePlatformUserIds"
+              type="hidden"
+              value={inviteeId}
             />
+          ))}
+          <div className={styles.protectedEventNotice}>
+            <ShieldCheck aria-hidden="true" size={20} />
+            <div>
+              <strong>Evento privado vinculado a Desarrollo</strong>
+              <p>
+                Solo se puede cambiar su horario. Las notas nunca se guardan en
+                Calendario.
+              </p>
+            </div>
           </div>
-          <div className={styles.fullWidth}>
-            <Button
-              aria-controls="event-optional-details"
-              aria-expanded={optionalDetailsVisible}
-              onClick={() => setShowOptionalDetails((visible) => !visible)}
-              size="small"
-              variant="quiet"
-            >
-              {optionalDetailsVisible ? (
-                <EyeOff aria-hidden="true" size={16} />
-              ) : (
-                <Eye aria-hidden="true" size={16} />
-              )}
-              {optionalDetailsVisible ? "Menos" : "Más"}
-            </Button>
-          </div>
-          <div
-            className={styles.eventDetailsFields}
-            hidden={!optionalDetailsVisible}
-            id="event-optional-details"
-          >
-            <div className={styles.eventLocationFields}>
+        </>
+      ) : (
+        <fieldset className={styles.formSection}>
+          <legend>Información del evento</legend>
+          <div className={`${styles.formGrid} ${styles.eventInformationGrid}`}>
+            <div>
+              <SelectField
+                defaultValue={event?.eventType ?? "custom"}
+                description="Seleccioná la categoría que mejor describe la actividad."
+                error={state.errors?.eventType}
+                id="eventType"
+                label="Tipo de evento"
+                name="eventType"
+                required
+              >
+                {calendarEventTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
+            </div>
+            <div>
               <TextField
-                defaultValue={event?.location ?? ""}
-                error={state.errors?.location}
-                id="location"
-                label="Lugar"
-                maxLength={200}
-                name="location"
-                optional
-              />
-              <TextField
-                defaultValue={event?.meetingUrl ?? ""}
-                error={state.errors?.meetingUrl}
-                id="meetingUrl"
-                label="Enlace de reunión"
-                maxLength={500}
-                name="meetingUrl"
-                optional
-                placeholder="https://"
-                type="url"
+                defaultValue={event?.title ?? ""}
+                error={state.errors?.title}
+                id="title"
+                label="Título"
+                maxLength={120}
+                name="title"
+                required
               />
             </div>
-            <TextAreaField
-              defaultValue={event?.description ?? ""}
-              error={state.errors?.description}
-              id="description"
-              label="Descripción"
-              maxLength={2000}
-              name="description"
-              optional
-              rows={4}
-            />
+            <div className={styles.fullWidth}>
+              <Button
+                aria-controls="event-optional-details"
+                aria-expanded={optionalDetailsVisible}
+                onClick={() => setShowOptionalDetails((visible) => !visible)}
+                size="small"
+                variant="quiet"
+              >
+                {optionalDetailsVisible ? (
+                  <EyeOff aria-hidden="true" size={16} />
+                ) : (
+                  <Eye aria-hidden="true" size={16} />
+                )}
+                {optionalDetailsVisible ? "Menos" : "Más"}
+              </Button>
+            </div>
+            <div
+              className={styles.eventDetailsFields}
+              hidden={!optionalDetailsVisible}
+              id="event-optional-details"
+            >
+              <div className={styles.eventLocationFields}>
+                <TextField
+                  defaultValue={event?.location ?? ""}
+                  error={state.errors?.location}
+                  id="location"
+                  label="Lugar"
+                  maxLength={200}
+                  name="location"
+                  optional
+                />
+                <TextField
+                  defaultValue={event?.meetingUrl ?? ""}
+                  error={state.errors?.meetingUrl}
+                  id="meetingUrl"
+                  label="Enlace de reunión"
+                  maxLength={500}
+                  name="meetingUrl"
+                  optional
+                  placeholder="https://"
+                  type="url"
+                />
+              </div>
+              <TextAreaField
+                defaultValue={event?.description ?? ""}
+                error={state.errors?.description}
+                id="description"
+                label="Descripción"
+                maxLength={2000}
+                name="description"
+                optional
+                rows={4}
+              />
+            </div>
           </div>
-        </div>
-      </fieldset>
+        </fieldset>
+      )}
 
       <fieldset className={styles.formSection}>
         <legend>Fecha y hora</legend>
-        <CheckboxField
-          checked={allDay}
-          description="El evento no mostrará una hora específica."
-          id="allDay"
-          label="Evento de todo el día"
-          name="allDay"
-          onChange={handleAllDayChange}
-        />
+        {!developmentOneOnOne && (
+          <CheckboxField
+            checked={allDay}
+            description="El evento no mostrará una hora específica."
+            id="allDay"
+            label="Evento de todo el día"
+            name="allDay"
+            onChange={handleAllDayChange}
+          />
+        )}
         {allDay ? (
           <div className={styles.formGrid}>
             <TextField
@@ -246,67 +276,69 @@ export function CalendarEventForm({
         )}
       </fieldset>
 
-      <fieldset className={styles.formSection}>
-        <legend>Visibilidad</legend>
-        <SelectField
-          error={state.errors?.visibility}
-          id="visibility"
-          label="¿Quién puede verlo?"
-          name="visibility"
-          onChange={handleVisibilityChange}
-          value={visibility}
-        >
-          <option value="company">Toda la empresa</option>
-          <option value="department">Un departamento</option>
-          <option value="invited">Personas invitadas</option>
-        </SelectField>
-
-        <div hidden={visibility !== "department"}>
+      {!developmentOneOnOne && (
+        <fieldset className={styles.formSection}>
+          <legend>Visibilidad</legend>
           <SelectField
-            defaultValue={event?.departmentId ?? ""}
-            disabled={visibility !== "department"}
-            error={state.errors?.departmentId}
-            id="departmentId"
-            label="Departamento"
-            name="departmentId"
-            required={visibility === "department"}
+            error={state.errors?.visibility}
+            id="visibility"
+            label="¿Quién puede verlo?"
+            name="visibility"
+            onChange={handleVisibilityChange}
+            value={visibility}
           >
-            <option value="">Seleccioná un departamento</option>
-            {options.departments.map((department) => (
-              <option key={department.id} value={department.id}>
-                {department.name}
-              </option>
-            ))}
+            <option value="company">Toda la empresa</option>
+            <option value="department">Un departamento</option>
+            <option value="invited">Personas invitadas</option>
           </SelectField>
-        </div>
 
-        {visibility === "invited" && (
-          <fieldset className={styles.peopleFieldset}>
-            <legend>Personas agregadas</legend>
-            <p className={styles.formHint}>
-              Las personas seleccionadas verán el evento en su calendario y recibirán
-              una notificación en Inicio. Seleccioná al menos una persona.
-            </p>
-            <div className={styles.peopleGrid}>
-              {options.people.map((person) => (
-                <CheckboxField
-                  defaultChecked={selectedInvitees.has(person.id)}
-                  id={`invitee-${person.id}`}
-                  key={person.id}
-                  label={person.displayName}
-                  name="inviteePlatformUserIds"
-                  value={person.id}
-                />
+          <div hidden={visibility !== "department"}>
+            <SelectField
+              defaultValue={event?.departmentId ?? ""}
+              disabled={visibility !== "department"}
+              error={state.errors?.departmentId}
+              id="departmentId"
+              label="Departamento"
+              name="departmentId"
+              required={visibility === "department"}
+            >
+              <option value="">Seleccioná un departamento</option>
+              {options.departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.name}
+                </option>
               ))}
-            </div>
-            {state.errors?.inviteePlatformUserIds && (
-              <p className={styles.fieldError} role="alert">
-                {state.errors.inviteePlatformUserIds}
+            </SelectField>
+          </div>
+
+          {visibility === "invited" && (
+            <fieldset className={styles.peopleFieldset}>
+              <legend>Personas agregadas</legend>
+              <p className={styles.formHint}>
+                Las personas seleccionadas verán el evento en su calendario y recibirán
+                una notificación en Inicio. Seleccioná al menos una persona.
               </p>
-            )}
-          </fieldset>
-        )}
-      </fieldset>
+              <div className={styles.peopleGrid}>
+                {options.people.map((person) => (
+                  <CheckboxField
+                    defaultChecked={selectedInvitees.has(person.id)}
+                    id={`invitee-${person.id}`}
+                    key={person.id}
+                    label={person.displayName}
+                    name="inviteePlatformUserIds"
+                    value={person.id}
+                  />
+                ))}
+              </div>
+              {state.errors?.inviteePlatformUserIds && (
+                <p className={styles.fieldError} role="alert">
+                  {state.errors.inviteePlatformUserIds}
+                </p>
+              )}
+            </fieldset>
+          )}
+        </fieldset>
+      )}
 
       <div className={styles.formActions}>
         <SubmitButton pendingLabel="Guardando evento…">

@@ -2,7 +2,6 @@ import "server-only";
 
 import { ObjectId, type ClientSession } from "mongodb";
 
-import { ensureCalendarIndexes } from "@/features/calendar/server/calendar-indexes";
 import { getDatabase } from "@/lib/server/mongodb";
 
 type CalendarAuditAction = "event_created" | "event_deleted" | "event_updated";
@@ -26,10 +25,9 @@ export async function recordCalendarAudit({
   action: CalendarAuditAction;
   actorPlatformUserId: string;
   changedFields: string[];
-  session?: ClientSession;
+  session: ClientSession;
   targetEventId: string;
 }) {
-  await ensureCalendarIndexes();
   const database = await getDatabase();
   const document: CalendarAuditDocument = {
     _id: new ObjectId(),
@@ -42,5 +40,5 @@ export async function recordCalendarAudit({
 
   await database
     .collection<CalendarAuditDocument>("calendar_event_audit")
-    .insertOne(document, session ? { session } : undefined);
+    .insertOne(document, { session });
 }

@@ -6,14 +6,18 @@ import {
   getCalendarEntries,
   getVisibleCalendarBirthdayDetail,
   getVisibleCalendarPtoDetail,
+  getVisibleCalendarEventDetail,
   readDashboardNotification,
+  updateCalendarEventForActor,
 } from "@/features/calendar/server/calendar-service";
 
 const mocks = vi.hoisted(() => ({
   createCalendarEvent: vi.fn(),
+  findDevelopmentLinkForCalendarIntegration: vi.fn(),
   findEffectiveEmployeeAssignment: vi.fn(),
   findEmployeeByPlatformUserId: vi.fn(),
   getPtoRequestDetail: vi.fn(),
+  getCalendarEventDetail: vi.fn(),
   listBirthdayCalendarEntries: vi.fn(),
   listCalendarEventTargetOptions: vi.fn(),
   listReadNotificationKeys: vi.fn(),
@@ -23,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   listVisibleApprovedPtoForCalendar: vi.fn(),
   markNotificationKeysRead: vi.fn(),
   requirePlatformUser: vi.fn(),
+  updateCalendarEvent: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -43,11 +48,16 @@ vi.mock("@/features/employees/server/assignment-repository", () => ({
 vi.mock("@/features/calendar/server/calendar-event-repository", () => ({
   createCalendarEvent: mocks.createCalendarEvent,
   deleteCalendarEvent: vi.fn(),
-  getCalendarEventDetail: vi.fn(),
+  getCalendarEventDetail: mocks.getCalendarEventDetail,
   listCalendarEventTargetOptions: mocks.listCalendarEventTargetOptions,
   listUpcomingCalendarEventNotifications: mocks.listUpcomingCalendarEventNotifications,
   listVisibleCalendarEvents: mocks.listVisibleCalendarEvents,
-  updateCalendarEvent: vi.fn(),
+  updateCalendarEvent: mocks.updateCalendarEvent,
+}));
+
+vi.mock("@/features/development/server/development-service", () => ({
+  findDevelopmentLinkForCalendarIntegration:
+    mocks.findDevelopmentLinkForCalendarIntegration,
 }));
 
 vi.mock("@/features/dashboard/server/notification-read-repository", () => ({
@@ -93,6 +103,7 @@ describe("calendar service authorization and aggregation", () => {
         employeeId: "507f1f77bcf86cd799439014",
       },
     ]);
+    mocks.findDevelopmentLinkForCalendarIntegration.mockResolvedValue(null);
   });
 
   it("passes the authenticated role and department to calendar sources", async () => {
@@ -226,6 +237,86 @@ describe("calendar service authorization and aggregation", () => {
       },
       input,
     });
+  });
+
+  it("links an administrator's 1:1 calendar detail back to Development", async () => {
+    const eventId = "507f1f77bcf86cd799439099";
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: {
+        displayName: "Ana Mora",
+        id: "507f1f77bcf86cd799439011",
+        role: "administrator",
+      },
+    });
+    mocks.getCalendarEventDetail.mockResolvedValue({
+      event: { eventType: "one_on_one", id: eventId },
+    });
+    mocks.findDevelopmentLinkForCalendarIntegration.mockResolvedValue({
+      employeeId: "507f1f77bcf86cd799439012",
+      meetingId: "507f1f77bcf86cd799439013",
+      status: "draft",
+    });
+
+    await expect(getVisibleCalendarEventDetail(eventId)).resolves.toMatchObject({
+      developmentLink: {
+        employeeId: "507f1f77bcf86cd799439012",
+        meetingId: "507f1f77bcf86cd799439013",
+      },
+      viewerRole: "administrator",
+    });
+    expect(mocks.findDevelopmentLinkForCalendarIntegration).toHaveBeenCalledWith({
+      actorRole: "administrator",
+      calendarEventId: eventId,
+    });
+  });
+
+  it("allows only schedule changes for a calendar event linked to Development", async () => {
+    const eventId = "507f1f77bcf86cd799439099";
+    const inviteeId = "507f1f77bcf86cd799439012";
+    const safeInput = {
+      allDay: false,
+      departmentId: null,
+      description: null,
+      endsAt: new Date("2026-08-10T15:30:00.000Z"),
+      eventType: "one_on_one" as const,
+      inviteePlatformUserIds: [inviteeId],
+      location: null,
+      meetingUrl: null,
+      startsAt: new Date("2026-08-10T15:00:00.000Z"),
+      title: "Reunión 1:1",
+      visibility: "invited" as const,
+    };
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: {
+        displayName: "Ana Mora",
+        id: "507f1f77bcf86cd799439011",
+        role: "administrator",
+      },
+    });
+    mocks.findDevelopmentLinkForCalendarIntegration.mockResolvedValue({
+      employeeId: inviteeId,
+      meetingId: "507f1f77bcf86cd799439013",
+      status: "draft",
+    });
+    mocks.getCalendarEventDetail.mockResolvedValue({
+      event: { inviteePlatformUserIds: [inviteeId] },
+    });
+    mocks.updateCalendarEvent.mockResolvedValue({ id: eventId });
+
+    await updateCalendarEventForActor({ eventId, input: safeInput });
+    expect(mocks.updateCalendarEvent).toHaveBeenCalledWith({
+      actor: expect.objectContaining({ role: "administrator" }),
+      eventId,
+      input: safeInput,
+    });
+
+    await expect(
+      updateCalendarEventForActor({
+        eventId,
+        input: { ...safeInput, description: "Notas que no deben exponerse." },
+      }),
+    ).rejects.toMatchObject({ code: "event_forbidden" });
+    expect(mocks.updateCalendarEvent).toHaveBeenCalledTimes(1);
   });
 
   it("makes the non-leap-year handling of 29 February explicit", async () => {

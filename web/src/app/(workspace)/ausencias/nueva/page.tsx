@@ -14,7 +14,7 @@ export default async function NewPtoRequestPage() {
   if (!dashboard.canRequest) notFound();
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href="/ausencias">Volver a solicitudes</BackLink>
         <header className={styles.header}>
           <div>
@@ -29,7 +29,7 @@ export default async function NewPtoRequestPage() {
           </div>
         </header>
         <PtoRequestForm />
-      </main>
+      </div>
     </Container>
   );
 }

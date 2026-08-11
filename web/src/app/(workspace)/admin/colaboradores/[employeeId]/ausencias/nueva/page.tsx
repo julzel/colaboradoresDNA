@@ -21,7 +21,7 @@ export default async function NewEmployeePtoRequestPage({
 
   return (
     <Container>
-      <main className={styles.page} id="main-content">
+      <div className={styles.page}>
         <BackLink href={`/admin/colaboradores/${employeeId}/ausencias`}>
           Volver al saldo de ausencias
         </BackLink>
@@ -38,7 +38,7 @@ export default async function NewEmployeePtoRequestPage({
           </div>
         </header>
         <PtoRequestForm employeeId={employeeId} />
-      </main>
+      </div>
     </Container>
   );
 }
