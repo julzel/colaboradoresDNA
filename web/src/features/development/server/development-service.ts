@@ -10,12 +10,7 @@ import {
   DevelopmentDomainError,
   developmentObjectIdSchema,
 } from "@/features/development/domain/shared";
-import { localDateTimeToUtc } from "@/features/calendar/domain/calendar-utils";
-import {
-  createInternalOneOnOneCalendarEvent,
-  findInternalOneOnOneCalendarEventSummaryForAdministrator,
-  type CalendarActor,
-} from "@/features/calendar/server/calendar-event-repository";
+import { developmentCalendarIntegration } from "@/features/calendar/integrations/development-calendar-adapter";
 import { parseEmployeeDirectoryQuery } from "@/features/employees/domain/employee-directory-query";
 import { listEmployeeDirectoryForAdministration } from "@/features/employees/server/employee-read-repository";
 import {
@@ -29,7 +24,6 @@ import {
   updateOneOnOneDraft,
 } from "@/features/development/server/development-repository";
 import {
-  findOneOnOneByCalendarEventId,
   findOneOnOneDetail,
   getDevelopmentRecordSummary,
   listDevelopmentRecordSummaries,
@@ -55,10 +49,6 @@ function assertMeetingId(meetingId: string) {
   if (!developmentObjectIdSchema.safeParse(meetingId).success) {
     throw new DevelopmentDomainError("record_not_found");
   }
-}
-
-function toCalendarActor(platformUserId: string): CalendarActor {
-  return { departmentId: null, platformUserId, role: "administrator" };
 }
 
 export async function getDevelopmentDirectoryForAdministration(): Promise<DevelopmentDirectory> {
@@ -169,19 +159,19 @@ function getCalendarEventWriter({
   schedule: NormalizedOneOnOneEditorInput["calendarSchedule"];
 }) {
   if (!schedule) return null;
-  const actor = toCalendarActor(actorPlatformUserId);
 
   return async (
-    session: Parameters<typeof createInternalOneOnOneCalendarEvent>[0]["session"],
+    session: Parameters<
+      typeof developmentCalendarIntegration.createOneOnOneEvent
+    >[0]["session"],
   ) => {
-    const event = await createInternalOneOnOneCalendarEvent({
-      actor,
-      endsAt: localDateTimeToUtc(schedule.endDateTime),
+    return developmentCalendarIntegration.createOneOnOneEvent({
+      actorPlatformUserId,
+      endDateTime: schedule.endDateTime,
       session,
-      startsAt: localDateTimeToUtc(schedule.startDateTime),
+      startDateTime: schedule.startDateTime,
       targetEmployeeId: employeeId,
     });
-    return event.id;
   };
 }
 
@@ -279,8 +269,8 @@ export async function getOneOnOneForAdministration({
     meetingId,
   });
   const calendarEvent = meeting.calendarEventId
-    ? await findInternalOneOnOneCalendarEventSummaryForAdministrator({
-        actor: toCalendarActor(actor.platformUser.id),
+    ? await developmentCalendarIntegration.findOneOnOneEventForAdministrator({
+        actorPlatformUserId: actor.platformUser.id,
         eventId: meeting.calendarEventId,
       })
     : null;
@@ -312,36 +302,6 @@ export async function updateOneOnOneActionForAdministration({
     meetingId,
     status,
   });
-}
-
-export async function getDevelopmentLinkForCalendarEventForAdministration(
-  calendarEventId: string,
-) {
-  if (!developmentObjectIdSchema.safeParse(calendarEventId).success) return null;
-  await requireDevelopmentAdministrator("read_shared");
-  return findOneOnOneByCalendarEventId(calendarEventId);
-}
-
-/**
- * Calendar already authenticated this actor and supplies its trusted role.
- * This metadata-only lookup lets Calendar preserve the privacy invariants of
- * linked 1:1 events without fetching or decrypting development narratives.
- */
-export async function findDevelopmentLinkForCalendarIntegration({
-  actorRole,
-  calendarEventId,
-}: {
-  actorRole: CalendarActor["role"];
-  calendarEventId: string;
-}) {
-  if (
-    actorRole !== "administrator" ||
-    !developmentObjectIdSchema.safeParse(calendarEventId).success
-  ) {
-    return null;
-  }
-
-  return findOneOnOneByCalendarEventId(calendarEventId);
 }
 
 export async function getOwnFinalizedDevelopmentRecord() {

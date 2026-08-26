@@ -34,8 +34,8 @@ web/
 ├── scripts/                Controlled bootstrap and maintenance operations
 ├── src/app/                 Routes, layouts, error states, and Route Handlers
 ├── src/components/ui/       Reusable, domain-neutral UI primitives
-├── src/features/<feature>/  Feature-owned actions, components, domain, server,
-│                            and UI-facing view models
+├── src/features/<feature>/  Feature-owned actions, components, domain,
+│                            integrations, server, and UI-facing view models
 ├── src/lib/server/          Server-only shared infrastructure
 ├── src/styles/              Global CSS tokens and base styles
 ├── tests/unit/              Unit tests
@@ -50,6 +50,13 @@ UI-facing DTOs live in `view-models/` (or `domain/` when they are true domain
 types), never in repository modules. Components depend on these stable contracts;
 query services and repositories produce them without exposing persistence-module
 ownership to the UI.
+
+Cross-feature behavior uses explicit interfaces under `integrations/`. The
+consuming feature owns the port and its narrow DTOs; the providing feature owns
+the adapter that translates its domain and service results into that contract.
+Feature services depend on those ports instead of importing another feature's
+service or repository directly. Provider-specific models stay behind the
+adapter, including the Calendar/PTO and Calendar/Development interactions.
 
 ## Rendering and data access
 

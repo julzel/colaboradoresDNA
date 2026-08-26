@@ -175,13 +175,13 @@ describe("calendar quick details", () => {
     render(
       <CalendarPtoQuickDetailContent
         detail={{
-          category: "vacation",
-          durationUnits: 3,
+          categoryLabel: "Vacaciones",
+          durationLabel: "1,5",
           endDate: "2026-07-12",
           id: "507f1f77bcf86cd799439099",
           requesterName: "Ana Mora",
           startDate: "2026-07-11",
-          status: "approved",
+          statusLabel: "Aprobada",
         }}
       />,
     );

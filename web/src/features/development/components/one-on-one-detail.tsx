@@ -6,8 +6,10 @@ import { BackLink } from "@/components/ui/navigation/back-link";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { updateOneOnOneActionStatusAction } from "@/features/development/actions/development-actions";
 import type { OneOnOneDetail as OneOnOneDetailModel } from "@/features/development/domain/one-on-one";
-import type { InternalOneOnOneCalendarEventSummary } from "@/features/calendar/view-models/calendar-event-view";
-import type { DevelopmentEmployeeIdentity } from "@/features/development/view-models/development-view";
+import type {
+  DevelopmentCalendarEventSummary,
+  DevelopmentEmployeeIdentity,
+} from "@/features/development/view-models/development-view";
 import {
   formatCalendarDate,
   formatCalendarTime,
@@ -31,7 +33,7 @@ export function OneOnOneDetail({
   employee,
   meeting,
 }: {
-  calendarEvent: InternalOneOnOneCalendarEventSummary | null;
+  calendarEvent: DevelopmentCalendarEventSummary | null;
   employee: DevelopmentEmployeeIdentity;
   meeting: OneOnOneDetailModel;
 }) {

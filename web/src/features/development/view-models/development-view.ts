@@ -24,3 +24,9 @@ export type DevelopmentRecordSummary = {
   overdueActionCount: number;
   overdueGoalCount: number;
 };
+
+export type DevelopmentCalendarEventSummary = {
+  endsAt: string;
+  id: string;
+  startsAt: string;
+};

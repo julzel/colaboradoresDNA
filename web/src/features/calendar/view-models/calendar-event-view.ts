@@ -13,9 +13,3 @@ export type CalendarEventDetail = {
   invitees: Array<{ displayName: string; id: string }>;
   organizerName: string;
 };
-
-export type InternalOneOnOneCalendarEventSummary = {
-  endsAt: string;
-  id: string;
-  startsAt: string;
-};

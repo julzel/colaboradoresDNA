@@ -3,24 +3,9 @@ import { CakeSlice, CalendarDays, Clock3, ExternalLink } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button/button";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { formatCalendarDate } from "@/features/calendar/domain/calendar-utils";
-import {
-  formatPtoDays,
-  ptoCategoryLabels,
-  ptoStatusLabels,
-  type PtoCategory,
-} from "@/features/pto/domain/pto";
+import type { CalendarPtoQuickDetail } from "@/features/calendar/view-models/calendar-pto-view";
 
 import styles from "./calendar.module.css";
-
-export type CalendarPtoQuickDetail = {
-  category: PtoCategory;
-  durationUnits: number;
-  endDate: string;
-  id: string;
-  requesterName: string;
-  startDate: string;
-  status: "approved";
-};
 
 export type CalendarBirthdayQuickDetail = {
   date: string;
@@ -43,9 +28,9 @@ export function CalendarPtoQuickDetailContent({
     <div className={styles.eventDetailContent}>
       <div className={styles.eventDetailOverview}>
         <span className={styles.quickDetailLabel} data-kind="pto">
-          {ptoCategoryLabels[detail.category]}
+          {detail.categoryLabel}
         </span>
-        <StatusBadge tone="success">{ptoStatusLabels[detail.status]}</StatusBadge>
+        <StatusBadge tone="success">{detail.statusLabel}</StatusBadge>
       </div>
 
       <dl className={styles.eventDetailFacts}>
@@ -61,7 +46,7 @@ export function CalendarPtoQuickDetailContent({
             <Clock3 aria-hidden="true" size={18} />
             Duración
           </dt>
-          <dd>{formatPtoDays(detail.durationUnits)} días</dd>
+          <dd>{detail.durationLabel} días</dd>
         </div>
       </dl>
 

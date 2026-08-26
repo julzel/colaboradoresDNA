@@ -23,7 +23,6 @@ import { recordCalendarAudit } from "@/features/calendar/server/calendar-audit-r
 import type {
   CalendarEventDetail,
   CalendarEventTargetOptions,
-  InternalOneOnOneCalendarEventSummary,
 } from "@/features/calendar/view-models/calendar-event-view";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
 
@@ -357,7 +356,7 @@ export async function findInternalOneOnOneCalendarEventSummaryForAdministrator({
   actor: CalendarActor;
   eventId: string;
   session?: ClientSession;
-}): Promise<InternalOneOnOneCalendarEventSummary | null> {
+}) {
   if (actor.role !== "administrator" || !ObjectId.isValid(actor.platformUserId)) {
     throw new CalendarDomainError("event_forbidden");
   }
