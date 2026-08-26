@@ -43,6 +43,8 @@ describe("desktop workspace sidebar", () => {
       name: "Expandir navegación",
     });
 
+    expect(screen.queryByText("Espacio de trabajo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Administración")).not.toBeInTheDocument();
     expect(expandButton).toHaveAttribute("aria-expanded", "false");
     expect(expandButton).toHaveAttribute("aria-controls", "workspace-sidebar");
 

@@ -23,7 +23,7 @@
   background: var(--background-navigation);
   color: var(--color-sidebar-text);
   scrollbar-width: thin;
-  transition: width var(--duration-slow) var(--ease-emphasized);
+  transition: width var(--duration-shell) var(--ease-emphasized);
 }
 
 .brand {
@@ -77,7 +77,7 @@
 }
 
 .sidebarToggleIcon {
-  transition: transform var(--duration-slow) var(--ease-emphasized);
+  transition: transform var(--duration-shell) var(--ease-emphasized);
 }
 
 .sidebarExpanded .sidebarToggleIcon {
@@ -86,7 +86,7 @@
 
 .sidebarExpanded .sidebarToggle {
   align-self: flex-start;
-  margin-left: 0.375rem;
+  margin-left: var(--space-4);
 }
 
 .sidebarFooter {
@@ -105,7 +105,7 @@
 }
 
 .sidebarExpanded .sidebarTheme {
-  margin-left: -0.125rem;
+  margin-left: var(--space-2);
 }
 
 .sidebarTheme > button {
@@ -126,7 +126,7 @@
   position: relative;
   min-height: 100dvh;
   margin-left: var(--sidebar-current-width);
-  transition: margin-left var(--duration-slow) var(--ease-emphasized);
+  transition: margin-left var(--duration-shell) var(--ease-emphasized);
 }
 
 .content {

@@ -191,21 +191,23 @@ Never add a shadow to every container.
 Motion explains a state change, preserves spatial context, or confirms an
 action. It must never delay access to content or run only for decoration.
 
-| Token               | Value                            | Usage                                      |
-| ------------------- | -------------------------------- | ------------------------------------------ |
-| `--duration-fast`   | `120ms`                          | Hover, focus, press, and color feedback    |
-| `--duration-base`   | `180ms`                          | Tabs, labels, toggles, and local state     |
-| `--duration-slow`   | `260ms`                          | Drawers, modals, and shell transformations |
-| `--ease-standard`   | `cubic-bezier(0.2, 0, 0, 1)`     | Reversible interaction feedback            |
-| `--ease-enter`      | `cubic-bezier(0, 0, 0.2, 1)`     | Content entering or becoming visible       |
-| `--ease-exit`       | `cubic-bezier(0.4, 0, 1, 1)`     | Content leaving or becoming hidden         |
-| `--ease-emphasized` | `cubic-bezier(0.2, 0.8, 0.2, 1)` | Large spatial changes                      |
+| Token               | Value                          | Usage                                      |
+| ------------------- | ------------------------------ | ------------------------------------------ |
+| `--duration-fast`   | `120ms`                        | Hover, focus, press, and color feedback    |
+| `--duration-base`   | `180ms`                        | Tabs, labels, toggles, and local state     |
+| `--duration-slow`   | `260ms`                        | Drawers, modals, and shell transformations |
+| `--duration-shell`  | `320ms`                        | Desktop navigation width changes           |
+| `--ease-standard`   | `cubic-bezier(0.2, 0, 0, 1)`   | Reversible interaction feedback            |
+| `--ease-enter`      | `cubic-bezier(0, 0, 0.2, 1)`   | Content entering or becoming visible       |
+| `--ease-exit`       | `cubic-bezier(0.4, 0, 1, 1)`   | Content leaving or becoming hidden         |
+| `--ease-emphasized` | `cubic-bezier(0.4, 0, 0.2, 1)` | Large spatial changes                      |
 
 - Prefer opacity and transform because they remain smooth and do not reflow
   surrounding content. Width or position may animate only when preserving
   spatial context is the point of the interaction, such as the desktop sidebar.
-- Keep hover and focus feedback at 120ms, local component changes at 180ms, and
-  large spatial changes at 260ms. Do not introduce one-off durations.
+- Keep hover and focus feedback at 120ms, local component changes at 180ms,
+  overlays at 260ms, and desktop shell resizing at 320ms. Do not introduce
+  one-off durations.
 - Entering content uses `--ease-enter`; exiting content uses `--ease-exit`.
   Reversible movement uses `--ease-standard` or `--ease-emphasized`.
 - Animate related properties together. A label may fade and translate while its
@@ -284,12 +286,14 @@ screens show a back button, concise title, and at most one trailing action.
 
 Desktop uses a persistent left sidebar and a 64px top bar.
 
-- Group destinations into Workspace and Administration when both are present.
+- Preserve destination grouping through spacing, without visible group labels.
 - Use a 20px icon. Keep the text label available to assistive technology and as
   a tooltip; visually hide it in the rail and reveal it in the expanded state.
 - Place the expand/collapse control on the sidebar edge. Give it an accessible
   name, `aria-expanded`, `aria-controls`, and a tooltip. Rotate its chevron while
-  the rail width and labels animate together over `--duration-slow`.
+  the rail width and labels animate together over `--duration-shell`.
+- Keep every navigation icon on the same fixed horizontal axis and at the same
+  size in both states. Only the label region and item background may expand.
 - The current destination uses aqua emphasis plus `aria-current="page"`.
 - Keep settings, theme, and account controls anchored consistently at the
   bottom or top-right; do not mix them into feature navigation.

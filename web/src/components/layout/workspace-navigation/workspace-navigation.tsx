@@ -30,21 +30,16 @@ export function WorkspaceNavigation({
   const currentHref = getActiveNavigationHref(pathname, items);
 
   return (
-    <div
-      aria-label={label}
-      className={`${styles.navigation} ${expanded ? styles.expanded : ""}`}
-      role="group"
-    >
+    <div aria-label={label} className={styles.navigation} role="group">
       {sections.map((section) => (
-        <section className={styles.section} key={section.label}>
-          <p className={styles.label}>{section.label}</p>
+        <div key={section.label}>
           <SideNavigation
             currentHref={currentHref}
             expanded={expanded}
             items={section.items}
             label={section.label}
           />
-        </section>
+        </div>
       ))}
     </div>
   );
