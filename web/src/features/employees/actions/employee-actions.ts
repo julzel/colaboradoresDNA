@@ -1,29 +1,19 @@
 "use server";
 
-import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { platformRoleSchema } from "@/features/auth/domain/platform-user";
-import { recordAuthAudit } from "@/features/auth/server/auth-audit-repository";
 import {
   AdminEmailUpdateError,
   updateEmployeeEmailAsAdministrator,
 } from "@/features/auth/server/admin-email-service";
-import {
-  safelySendPlatformInvitation,
-  sendPlatformInvitation,
-} from "@/features/auth/server/invitation-service";
-import {
-  findPlatformUserById,
-  markPlatformUserInvitationFailed,
-  setPlatformUserClerkSyncStatus,
-  updatePlatformUserRole,
-} from "@/features/auth/server/platform-user-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import { employeeAssignmentInputSchema } from "@/features/employees/domain/assignment";
-import { employeeInputSchema } from "@/features/employees/domain/employee";
+import {
+  employeeInputSchema,
+  employeePersonalInformationInputSchema,
+} from "@/features/employees/domain/employee";
 import { EmployeeDomainError } from "@/features/employees/domain/errors";
 import type {
   EmployeeActionState,
@@ -41,16 +31,18 @@ import {
   objectIdStringSchema,
 } from "@/features/employees/domain/shared";
 import {
-  createEmployeeWithAccess,
+  EmployeeAdministrationError,
+  createEmployeeForAdministration,
+  endEmployeeEmploymentForAdministration,
+  resendEmployeeInvitationForAdministration,
+  revealEmployeeIdentificationForAdministration,
+  updateEmployeePersonalInformationForAdministration,
+  updateEmployeeRoleForAdministration,
+} from "@/features/employees/server/employee-administration-service";
+import {
   replaceEmployeeAssignmentAsAdministrator,
   replaceEmployeeScheduleAsAdministrator,
-  updateEmployeePersonalInformationAsAdministrator,
 } from "@/features/employees/server/employee-service";
-import {
-  endEmployeeEmployment,
-  findEmployeeById,
-} from "@/features/employees/server/employee-repository";
-import { revealEmployeeIdentificationValue } from "@/features/employees/server/employee-read-repository";
 import { createFeedbackUrl } from "@/lib/actions/feedback-messages";
 import { PtoDomainError, ptoOpeningBalanceDaysSchema } from "@/features/pto/domain/pto";
 
@@ -110,6 +102,17 @@ function domainState(error: unknown): EmployeeActionState {
       message: messages[error.code] ?? "No fue posible guardar los cambios.",
       status: "error",
     };
+  }
+
+  if (error instanceof EmployeeAdministrationError) {
+    const messages: Record<EmployeeAdministrationError["code"], string> = {
+      invitation_failed: "No fue posible enviar la invitación.",
+      invitation_not_pending: "La cuenta ya no tiene una invitación pendiente.",
+      own_employment_end: "No podés finalizar tu propia relación laboral.",
+      role_update_failed: "No fue posible cambiar el rol.",
+    };
+
+    return { message: messages[error.code], status: "error" };
   }
 
   return {
@@ -195,7 +198,7 @@ export async function createEmployeeAction(
   let result;
   try {
     const employee = parsedEmployee.data;
-    result = await createEmployeeWithAccess({
+    result = await createEmployeeForAdministration({
       access: parsedAccess.data,
       assignment: parsedAssignment.data,
       employee: {
@@ -221,23 +224,14 @@ export async function createEmployeeAction(
     return domainState(error);
   }
 
-  const invitationSent = await safelySendPlatformInvitation({
-    email: result.platformUser.normalizedEmail,
-    platformUserId: result.platformUser.id,
-  });
-  await recordAuthAudit({
-    action: invitationSent ? "invitation_created" : "invitation_failed",
-    actorClerkUserId: result.actor.clerkUserId ?? "system",
-    actorPlatformUserId: result.actor.id,
-    metadata: { role: result.platformUser.role },
-    targetPlatformUserId: result.platformUser.id,
-  });
   revalidatePath("/admin/colaboradores");
   redirect(
     createFeedbackUrl(
-      `/admin/colaboradores/${result.employee.id}`,
-      invitationSent ? "notice" : "error",
-      invitationSent ? "employee_created" : "employee_created_invitation_pending",
+      `/admin/colaboradores/${result.employeeId}`,
+      result.invitationSent ? "notice" : "error",
+      result.invitationSent
+        ? "employee_created"
+        : "employee_created_invitation_pending",
     ),
   );
 }
@@ -246,16 +240,10 @@ export async function updateEmployeePersonalAction(
   _state: EmployeeActionState,
   formData: FormData,
 ): Promise<EmployeeActionState> {
-  await requirePlatformUser({ roles: ["administrator"] });
-  const employeeId = String(formData.get("employeeId"));
-  const existing = await findEmployeeById(employeeId);
-  if (!existing) return domainState(new EmployeeDomainError("employee_not_found"));
-  const input = {
+  const employeeId = objectIdStringSchema.safeParse(formData.get("employeeId"));
+  const parsed = employeePersonalInformationInputSchema.safeParse({
     birthDay: formData.get("birthDay"),
     birthMonth: formData.get("birthMonth"),
-    employmentEndedOn: existing.employmentEndedOn,
-    employmentStartedOn: existing.employmentStartedOn,
-    employmentStatus: existing.employmentStatus,
     firstSurname: formData.get("firstSurname"),
     givenNames: formData.get("givenNames"),
     identification: {
@@ -263,40 +251,26 @@ export async function updateEmployeePersonalAction(
       value: formData.get("identificationValue"),
     },
     phoneNumber: nullableString(formData, "phoneNumber"),
-    platformUserId: existing.platformUserId,
     secondSurname: nullableString(formData, "secondSurname"),
     shareBirthdayOnCalendar: booleanValue(formData, "shareBirthdayOnCalendar"),
-  };
-  const parsed = employeeInputSchema.safeParse(input);
-  if (!parsed.success) return zodState(parsed.error);
+  });
+  const failure =
+    (!employeeId.success && employeeId.error) || (!parsed.success && parsed.error);
+  if (failure) return zodState(failure);
 
   try {
-    const employee = parsed.data;
-    await updateEmployeePersonalInformationAsAdministrator(employeeId, {
-      birthDay: employee.birthDay,
-      birthMonth: employee.birthMonth,
-      employmentEndedOn: employee.employmentEndedOn,
-      employmentStartedOn: employee.employmentStartedOn,
-      employmentStatus: employee.employmentStatus,
-      firstSurname: employee.firstSurname,
-      givenNames: employee.givenNames,
-      identification: {
-        type: employee.identification.type,
-        value: employee.identification.value,
-      },
-      phoneNumber: employee.phoneNumber?.displayValue ?? null,
-      platformUserId: employee.platformUserId,
-      secondSurname: employee.secondSurname,
-      shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
+    await updateEmployeePersonalInformationForAdministration({
+      employeeId: employeeId.data,
+      input: parsed.data,
     });
   } catch (error) {
     return domainState(error);
   }
 
-  revalidatePath(`/admin/colaboradores/${employeeId}`);
+  revalidatePath(`/admin/colaboradores/${employeeId.data}`);
   redirect(
     createFeedbackUrl(
-      `/admin/colaboradores/${employeeId}`,
+      `/admin/colaboradores/${employeeId.data}`,
       "notice",
       "employee_personal_updated",
     ),
@@ -366,7 +340,6 @@ export async function updateEmployeeAccessAction(
   _state: EmployeeActionState,
   formData: FormData,
 ): Promise<EmployeeActionState> {
-  const actor = await requirePlatformUser({ roles: ["administrator"] });
   const parsed = z
     .object({ employeeId: objectIdStringSchema, role: platformRoleSchema })
     .safeParse({
@@ -374,20 +347,13 @@ export async function updateEmployeeAccessAction(
       role: formData.get("role"),
     });
   if (!parsed.success) return zodState(parsed.error);
-  const employee = await findEmployeeById(parsed.data.employeeId);
-  if (!employee) return domainState(new EmployeeDomainError("employee_not_found"));
-  const updated = await updatePlatformUserRole({
-    id: employee.platformUserId,
-    role: parsed.data.role,
-  });
-  if (!updated) return { message: "No fue posible cambiar el rol.", status: "error" };
-  await recordAuthAudit({
-    action: "role_updated",
-    actorClerkUserId: actor.clerkUserId,
-    actorPlatformUserId: actor.platformUser.id,
-    metadata: { role: updated.role },
-    targetPlatformUserId: updated.id,
-  });
+
+  try {
+    await updateEmployeeRoleForAdministration(parsed.data);
+  } catch (error) {
+    return domainState(error);
+  }
+
   const employeeId = parsed.data.employeeId;
   revalidatePath(`/admin/colaboradores/${employeeId}`);
   redirect(
@@ -460,48 +426,17 @@ export async function updateEmployeeEmailAction(
 }
 
 export async function resendEmployeeInvitation(formData: FormData) {
-  const actor = await requirePlatformUser({ roles: ["administrator"] });
   const employeeId = objectIdStringSchema.parse(formData.get("employeeId"));
-  const employee = await findEmployeeById(employeeId);
-  const target = employee ? await findPlatformUserById(employee.platformUserId) : null;
-  if (!target || target.status !== "invited") {
-    redirect(
-      createFeedbackUrl(
-        `/admin/colaboradores/${employeeId}`,
-        "error",
-        "invitation_not_pending",
-      ),
-    );
-  }
 
   try {
-    if (target.invitation.clerkInvitationId) {
-      try {
-        const client = await clerkClient();
-        await client.invitations.revokeInvitation(target.invitation.clerkInvitationId);
-      } catch {
-        // An expired or previously revoked invitation is safe to replace.
-      }
-    }
-    await sendPlatformInvitation({
-      email: target.normalizedEmail,
-      platformUserId: target.id,
-    });
-    await recordAuthAudit({
-      action: "invitation_resent",
-      actorClerkUserId: actor.clerkUserId,
-      actorPlatformUserId: actor.platformUser.id,
-      targetPlatformUserId: target.id,
-    });
-  } catch {
-    await markPlatformUserInvitationFailed(target.id);
-    redirect(
-      createFeedbackUrl(
-        `/admin/colaboradores/${employeeId}`,
-        "error",
-        "invitation_failed",
-      ),
-    );
+    await resendEmployeeInvitationForAdministration(employeeId);
+  } catch (error) {
+    const key =
+      error instanceof EmployeeAdministrationError &&
+      (error.code === "invitation_failed" || error.code === "invitation_not_pending")
+        ? error.code
+        : "invitation_failed";
+    redirect(createFeedbackUrl(`/admin/colaboradores/${employeeId}`, "error", key));
   }
   revalidatePath(`/admin/colaboradores/${employeeId}`);
   redirect(
@@ -517,7 +452,6 @@ export async function endEmployeeEmploymentAction(
   _state: EmployeeActionState,
   formData: FormData,
 ): Promise<EmployeeActionState> {
-  const actor = await requirePlatformUser({ roles: ["administrator"] });
   const parsed = z
     .object({
       employeeId: objectIdStringSchema,
@@ -531,19 +465,9 @@ export async function endEmployeeEmploymentAction(
     });
   if (!parsed.success) return zodState(parsed.error);
 
-  const employee = await findEmployeeById(parsed.data.employeeId);
-  if (!employee) return domainState(new EmployeeDomainError("employee_not_found"));
-  if (employee.platformUserId === actor.platformUser.id) {
-    return {
-      message: "No podés finalizar tu propia relación laboral.",
-      status: "error",
-    };
-  }
-
-  let platformUserId;
+  let result;
   try {
-    platformUserId = await endEmployeeEmployment({
-      actorPlatformUserId: actor.platformUser.id,
+    result = await endEmployeeEmploymentForAdministration({
       employeeId: parsed.data.employeeId,
       endedOn: parsed.data.endedOn,
     });
@@ -551,35 +475,12 @@ export async function endEmployeeEmploymentAction(
     return domainState(error);
   }
 
-  let syncFailed = false;
-  if (platformUserId) {
-    const target = await findPlatformUserById(platformUserId);
-    if (target?.clerkUserId) {
-      try {
-        const client = await clerkClient();
-        await client.users.banUser(target.clerkUserId);
-        await setPlatformUserClerkSyncStatus({ id: target.id, status: "synced" });
-      } catch {
-        syncFailed = true;
-      }
-    } else if (target) {
-      await setPlatformUserClerkSyncStatus({ id: target.id, status: "synced" });
-    }
-    await recordAuthAudit({
-      action: "account_deactivated",
-      actorClerkUserId: actor.clerkUserId,
-      actorPlatformUserId: actor.platformUser.id,
-      metadata: { clerkSyncFailed: syncFailed, operation: "employment_end" },
-      targetPlatformUserId: platformUserId,
-    });
-  }
-
   revalidatePath(`/admin/colaboradores/${parsed.data.employeeId}`);
   redirect(
     createFeedbackUrl(
       `/admin/colaboradores/${parsed.data.employeeId}`,
-      syncFailed ? "error" : "notice",
-      syncFailed ? "employee_ended_sync_pending" : "employee_ended",
+      result.clerkSyncFailed ? "error" : "notice",
+      result.clerkSyncFailed ? "employee_ended_sync_pending" : "employee_ended",
     ),
   );
 }
@@ -588,9 +489,8 @@ export async function revealEmployeeIdentificationAction(
   _state: IdentificationRevealState,
   formData: FormData,
 ): Promise<IdentificationRevealState> {
-  await requirePlatformUser({ roles: ["administrator"] });
   const parsed = objectIdStringSchema.safeParse(formData.get("employeeId"));
   if (!parsed.success) return { status: "error" };
-  const value = await revealEmployeeIdentificationValue(parsed.data);
+  const value = await revealEmployeeIdentificationForAdministration(parsed.data);
   return value ? { status: "success", value } : { status: "error" };
 }

@@ -1,34 +1,24 @@
 import type { ReactNode } from "react";
 
 import { WorkspaceShell } from "@/components/layout/workspace-shell/workspace-shell";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
-import { getCalendarDashboardUnreadCount } from "@/features/calendar/server/calendar-service";
-import { formatEmployeePreferredDisplayName } from "@/features/employees/domain/employee";
-import { findEmployeeByPlatformUserId } from "@/features/employees/server/employee-repository";
 import { getDashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
+import { getWorkspaceShellData } from "@/features/dashboard/server/workspace-query-service";
 
 export default async function WorkspaceLayout({
   children,
   modal,
 }: Readonly<{ children: ReactNode; modal?: ReactNode }>) {
-  const { clerkHasImage, clerkImageUrl, platformUser } = await requirePlatformUser();
-  const [employee, unreadNotificationCount] = await Promise.all([
-    findEmployeeByPlatformUserId(platformUser.id),
-    getCalendarDashboardUnreadCount(platformUser.id),
-  ]);
-  const displayName = employee
-    ? formatEmployeePreferredDisplayName(employee)
-    : platformUser.displayName;
+  const workspace = await getWorkspaceShellData();
   const greeting = getDashboardGreeting();
 
   return (
     <>
       <WorkspaceShell
-        displayName={displayName}
+        displayName={workspace.displayName}
         greeting={greeting}
-        profileImageUrl={clerkHasImage ? clerkImageUrl : null}
-        role={platformUser.role}
-        unreadNotificationCount={unreadNotificationCount}
+        profileImageUrl={workspace.profileImageUrl}
+        role={workspace.role}
+        unreadNotificationCount={workspace.unreadNotificationCount}
       >
         {children}
       </WorkspaceShell>

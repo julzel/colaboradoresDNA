@@ -1,6 +1,5 @@
 "use server";
 
-import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -8,221 +7,87 @@ import {
   invitePlatformUserSchema,
   platformUserIdSchema,
 } from "@/features/auth/domain/platform-user";
-import { recordAuthAudit } from "@/features/auth/server/auth-audit-repository";
-import { sendPlatformInvitation } from "@/features/auth/server/invitation-service";
 import {
-  createInvitedPlatformUser,
-  deactivatePlatformUserRecord,
-  findPlatformUserByEmail,
-  findPlatformUserById,
-  markPlatformUserInvitationFailed,
-  reactivatePlatformUserRecord,
-  setPlatformUserClerkSyncStatus,
-} from "@/features/auth/server/platform-user-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
-import { createFeedbackUrl } from "@/lib/actions/feedback-messages";
+  AccountAdministrationError,
+  deactivateAccountForAdministration,
+  inviteAccountForAdministration,
+  reactivateAccountForAdministration,
+  resendAccountInvitationForAdministration,
+} from "@/features/auth/server/account-administration-service";
+import {
+  createFeedbackUrl,
+  type FeedbackMessageKey,
+} from "@/lib/actions/feedback-messages";
+
+const accountsPath = "/admin/accounts";
+
+function redirectWithError(error: unknown, fallback: FeedbackMessageKey): never {
+  const key: FeedbackMessageKey =
+    error instanceof AccountAdministrationError ? error.code : fallback;
+  redirect(createFeedbackUrl(accountsPath, "error", key));
+}
 
 export async function invitePlatformUser(formData: FormData) {
-  const actor = await requirePlatformUser({ roles: ["administrator"] });
   const parsed = invitePlatformUserSchema.safeParse({
     displayName: formData.get("displayName"),
     email: formData.get("email"),
     role: formData.get("role"),
   });
-
-  if (!parsed.success) {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_invitation"));
-  }
-
-  const existing = await findPlatformUserByEmail(parsed.data.email);
-
-  if (existing) {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "account_exists"));
-  }
-
-  let target;
+  if (!parsed.success) redirectWithError(null, "invalid_invitation");
 
   try {
-    target = await createInvitedPlatformUser(parsed.data);
-    await sendPlatformInvitation({
-      email: target.normalizedEmail,
-      platformUserId: target.id,
-    });
-    await recordAuthAudit({
-      action: "invitation_created",
-      actorClerkUserId: actor.clerkUserId,
-      actorPlatformUserId: actor.platformUser.id,
-      metadata: { role: target.role },
-      targetPlatformUserId: target.id,
-    });
-  } catch {
-    if (target) {
-      await markPlatformUserInvitationFailed(target.id);
-      await recordAuthAudit({
-        action: "invitation_failed",
-        actorClerkUserId: actor.clerkUserId,
-        actorPlatformUserId: actor.platformUser.id,
-        metadata: { role: target.role },
-        targetPlatformUserId: target.id,
-      });
-    }
-
-    redirect(createFeedbackUrl("/admin/accounts", "error", "invitation_failed"));
+    await inviteAccountForAdministration(parsed.data);
+  } catch (error) {
+    redirectWithError(error, "invitation_failed");
   }
 
-  revalidatePath("/admin/accounts");
-  redirect(createFeedbackUrl("/admin/accounts", "notice", "invitation_sent"));
+  revalidatePath(accountsPath);
+  redirect(createFeedbackUrl(accountsPath, "notice", "invitation_sent"));
 }
 
 export async function resendPlatformInvitation(formData: FormData) {
-  const actor = await requirePlatformUser({ roles: ["administrator"] });
-  const parsedId = platformUserIdSchema.safeParse(formData.get("platformUserId"));
-
-  if (!parsedId.success) {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_account"));
-  }
-
-  const target = await findPlatformUserById(parsedId.data);
-
-  if (!target || target.status !== "invited") {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "invitation_not_pending"));
-  }
-
-  if (target.invitation.clerkInvitationId) {
-    try {
-      const client = await clerkClient();
-      await client.invitations.revokeInvitation(target.invitation.clerkInvitationId);
-    } catch {
-      // Expired, accepted, or already revoked invitations cannot be reused.
-    }
-  }
+  const parsed = platformUserIdSchema.safeParse(formData.get("platformUserId"));
+  if (!parsed.success) redirectWithError(null, "invalid_account");
 
   try {
-    await sendPlatformInvitation({
-      email: target.normalizedEmail,
-      platformUserId: target.id,
-    });
-    await recordAuthAudit({
-      action: "invitation_resent",
-      actorClerkUserId: actor.clerkUserId,
-      actorPlatformUserId: actor.platformUser.id,
-      targetPlatformUserId: target.id,
-    });
-  } catch {
-    await markPlatformUserInvitationFailed(target.id);
-    redirect(createFeedbackUrl("/admin/accounts", "error", "invitation_failed"));
+    await resendAccountInvitationForAdministration(parsed.data);
+  } catch (error) {
+    redirectWithError(error, "invitation_failed");
   }
 
-  revalidatePath("/admin/accounts");
-  redirect(createFeedbackUrl("/admin/accounts", "notice", "invitation_resent"));
+  revalidatePath(accountsPath);
+  redirect(createFeedbackUrl(accountsPath, "notice", "invitation_resent"));
 }
 
 export async function deactivatePlatformUser(formData: FormData) {
-  const actor = await requirePlatformUser({ roles: ["administrator"] });
-  const parsedId = platformUserIdSchema.safeParse(formData.get("platformUserId"));
+  const parsed = platformUserIdSchema.safeParse(formData.get("platformUserId"));
+  if (!parsed.success) redirectWithError(null, "invalid_deactivation");
 
-  if (!parsedId.success || parsedId.data === actor.platformUser.id) {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_deactivation"));
+  let result;
+  try {
+    result = await deactivateAccountForAdministration(parsed.data);
+  } catch (error) {
+    redirectWithError(error, "deactivation_failed");
   }
 
-  const existing = await findPlatformUserById(parsedId.data);
-
-  if (!existing) {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_account"));
-  }
-
-  const target =
-    existing.status === "deactivated"
-      ? existing
-      : await deactivatePlatformUserRecord(existing.id);
-
-  if (!target) {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "deactivation_failed"));
-  }
-
-  let clerkSyncFailed = false;
-
-  if (target.clerkUserId) {
-    try {
-      const client = await clerkClient();
-      await client.users.banUser(target.clerkUserId);
-      await setPlatformUserClerkSyncStatus({ id: target.id, status: "synced" });
-    } catch {
-      clerkSyncFailed = true;
-      await recordAuthAudit({
-        action: "session_revocation_failed",
-        actorClerkUserId: actor.clerkUserId,
-        actorPlatformUserId: actor.platformUser.id,
-        metadata: { operation: "deactivate" },
-        targetPlatformUserId: target.id,
-      });
-    }
-  } else {
-    await setPlatformUserClerkSyncStatus({ id: target.id, status: "synced" });
-  }
-
-  await recordAuthAudit({
-    action: "account_deactivated",
-    actorClerkUserId: actor.clerkUserId,
-    actorPlatformUserId: actor.platformUser.id,
-    metadata: { clerkSyncFailed },
-    targetPlatformUserId: target.id,
-  });
-
-  revalidatePath("/admin/accounts");
+  revalidatePath(accountsPath);
   redirect(
-    clerkSyncFailed
-      ? createFeedbackUrl("/admin/accounts", "error", "deactivated_sync_pending")
-      : createFeedbackUrl("/admin/accounts", "notice", "account_deactivated"),
+    result.clerkSyncFailed
+      ? createFeedbackUrl(accountsPath, "error", "deactivated_sync_pending")
+      : createFeedbackUrl(accountsPath, "notice", "account_deactivated"),
   );
 }
 
 export async function reactivatePlatformUser(formData: FormData) {
-  const actor = await requirePlatformUser({ roles: ["administrator"] });
-  const parsedId = platformUserIdSchema.safeParse(formData.get("platformUserId"));
+  const parsed = platformUserIdSchema.safeParse(formData.get("platformUserId"));
+  if (!parsed.success) redirectWithError(null, "invalid_account");
 
-  if (!parsedId.success) {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "invalid_account"));
+  try {
+    await reactivateAccountForAdministration(parsed.data);
+  } catch (error) {
+    redirectWithError(error, "reactivation_failed");
   }
 
-  const target = await findPlatformUserById(parsedId.data);
-
-  if (!target || target.status !== "deactivated") {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "reactivation_failed"));
-  }
-
-  if (target.clerkUserId) {
-    try {
-      await setPlatformUserClerkSyncStatus({
-        id: target.id,
-        status: "pending_reactivation",
-      });
-      const client = await clerkClient();
-      await client.users.unbanUser(target.clerkUserId);
-    } catch {
-      redirect(
-        createFeedbackUrl("/admin/accounts", "error", "reactivation_sync_failed"),
-      );
-    }
-  }
-
-  const reactivated = await reactivatePlatformUserRecord({
-    id: target.id,
-    status: target.clerkUserId ? "active" : "invited",
-  });
-
-  if (!reactivated) {
-    redirect(createFeedbackUrl("/admin/accounts", "error", "reactivation_failed"));
-  }
-
-  await recordAuthAudit({
-    action: "account_reactivated",
-    actorClerkUserId: actor.clerkUserId,
-    actorPlatformUserId: actor.platformUser.id,
-    metadata: { status: reactivated.status },
-    targetPlatformUserId: target.id,
-  });
-
-  revalidatePath("/admin/accounts");
-  redirect(createFeedbackUrl("/admin/accounts", "notice", "account_reactivated"));
+  revalidatePath(accountsPath);
+  redirect(createFeedbackUrl(accountsPath, "notice", "account_reactivated"));
 }

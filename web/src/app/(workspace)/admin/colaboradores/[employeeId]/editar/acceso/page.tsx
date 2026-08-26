@@ -5,8 +5,7 @@ import { Container } from "@/components/ui/container/container";
 import { BackLink } from "@/components/ui/navigation/back-link";
 import { AccessManagementForm } from "@/features/employees/components/access-management-form";
 import styles from "@/features/employees/components/employee-management.module.css";
-import { getEmployeeDetailForAdministration } from "@/features/employees/server/employee-read-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { getEmployeeAccessPageData } from "@/features/employees/server/employee-query-service";
 
 export const metadata: Metadata = { title: "Gestionar acceso" };
 
@@ -15,9 +14,8 @@ export default async function EditAccessPage({
 }: {
   params: Promise<{ employeeId: string }>;
 }) {
-  await requirePlatformUser({ roles: ["administrator"] });
   const { employeeId } = await params;
-  const detail = await getEmployeeDetailForAdministration(employeeId);
+  const detail = await getEmployeeAccessPageData(employeeId);
   if (!detail) notFound();
 
   return (

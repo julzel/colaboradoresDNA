@@ -19,11 +19,10 @@ import {
   cancelOwnPtoRequest,
   createEmployeePtoDraftAsAdministrator,
   createOwnPtoDraft,
-  decideAssignedPtoRequest,
-  getPtoRequestDetail,
+  decidePtoRequestWithConfirmation,
   openEmployeePtoBalance,
   reassignOrphanedPtoApprover,
-  submitOwnPtoDraft,
+  submitPtoRequestWithConfirmation,
   updateEmployeePtoDraftAsAdministrator,
   updateOwnPtoDraft,
 } from "@/features/pto/server/pto-service";
@@ -124,28 +123,27 @@ export async function submitPtoRequestAction(
 ): Promise<PtoActionState> {
   const parsedId = objectIdStringSchema.safeParse(getText(formData, "requestId"));
   if (!parsedId.success) return zodState(parsedId.error);
-  let proxyEmployeeId: string | null = null;
+  let result;
   try {
-    const detail = await getPtoRequestDetail(parsedId.data);
-    if (!detail) throw new PtoDomainError("request_missing");
-    proxyEmployeeId = detail.proxyEmployeeId;
-    const hasWarnings = detail.warnings.hasOverlap || detail.warnings.wouldBeNegative;
-    if (hasWarnings && getText(formData, "confirmWarnings") !== "true") {
-      return {
-        message:
-          "Hay advertencias que no bloquean la solicitud. Revisalas y confirmá para enviar de todos modos.",
-        requiresConfirmation: true,
-        status: "warning",
-      };
-    }
-    await submitOwnPtoDraft({ requestId: parsedId.data });
+    result = await submitPtoRequestWithConfirmation({
+      confirmWarnings: getText(formData, "confirmWarnings") === "true",
+      requestId: parsedId.data,
+    });
   } catch (error) {
     return ptoErrorState(error);
   }
+  if (result.requiresConfirmation) {
+    return {
+      message:
+        "Hay advertencias que no bloquean la solicitud. Revisalas y confirmá para enviar de todos modos.",
+      requiresConfirmation: true,
+      status: "warning",
+    };
+  }
   revalidatePath("/ausencias");
   revalidatePath("/admin/ausencias");
-  if (proxyEmployeeId) {
-    revalidatePath(`/admin/colaboradores/${proxyEmployeeId}/ausencias`);
+  if (result.proxyEmployeeId) {
+    revalidatePath(`/admin/colaboradores/${result.proxyEmployeeId}/ausencias`);
   }
   revalidatePath(`/ausencias/${parsedId.data}`);
   redirect(`/ausencias/${parsedId.data}`);
@@ -177,25 +175,22 @@ export async function decidePtoRequestAction(
     requestId: getText(formData, "requestId"),
   });
   if (!parsed.success) return zodState(parsed.error);
+  let result;
   try {
-    const detail = await getPtoRequestDetail(parsed.data.requestId);
-    if (!detail) throw new PtoDomainError("request_missing");
-    const hasWarnings = detail.warnings.hasOverlap || detail.warnings.wouldBeNegative;
-    if (
-      parsed.data.decision === "approved" &&
-      hasWarnings &&
-      getText(formData, "confirmWarnings") !== "true"
-    ) {
-      return {
-        message:
-          "La solicitud tiene advertencias. Confirmá si querés aprobarla de todos modos.",
-        requiresConfirmation: true,
-        status: "warning",
-      };
-    }
-    await decideAssignedPtoRequest(parsed.data);
+    result = await decidePtoRequestWithConfirmation({
+      ...parsed.data,
+      confirmWarnings: getText(formData, "confirmWarnings") === "true",
+    });
   } catch (error) {
     return ptoErrorState(error);
+  }
+  if (result.requiresConfirmation) {
+    return {
+      message:
+        "La solicitud tiene advertencias. Confirmá si querés aprobarla de todos modos.",
+      requiresConfirmation: true,
+      status: "warning",
+    };
   }
   revalidatePath("/ausencias");
   revalidatePath("/admin/ausencias");

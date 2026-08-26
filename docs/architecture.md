@@ -51,9 +51,14 @@ avoid creating broad `utils` or `helpers` folders.
   required.
 - Keep the `"use client"` boundary as small as possible to minimise client-side
   JavaScript.
-- Server Components access server-only data modules directly. Do not call an
-  internal Route Handler from a Server Component.
-- Server Actions serve UI-triggered form submissions and mutations.
+- Route-level Server Components access data through feature query or service
+  modules. Repository and backend-provider clients remain behind those modules.
+  Do not call an internal Route Handler from a Server Component.
+- Server Actions serve UI-triggered form submissions and mutations. They parse
+  transport input, call one feature use case, and translate its result into UI
+  state, cache invalidation, or navigation. Authorization, repositories,
+  provider clients, and multi-step business orchestration remain in the use
+  case or service layer.
 - Route Handlers serve webhooks, integrations, health checks, and external HTTP
   consumers.
 - MongoDB access must use `src/lib/server/mongodb.ts`; never expose an Atlas

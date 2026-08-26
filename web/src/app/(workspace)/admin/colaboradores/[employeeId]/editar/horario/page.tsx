@@ -9,8 +9,7 @@ import {
   dayOfWeekOrder,
   type ScheduledDay,
 } from "@/features/employees/domain/schedule";
-import { getEmployeeDetailForAdministration } from "@/features/employees/server/employee-read-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { getEmployeeSchedulePageData } from "@/features/employees/server/employee-query-service";
 
 export const metadata: Metadata = { title: "Cambiar horario" };
 
@@ -19,9 +18,8 @@ export default async function EditSchedulePage({
 }: {
   params: Promise<{ employeeId: string }>;
 }) {
-  await requirePlatformUser({ roles: ["administrator"] });
   const { employeeId } = await params;
-  const detail = await getEmployeeDetailForAdministration(employeeId);
+  const detail = await getEmployeeSchedulePageData(employeeId);
   if (!detail) notFound();
   const initialDays: ScheduledDay[] =
     detail.currentSchedule?.days ??

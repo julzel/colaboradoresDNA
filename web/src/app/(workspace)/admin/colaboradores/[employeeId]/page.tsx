@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
 
-import { clerkClient } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -38,10 +37,7 @@ import { EmployeeDetailItem } from "@/features/employees/components/employee-det
 import { IdentificationReveal } from "@/features/employees/components/identification-reveal";
 import { ScheduleSummary } from "@/features/employees/components/schedule-summary";
 import styles from "@/features/employees/components/employee-management.module.css";
-import { getEmployeeDetailForAdministration } from "@/features/employees/server/employee-read-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
-import { DevelopmentDomainError } from "@/features/development/domain/shared";
-import { getDevelopmentSummaryForAdministration } from "@/features/development/server/development-service";
+import { getEmployeeDetailPageData } from "@/features/employees/server/employee-query-service";
 
 export const metadata: Metadata = { title: "Detalle del colaborador" };
 
@@ -67,43 +63,15 @@ function formatDevelopmentDate(value: string | null) {
   }).format(new Date(`${value}T12:00:00.000Z`));
 }
 
-async function loadDevelopmentSummary(employeeId: string) {
-  try {
-    return await getDevelopmentSummaryForAdministration(employeeId);
-  } catch (error) {
-    if (error instanceof DevelopmentDomainError && error.code === "forbidden") {
-      return null;
-    }
-    throw error;
-  }
-}
-
-async function getProfileImageUrl(clerkUserId: string | null) {
-  if (!clerkUserId) return null;
-
-  try {
-    const client = await clerkClient();
-    const user = await client.users.getUser(clerkUserId);
-    return user.hasImage ? user.imageUrl : null;
-  } catch {
-    // The collaborator detail remains available with its initials fallback.
-    return null;
-  }
-}
-
 export default async function EmployeeDetailPage({
   params,
 }: {
   params: Promise<{ employeeId: string }>;
 }) {
-  await requirePlatformUser({ roles: ["administrator"] });
   const { employeeId } = await params;
-  const detail = await getEmployeeDetailForAdministration(employeeId);
-  if (!detail) notFound();
-  const [profileImageUrl, development] = await Promise.all([
-    getProfileImageUrl(detail.access.clerkUserId),
-    loadDevelopmentSummary(employeeId),
-  ]);
+  const pageData = await getEmployeeDetailPageData(employeeId);
+  if (!pageData) notFound();
+  const { detail, development, profileImageUrl } = pageData;
   const displayName = [
     detail.employee.givenNames,
     detail.employee.firstSurname,

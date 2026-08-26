@@ -45,6 +45,8 @@ export const invitePlatformUserSchema = z.object({
   role: platformRoleSchema,
 });
 
+export type InvitePlatformUserInput = z.infer<typeof invitePlatformUserSchema>;
+
 export const platformUserIdSchema = z.string().regex(/^[a-f\d]{24}$/i);
 
 export function normalizeEmail(email: string) {

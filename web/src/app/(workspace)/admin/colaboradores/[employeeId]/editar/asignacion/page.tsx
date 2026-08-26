@@ -5,12 +5,7 @@ import { Container } from "@/components/ui/container/container";
 import { BackLink } from "@/components/ui/navigation/back-link";
 import { AssignmentForm } from "@/features/employees/components/assignment-form";
 import styles from "@/features/employees/components/employee-management.module.css";
-import { listDepartments } from "@/features/employees/server/department-repository";
-import {
-  getEmployeeDetailForAdministration,
-  listEligibleManagerOptions,
-} from "@/features/employees/server/employee-read-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { getEmployeeAssignmentPageData } from "@/features/employees/server/employee-query-service";
 
 export const metadata: Metadata = { title: "Cambiar asignación" };
 
@@ -19,13 +14,9 @@ export default async function EditAssignmentPage({
 }: {
   params: Promise<{ employeeId: string }>;
 }) {
-  await requirePlatformUser({ roles: ["administrator"] });
   const { employeeId } = await params;
-  const [detail, departments, managers] = await Promise.all([
-    getEmployeeDetailForAdministration(employeeId),
-    listDepartments(),
-    listEligibleManagerOptions(employeeId),
-  ]);
+  const { departments, detail, managers } =
+    await getEmployeeAssignmentPageData(employeeId);
   if (!detail) notFound();
 
   return (
