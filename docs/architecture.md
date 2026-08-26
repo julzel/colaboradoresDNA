@@ -67,6 +67,8 @@ adapter, including the Calendar/PTO and Calendar/Development interactions.
 - Route-level Server Components access data through feature query or service
   modules. Repository and backend-provider clients remain behind those modules.
   Do not call an internal Route Handler from a Server Component.
+- ESLint prevents route modules and feature components from importing repository
+  modules directly, including through relative paths.
 - Server Actions serve UI-triggered form submissions and mutations. They parse
   transport input, call one feature use case, and translate its result into UI
   state, cache invalidation, or navigation. Authorization, repositories,
