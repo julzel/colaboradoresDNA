@@ -4,18 +4,12 @@ import { Container } from "@/components/ui/container/container";
 import { BackLink } from "@/components/ui/navigation/back-link";
 import { EmployeeCreationForm } from "@/features/employees/components/employee-creation-form";
 import styles from "@/features/employees/components/employee-management.module.css";
-import { listDepartments } from "@/features/employees/server/department-repository";
-import { listEligibleManagerOptions } from "@/features/employees/server/employee-read-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { getEmployeeCreationPageData } from "@/features/employees/server/employee-query-service";
 
 export const metadata: Metadata = { title: "Nuevo colaborador" };
 
 export default async function NewEmployeePage() {
-  await requirePlatformUser({ roles: ["administrator"] });
-  const [departments, managers] = await Promise.all([
-    listDepartments(),
-    listEligibleManagerOptions(),
-  ]);
+  const { departments, managers } = await getEmployeeCreationPageData();
 
   return (
     <Container>

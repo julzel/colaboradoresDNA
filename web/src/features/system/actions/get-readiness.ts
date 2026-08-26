@@ -1,10 +1,7 @@
 "use server";
 
-import { getStackStatus } from "@/features/system/lib/get-stack-status";
+import { getSystemReadiness } from "@/features/system/server/readiness-service";
 
 export async function getReadiness() {
-  return {
-    ...getStackStatus(process.env.NODE_ENV, process.env.MONGODB_URI),
-    checkedAt: new Date().toISOString(),
-  };
+  return getSystemReadiness();
 }

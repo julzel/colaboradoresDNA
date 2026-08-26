@@ -21,6 +21,8 @@ import {
   getTodayInCostaRica,
   isLeapYear,
 } from "@/features/calendar/domain/calendar-utils";
+import type { CalendarPtoEntry } from "@/features/calendar/integrations/calendar-pto-port";
+import { calendarDevelopmentIntegration } from "@/features/development/integrations/calendar-development-adapter";
 import {
   createCalendarEvent,
   deleteCalendarEvent,
@@ -41,13 +43,7 @@ import {
   listReadNotificationKeys,
   markNotificationKeysRead,
 } from "@/features/dashboard/server/notification-read-repository";
-import { formatPtoDays, ptoCategoryLabels } from "@/features/pto/domain/pto";
-import {
-  getPtoRequestDetail,
-  listUpcomingProxyPtoNotifications,
-  listVisibleApprovedPtoForCalendar,
-} from "@/features/pto/server/pto-service";
-import { findDevelopmentLinkForCalendarIntegration } from "@/features/development/server/development-service";
+import { calendarPtoIntegration } from "@/features/pto/integrations/calendar-pto-adapter";
 
 const dashboardNotificationLimit = 100;
 
@@ -152,13 +148,7 @@ function birthdayToEntry({
   };
 }
 
-function ptoToEntry(pto: {
-  durationUnits: number;
-  endDate: string;
-  id: string;
-  requesterName: string;
-  startDate: string;
-}): CalendarEntry {
+function ptoToEntry(pto: CalendarPtoEntry): CalendarEntry {
   return {
     allDay: true,
     canManage: false,
@@ -168,7 +158,7 @@ function ptoToEntry(pto: {
     endDate: pto.endDate,
     id: `pto:${pto.id}`,
     kind: "pto",
-    label: `Ausencia · ${formatPtoDays(pto.durationUnits)} días`,
+    label: `Ausencia · ${pto.durationLabel} días`,
     location: null,
     meetingUrl: null,
     note: null,
@@ -189,7 +179,7 @@ export async function getCalendarEntries(month: string) {
       startsAt: range.startAt,
     }),
     listBirthdayCalendarEntries({ viewerRole: actor.role }),
-    listVisibleApprovedPtoForCalendar({
+    calendarPtoIntegration.listVisibleApprovedAbsences({
       endDate: addCalendarDays(range.endDate, -1),
       platformUserId: actor.platformUserId,
       role: actor.role,
@@ -219,7 +209,7 @@ export async function getVisibleCalendarEventDetail(eventId: string) {
   if (!detail) return null;
   const developmentLink =
     detail.event.eventType === "one_on_one"
-      ? await findDevelopmentLinkForCalendarIntegration({
+      ? await calendarDevelopmentIntegration.findLinkedOneOnOne({
           actorRole: actor.role,
           calendarEventId: detail.event.id,
         })
@@ -229,19 +219,7 @@ export async function getVisibleCalendarEventDetail(eventId: string) {
 }
 
 export async function getVisibleCalendarPtoDetail(requestId: string) {
-  const detail = await getPtoRequestDetail(requestId);
-  if (!detail || detail.request.status !== "approved") return null;
-  const { request } = detail;
-
-  return {
-    category: request.category,
-    durationUnits: request.durationUnits,
-    endDate: request.endDate,
-    id: request.id,
-    requesterName: request.requesterName,
-    startDate: request.startDate,
-    status: "approved" as const,
-  };
+  return calendarPtoIntegration.getVisibleApprovedAbsenceDetail(requestId);
 }
 
 export async function getVisibleCalendarBirthdayDetail({
@@ -285,7 +263,7 @@ export async function updateCalendarEventForActor({
   input: NormalizedCalendarEventInput;
 }) {
   const actor = await requireCalendarActor({ canManage: true });
-  const developmentLink = await findDevelopmentLinkForCalendarIntegration({
+  const developmentLink = await calendarDevelopmentIntegration.findLinkedOneOnOne({
     actorRole: actor.role,
     calendarEventId: eventId,
   });
@@ -323,7 +301,10 @@ const getDashboardNotificationState = cache(async (platformUserId: string) => {
       limit: dashboardNotificationLimit,
       platformUserId,
     }),
-    listUpcomingProxyPtoNotifications(platformUserId, dashboardNotificationLimit),
+    calendarPtoIntegration.listUpcomingAbsenceNotifications(
+      platformUserId,
+      dashboardNotificationLimit,
+    ),
   ]);
   const notificationSources: Array<Omit<DashboardNotification, "isUnread">> = [
     ...events.map((event) => ({
@@ -350,7 +331,7 @@ const getDashboardNotificationState = cache(async (platformUserId: string) => {
       label: "Ausencia aprobada",
       startDate: request.startDate,
       startsAt: calendarDateToUtc(request.startDate).toISOString(),
-      title: ptoCategoryLabels[request.category],
+      title: request.categoryLabel,
     })),
   ].sort((left, right) => left.startsAt.localeCompare(right.startsAt));
   const readKeys = await listReadNotificationKeys({

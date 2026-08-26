@@ -9,7 +9,7 @@ import { SelectField, TextField } from "@/components/ui/form-field/form-field";
 import { updateEmployeeAssignmentAction } from "@/features/employees/actions/employee-actions";
 import { initialEmployeeActionState } from "@/features/employees/domain/employee-action-state";
 import type { Department } from "@/features/employees/domain/department";
-import type { EmployeeManagerOption } from "@/features/employees/server/employee-read-repository";
+import type { EmployeeManagerOption } from "@/features/employees/view-models/employee-view";
 
 import styles from "./employee-management.module.css";
 import { FormErrorSummary } from "./form-error-summary";

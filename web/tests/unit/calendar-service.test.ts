@@ -12,19 +12,19 @@ import {
 } from "@/features/calendar/server/calendar-service";
 
 const mocks = vi.hoisted(() => ({
+  findLinkedOneOnOne: vi.fn(),
   createCalendarEvent: vi.fn(),
-  findDevelopmentLinkForCalendarIntegration: vi.fn(),
   findEffectiveEmployeeAssignment: vi.fn(),
   findEmployeeByPlatformUserId: vi.fn(),
-  getPtoRequestDetail: vi.fn(),
+  getVisibleApprovedAbsenceDetail: vi.fn(),
   getCalendarEventDetail: vi.fn(),
   listBirthdayCalendarEntries: vi.fn(),
   listCalendarEventTargetOptions: vi.fn(),
   listReadNotificationKeys: vi.fn(),
   listUpcomingCalendarEventNotifications: vi.fn(),
-  listUpcomingProxyPtoNotifications: vi.fn(),
+  listUpcomingAbsenceNotifications: vi.fn(),
   listVisibleCalendarEvents: vi.fn(),
-  listVisibleApprovedPtoForCalendar: vi.fn(),
+  listVisibleApprovedAbsences: vi.fn(),
   markNotificationKeysRead: vi.fn(),
   requirePlatformUser: vi.fn(),
   updateCalendarEvent: vi.fn(),
@@ -55,9 +55,10 @@ vi.mock("@/features/calendar/server/calendar-event-repository", () => ({
   updateCalendarEvent: mocks.updateCalendarEvent,
 }));
 
-vi.mock("@/features/development/server/development-service", () => ({
-  findDevelopmentLinkForCalendarIntegration:
-    mocks.findDevelopmentLinkForCalendarIntegration,
+vi.mock("@/features/development/integrations/calendar-development-adapter", () => ({
+  calendarDevelopmentIntegration: {
+    findLinkedOneOnOne: mocks.findLinkedOneOnOne,
+  },
 }));
 
 vi.mock("@/features/dashboard/server/notification-read-repository", () => ({
@@ -65,10 +66,12 @@ vi.mock("@/features/dashboard/server/notification-read-repository", () => ({
   markNotificationKeysRead: mocks.markNotificationKeysRead,
 }));
 
-vi.mock("@/features/pto/server/pto-service", () => ({
-  getPtoRequestDetail: mocks.getPtoRequestDetail,
-  listUpcomingProxyPtoNotifications: mocks.listUpcomingProxyPtoNotifications,
-  listVisibleApprovedPtoForCalendar: mocks.listVisibleApprovedPtoForCalendar,
+vi.mock("@/features/pto/integrations/calendar-pto-adapter", () => ({
+  calendarPtoIntegration: {
+    getVisibleApprovedAbsenceDetail: mocks.getVisibleApprovedAbsenceDetail,
+    listUpcomingAbsenceNotifications: mocks.listUpcomingAbsenceNotifications,
+    listVisibleApprovedAbsences: mocks.listVisibleApprovedAbsences,
+  },
 }));
 
 describe("calendar service authorization and aggregation", () => {
@@ -88,13 +91,13 @@ describe("calendar service authorization and aggregation", () => {
       departmentId: "507f1f77bcf86cd799439013",
     });
     mocks.listVisibleCalendarEvents.mockResolvedValue([]);
-    mocks.listVisibleApprovedPtoForCalendar.mockResolvedValue([]);
+    mocks.listVisibleApprovedAbsences.mockResolvedValue([]);
     mocks.listCalendarEventTargetOptions.mockResolvedValue({
       departments: [],
       people: [],
     });
     mocks.listUpcomingCalendarEventNotifications.mockResolvedValue([]);
-    mocks.listUpcomingProxyPtoNotifications.mockResolvedValue([]);
+    mocks.listUpcomingAbsenceNotifications.mockResolvedValue([]);
     mocks.listReadNotificationKeys.mockResolvedValue(new Set());
     mocks.listBirthdayCalendarEntries.mockResolvedValue([
       {
@@ -103,7 +106,7 @@ describe("calendar service authorization and aggregation", () => {
         employeeId: "507f1f77bcf86cd799439014",
       },
     ]);
-    mocks.findDevelopmentLinkForCalendarIntegration.mockResolvedValue(null);
+    mocks.findLinkedOneOnOne.mockResolvedValue(null);
   });
 
   it("passes the authenticated role and department to calendar sources", async () => {
@@ -121,7 +124,7 @@ describe("calendar service authorization and aggregation", () => {
     expect(mocks.listBirthdayCalendarEntries).toHaveBeenCalledWith({
       viewerRole: "supervisor",
     });
-    expect(mocks.listVisibleApprovedPtoForCalendar).toHaveBeenCalledWith({
+    expect(mocks.listVisibleApprovedAbsences).toHaveBeenCalledWith({
       endDate: "2026-07-31",
       platformUserId: "507f1f77bcf86cd799439011",
       role: "supervisor",
@@ -145,9 +148,9 @@ describe("calendar service authorization and aggregation", () => {
   });
 
   it("routes approved leave through a calendar summary", async () => {
-    mocks.listVisibleApprovedPtoForCalendar.mockResolvedValue([
+    mocks.listVisibleApprovedAbsences.mockResolvedValue([
       {
-        durationUnits: 3,
+        durationLabel: "1,5",
         endDate: "2026-07-12",
         id: "507f1f77bcf86cd799439099",
         requesterName: "Ana Mora",
@@ -183,28 +186,26 @@ describe("calendar service authorization and aggregation", () => {
   });
 
   it("returns only approved leave fields needed by the calendar summary", async () => {
-    mocks.getPtoRequestDetail.mockResolvedValue({
-      request: {
-        category: "vacation",
-        durationUnits: 2,
-        endDate: "2026-07-12",
-        id: "507f1f77bcf86cd799439099",
-        requesterName: "Ana Mora",
-        startDate: "2026-07-11",
-        status: "approved",
-      },
+    mocks.getVisibleApprovedAbsenceDetail.mockResolvedValue({
+      categoryLabel: "Vacaciones",
+      durationLabel: "1",
+      endDate: "2026-07-12",
+      id: "507f1f77bcf86cd799439099",
+      requesterName: "Ana Mora",
+      startDate: "2026-07-11",
+      statusLabel: "Aprobada",
     });
 
     await expect(
       getVisibleCalendarPtoDetail("507f1f77bcf86cd799439099"),
     ).resolves.toEqual({
-      category: "vacation",
-      durationUnits: 2,
+      categoryLabel: "Vacaciones",
+      durationLabel: "1",
       endDate: "2026-07-12",
       id: "507f1f77bcf86cd799439099",
       requesterName: "Ana Mora",
       startDate: "2026-07-11",
-      status: "approved",
+      statusLabel: "Aprobada",
     });
   });
 
@@ -251,10 +252,9 @@ describe("calendar service authorization and aggregation", () => {
     mocks.getCalendarEventDetail.mockResolvedValue({
       event: { eventType: "one_on_one", id: eventId },
     });
-    mocks.findDevelopmentLinkForCalendarIntegration.mockResolvedValue({
+    mocks.findLinkedOneOnOne.mockResolvedValue({
       employeeId: "507f1f77bcf86cd799439012",
       meetingId: "507f1f77bcf86cd799439013",
-      status: "draft",
     });
 
     await expect(getVisibleCalendarEventDetail(eventId)).resolves.toMatchObject({
@@ -264,7 +264,7 @@ describe("calendar service authorization and aggregation", () => {
       },
       viewerRole: "administrator",
     });
-    expect(mocks.findDevelopmentLinkForCalendarIntegration).toHaveBeenCalledWith({
+    expect(mocks.findLinkedOneOnOne).toHaveBeenCalledWith({
       actorRole: "administrator",
       calendarEventId: eventId,
     });
@@ -293,10 +293,9 @@ describe("calendar service authorization and aggregation", () => {
         role: "administrator",
       },
     });
-    mocks.findDevelopmentLinkForCalendarIntegration.mockResolvedValue({
+    mocks.findLinkedOneOnOne.mockResolvedValue({
       employeeId: inviteeId,
       meetingId: "507f1f77bcf86cd799439013",
-      status: "draft",
     });
     mocks.getCalendarEventDetail.mockResolvedValue({
       event: { inviteePlatformUserIds: [inviteeId] },
@@ -351,7 +350,7 @@ describe("calendar service authorization and aggregation", () => {
       limit: 100,
       platformUserId: "507f1f77bcf86cd799439011",
     });
-    expect(mocks.listUpcomingProxyPtoNotifications).toHaveBeenCalledWith(
+    expect(mocks.listUpcomingAbsenceNotifications).toHaveBeenCalledWith(
       "507f1f77bcf86cd799439011",
       100,
     );
@@ -363,9 +362,9 @@ describe("calendar service authorization and aggregation", () => {
   });
 
   it("notifies an employee about upcoming approved leave created by an administrator", async () => {
-    mocks.listUpcomingProxyPtoNotifications.mockResolvedValue([
+    mocks.listUpcomingAbsenceNotifications.mockResolvedValue([
       {
-        category: "vacation",
+        categoryLabel: "Vacaciones",
         endDate: "2026-08-12",
         id: "leave-request",
         startDate: "2026-08-11",

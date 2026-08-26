@@ -6,18 +6,12 @@ import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { EmployeeDirectory } from "@/features/employees/components/employee-directory";
 import styles from "@/features/employees/components/employee-management.module.css";
-import { parseEmployeeDirectoryQuery } from "@/features/employees/domain/employee-directory-query";
-import { listEmployeeDirectoryForAdministration } from "@/features/employees/server/employee-read-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { getEmployeeDirectoryPageData } from "@/features/employees/server/employee-query-service";
 
 export const metadata: Metadata = { title: "Colaboradores" };
 
 export default async function EmployeeDirectoryPage() {
-  await requirePlatformUser({ roles: ["administrator"] });
-  const directory = await listEmployeeDirectoryForAdministration(
-    parseEmployeeDirectoryQuery({}),
-    { paginate: false },
-  );
+  const directory = await getEmployeeDirectoryPageData();
 
   return (
     <Container>

@@ -229,6 +229,27 @@ export const employeeSelfServiceProfileInputSchema = z
   })
   .strict();
 
+export const employeePersonalInformationInputSchema = z
+  .object({
+    birthDay: birthdaySchema.shape.birthDay,
+    birthMonth: birthdaySchema.shape.birthMonth,
+    firstSurname: requiredNameSchema,
+    givenNames: requiredNameSchema,
+    identification: identificationInputSchema,
+    phoneNumber: phoneNumberInputSchema,
+    secondSurname: optionalNameSchema,
+    shareBirthdayOnCalendar: z.boolean(),
+  })
+  .superRefine((employee, context) => {
+    if (!birthdaySchema.safeParse(employee).success) {
+      context.addIssue({
+        code: "custom",
+        message: "El día no corresponde al mes seleccionado.",
+        path: ["birthDay"],
+      });
+    }
+  });
+
 export const employeeInputSchema = z
   .object({
     birthDay: birthdaySchema.shape.birthDay,
@@ -287,6 +308,9 @@ export type EmployeeInput = z.input<typeof employeeInputSchema>;
 export type NormalizedEmployeeInput = z.output<typeof employeeInputSchema>;
 export type EmployeeSelfServiceProfileInput = z.input<
   typeof employeeSelfServiceProfileInputSchema
+>;
+export type NormalizedEmployeePersonalInformationInput = z.output<
+  typeof employeePersonalInformationInputSchema
 >;
 
 export function formatNationalId(normalizedValue: string) {

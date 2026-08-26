@@ -16,6 +16,7 @@ import {
   PtoDomainError,
   ptoDraftInputSchema,
   type PtoDraftInput,
+  type PtoRequest,
 } from "@/features/pto/domain/pto";
 import {
   adjustPtoBalance,
@@ -35,14 +36,8 @@ import {
   reassignPtoRequestApprover,
   submitPtoDraft,
   updatePtoDraft,
-  type PtoRequest,
 } from "@/features/pto/server/pto-repository";
-
-export type PtoRequestView = PtoRequest & {
-  approverName: string | null;
-  createdByName: string | null;
-  requesterName: string;
-};
+import type { PtoRequestView } from "@/features/pto/view-models/pto-view";
 
 async function requirePtoEmployee() {
   const { platformUser } = await requirePlatformUser();
@@ -331,6 +326,31 @@ export async function submitOwnPtoDraft({ requestId }: { requestId: string }) {
   });
 }
 
+export async function submitPtoRequestWithConfirmation({
+  confirmWarnings,
+  requestId,
+}: {
+  confirmWarnings: boolean;
+  requestId: string;
+}) {
+  const detail = await getPtoRequestDetail(requestId);
+  if (!detail) throw new PtoDomainError("request_missing");
+
+  const hasWarnings = detail.warnings.hasOverlap || detail.warnings.wouldBeNegative;
+  if (hasWarnings && !confirmWarnings) {
+    return {
+      proxyEmployeeId: detail.proxyEmployeeId,
+      requiresConfirmation: true,
+    };
+  }
+
+  await submitOwnPtoDraft({ requestId });
+  return {
+    proxyEmployeeId: detail.proxyEmployeeId,
+    requiresConfirmation: false,
+  };
+}
+
 export async function cancelOwnPtoRequest(requestId: string) {
   const { platformUser } = await requirePlatformUser();
   const request = await findPtoRequestById(requestId);
@@ -360,6 +380,29 @@ export async function decideAssignedPtoRequest(input: {
     administratorOverride: platformUser.role === "administrator",
     ...input,
   });
+}
+
+export async function decidePtoRequestWithConfirmation(
+  input: {
+    decision: "approved" | "denied";
+    decisionNote: string | null;
+    requestId: string;
+  } & { confirmWarnings: boolean },
+) {
+  const detail = await getPtoRequestDetail(input.requestId);
+  if (!detail) throw new PtoDomainError("request_missing");
+
+  const hasWarnings = detail.warnings.hasOverlap || detail.warnings.wouldBeNegative;
+  if (input.decision === "approved" && hasWarnings && !input.confirmWarnings) {
+    return { requiresConfirmation: true };
+  }
+
+  await decideAssignedPtoRequest({
+    decision: input.decision,
+    decisionNote: input.decisionNote,
+    requestId: input.requestId,
+  });
+  return { requiresConfirmation: false };
 }
 
 export async function reassignOrphanedPtoApprover(input: {

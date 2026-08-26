@@ -13,8 +13,10 @@ import type {
   PlatformUser,
   PlatformUserStatus,
 } from "@/features/auth/domain/platform-user";
-import { listPlatformUsers } from "@/features/auth/server/platform-user-repository";
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import {
+  getAccountAdministrationActor,
+  listAccountsForAdministration,
+} from "@/features/auth/server/account-query-service";
 import { Card, CardBody, CardHeader } from "@/components/ui/card/card";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { SelectField, TextField } from "@/components/ui/form-field/form-field";
@@ -35,7 +37,7 @@ const statusLabels: Record<PlatformUserStatus, string> = {
 };
 
 async function AccountDirectory({ actor }: { actor: PlatformUser }) {
-  const users = await listPlatformUsers();
+  const users = await listAccountsForAdministration();
 
   return (
     <Card className={styles.directory}>
@@ -130,9 +132,7 @@ async function AccountDirectory({ actor }: { actor: PlatformUser }) {
 }
 
 export default async function AccountsPage() {
-  const { platformUser: actor } = await requirePlatformUser({
-    roles: ["administrator"],
-  });
+  const actor = await getAccountAdministrationActor();
 
   return (
     <section className={styles.shell}>

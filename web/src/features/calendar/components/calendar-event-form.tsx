@@ -22,7 +22,7 @@ import {
   type CalendarEvent,
 } from "@/features/calendar/domain/calendar-event";
 import { getTodayInCostaRica } from "@/features/calendar/domain/calendar-utils";
-import type { CalendarEventTargetOptions } from "@/features/calendar/server/calendar-event-repository";
+import type { CalendarEventTargetOptions } from "@/features/calendar/view-models/calendar-event-view";
 import { useGuardedForm } from "@/features/employees/components/use-guarded-form";
 
 import { CalendarFormErrorSummary } from "./calendar-form-error-summary";

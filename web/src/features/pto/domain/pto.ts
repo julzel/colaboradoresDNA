@@ -147,6 +147,28 @@ export type PtoRequestDocument = {
   updatedAt: Date;
 };
 
+export type PtoRequest = Omit<
+  PtoRequestDocument,
+  | "_id"
+  | "assignedApproverPlatformUserId"
+  | "createdByPlatformUserId"
+  | "requesterEmployeeId"
+  | "requesterPlatformUserId"
+  | "statusHistory"
+> & {
+  assignedApproverPlatformUserId: string | null;
+  createdByPlatformUserId: string;
+  id: string;
+  requesterEmployeeId: string;
+  requesterPlatformUserId: string;
+  statusHistory: Array<{
+    actorPlatformUserId: string;
+    from: PtoStatus | null;
+    occurredAt: Date;
+    to: PtoStatus;
+  }>;
+};
+
 export type PtoBalanceDocument = {
   _id: ObjectId;
   createdAt: Date;

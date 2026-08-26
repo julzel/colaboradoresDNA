@@ -18,7 +18,7 @@ import {
   formatCalendarDate,
   formatCalendarTime,
 } from "@/features/calendar/domain/calendar-utils";
-import type { CalendarEventDetail } from "@/features/calendar/server/calendar-event-repository";
+import type { CalendarEventDetail } from "@/features/calendar/view-models/calendar-event-view";
 
 import styles from "./calendar.module.css";
 

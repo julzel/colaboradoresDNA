@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
-import type { EmployeeDirectoryItem } from "@/features/employees/server/employee-read-repository";
+import type { EmployeeDirectoryItem } from "@/features/employees/view-models/employee-view";
 
 import styles from "./employee-management.module.css";
 

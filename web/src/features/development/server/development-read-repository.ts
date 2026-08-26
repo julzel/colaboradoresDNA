@@ -19,6 +19,7 @@ import type {
   SkillAssessmentSummary,
 } from "@/features/development/domain/skill";
 import { developmentObjectIdSchema } from "@/features/development/domain/shared";
+import type { DevelopmentRecordSummary } from "@/features/development/view-models/development-view";
 import { getDatabase } from "@/lib/server/mongodb";
 import { decryptDevelopmentPayload } from "@/features/development/server/development-encryption";
 
@@ -82,18 +83,6 @@ const developmentProfileSummaryProjection = {
   updatedAt: 1,
   version: 1,
 } as const;
-
-export type DevelopmentRecordSummary = {
-  activeGoalCount: number;
-  assessedSkillCount: number;
-  employeeId: string;
-  lastFinalizedOneOnOneOn: string | null;
-  nextOneOnOneDueOn: string | null;
-  oneOnOneCadenceDays: number | null;
-  openActionCount: number;
-  overdueActionCount: number;
-  overdueGoalCount: number;
-};
 
 function parseEmployeeId(employeeId: string) {
   return new ObjectId(developmentObjectIdSchema.parse(employeeId));

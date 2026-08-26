@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import type { CalendarActionState } from "@/features/calendar/domain/calendar-action-state";
 import {
   CalendarDomainError,
@@ -85,7 +84,6 @@ export async function createCalendarEventAction(
   _state: CalendarActionState,
   formData: FormData,
 ): Promise<CalendarActionState> {
-  await requirePlatformUser({ roles: ["administrator", "supervisor"] });
   const parsed = calendarEventInputSchema.safeParse(readEventInput(formData));
   if (!parsed.success) return zodState(parsed.error);
 
@@ -111,7 +109,6 @@ export async function updateCalendarEventAction(
   _state: CalendarActionState,
   formData: FormData,
 ): Promise<CalendarActionState> {
-  await requirePlatformUser({ roles: ["administrator", "supervisor"] });
   const eventId = optionalString(formData, "eventId");
   const parsed = calendarEventInputSchema.safeParse(readEventInput(formData));
   if (!parsed.success) return zodState(parsed.error);
@@ -135,7 +132,6 @@ export async function updateCalendarEventAction(
 }
 
 export async function deleteCalendarEventAction(formData: FormData) {
-  await requirePlatformUser({ roles: ["administrator", "supervisor"] });
   const eventId = optionalString(formData, "eventId");
   const query = parseCalendarQuery({
     mes: optionalString(formData, "month"),
