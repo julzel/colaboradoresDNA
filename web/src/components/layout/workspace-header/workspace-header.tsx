@@ -18,7 +18,6 @@ import { AuthControls } from "@/components/auth/auth-controls";
 import { Logo } from "@/components/brand/logo/logo";
 import { PwaInstallButton } from "@/components/pwa/pwa-install-button";
 import { Breadcrumbs } from "@/components/ui/navigation/breadcrumbs";
-import { ThemeToggle } from "@/components/ui/theme-toggle/theme-toggle";
 import type { DashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 import { getWorkspaceBreadcrumbs } from "@/features/navigation/workspace-navigation";
 
@@ -105,9 +104,6 @@ export function WorkspaceHeader({
             </span>
           )}
         </Link>
-        <span className={styles.desktopThemeToggle}>
-          <ThemeToggle />
-        </span>
         <PwaInstallButton />
         <span className={styles.desktopAccount}>
           <AuthControls displayName={displayName} />

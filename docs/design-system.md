@@ -188,10 +188,34 @@ Never add a shadow to every container.
 
 ### Motion
 
-Use 150ms for hover/focus, 200ms for component state changes, and 240ms for
-drawers or modals. Use ease-out when content enters and ease-in when it exits.
-Animate opacity and transform only. Respect `prefers-reduced-motion` and make
-the final state available without animation.
+Motion explains a state change, preserves spatial context, or confirms an
+action. It must never delay access to content or run only for decoration.
+
+| Token               | Value                            | Usage                                      |
+| ------------------- | -------------------------------- | ------------------------------------------ |
+| `--duration-fast`   | `120ms`                          | Hover, focus, press, and color feedback    |
+| `--duration-base`   | `180ms`                          | Tabs, labels, toggles, and local state     |
+| `--duration-slow`   | `260ms`                          | Drawers, modals, and shell transformations |
+| `--ease-standard`   | `cubic-bezier(0.2, 0, 0, 1)`     | Reversible interaction feedback            |
+| `--ease-enter`      | `cubic-bezier(0, 0, 0.2, 1)`     | Content entering or becoming visible       |
+| `--ease-exit`       | `cubic-bezier(0.4, 0, 1, 1)`     | Content leaving or becoming hidden         |
+| `--ease-emphasized` | `cubic-bezier(0.2, 0.8, 0.2, 1)` | Large spatial changes                      |
+
+- Prefer opacity and transform because they remain smooth and do not reflow
+  surrounding content. Width or position may animate only when preserving
+  spatial context is the point of the interaction, such as the desktop sidebar.
+- Keep hover and focus feedback at 120ms, local component changes at 180ms, and
+  large spatial changes at 260ms. Do not introduce one-off durations.
+- Entering content uses `--ease-enter`; exiting content uses `--ease-exit`.
+  Reversible movement uses `--ease-standard` or `--ease-emphasized`.
+- Animate related properties together. A label may fade and translate while its
+  container expands, but it must not begin after the container has finished.
+- Do not animate validation messages, destructive confirmations, keyboard focus
+  placement, or data users need to act on immediately.
+- Every animated component must implement `prefers-reduced-motion: reduce` by
+  removing the transition or reducing it to a non-spatial opacity change.
+- Animations do not autoplay repeatedly. Celebration motion may run once after
+  an explicit success and must not block the next action.
 
 ## Responsive layout system
 
@@ -215,8 +239,9 @@ Use CSS Grid for page regions and Flexbox for one-dimensional control groups.
 - Leave bottom content padding equal to the bottom tab bar plus 16px so controls
   are never hidden behind navigation.
 - Desktop uses a persistent left navigation region and a flexible content area.
-- At 1024–1279px the sidebar may use a 72px icon rail with accessible tooltips.
-- At 1280px and wider the sidebar expands to 248px and shows labels.
+- Desktop navigation defaults to an 88px icon rail with accessible names and
+  hover/focus tooltips. A user-controlled toggle expands it to 256px so labels
+  can be read, and the preference persists for that browser.
 - The main content area is capped at 1440px. Tables may use the full content
   width; forms should normally cap at 720px and prose at 680px.
 
@@ -260,7 +285,11 @@ screens show a back button, concise title, and at most one trailing action.
 Desktop uses a persistent left sidebar and a 64px top bar.
 
 - Group destinations into Workspace and Administration when both are present.
-- Use a 20px icon and visible label in the expanded sidebar.
+- Use a 20px icon. Keep the text label available to assistive technology and as
+  a tooltip; visually hide it in the rail and reveal it in the expanded state.
+- Place the expand/collapse control on the sidebar edge. Give it an accessible
+  name, `aria-expanded`, `aria-controls`, and a tooltip. Rotate its chevron while
+  the rail width and labels animate together over `--duration-slow`.
 - The current destination uses aqua emphasis plus `aria-current="page"`.
 - Keep settings, theme, and account controls anchored consistently at the
   bottom or top-right; do not mix them into feature navigation.

@@ -123,9 +123,18 @@
   --shadow-md: 0 1rem 2.5rem rgb(16 47 43 / 14%);
   --focus-ring: 0 0 0 0.2rem rgb(255 128 102 / 34%);
 
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 260ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+
   /* Layout */
-  --sidebar-width: 15.5rem;
-  --sidebar-rail-width: 4.5rem;
+  --sidebar-rail-width: 5.5rem;
+  --sidebar-expanded-width: 16rem;
   --topbar-height: 4rem;
   --mobile-tabbar-height: 4rem;
   --content-max: 90rem;

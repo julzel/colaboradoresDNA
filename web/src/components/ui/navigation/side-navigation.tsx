@@ -12,18 +12,20 @@ export type NavigationItem = {
 
 type SideNavigationProps = {
   currentHref: string;
+  expanded?: boolean;
   items: readonly NavigationItem[];
   label?: string;
 };
 
 export function SideNavigation({
   currentHref,
+  expanded = false,
   items,
   label = "Navegación principal",
 }: SideNavigationProps) {
   return (
     <nav aria-label={label}>
-      <ul className={styles.list}>
+      <ul className={`${styles.list} ${expanded ? styles.listExpanded : ""}`}>
         {items.map((item) => {
           const isCurrent = item.href === currentHref;
           const Icon = item.icon;
@@ -32,7 +34,7 @@ export function SideNavigation({
             <li key={item.label}>
               <Link
                 aria-current={isCurrent ? "page" : undefined}
-                className={styles.link}
+                className={`${styles.link} ${expanded ? styles.linkExpanded : ""}`}
                 href={item.href}
                 title={item.label}
               >
