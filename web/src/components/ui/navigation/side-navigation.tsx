@@ -34,9 +34,10 @@ export function SideNavigation({
                 aria-current={isCurrent ? "page" : undefined}
                 className={styles.link}
                 href={item.href}
+                title={item.label}
               >
                 <Icon aria-hidden="true" className={styles.icon} size={18} />
-                <span>{item.label}</span>
+                <span className={styles.label}>{item.label}</span>
                 {item.badge && <span className={styles.badge}>{item.badge}</span>}
               </Link>
             </li>

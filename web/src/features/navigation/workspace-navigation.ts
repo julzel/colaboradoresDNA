@@ -1,4 +1,14 @@
-import { CalendarDays, ClipboardClock, House, Settings } from "lucide-react";
+import {
+  CalendarDays,
+  ChartNoAxesColumnIncreasing,
+  ClipboardCheck,
+  ClipboardClock,
+  House,
+  LayoutDashboard,
+  Settings,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react";
 
 import type { NavigationItem } from "@/components/ui/navigation/side-navigation";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
@@ -13,6 +23,31 @@ const administratorNavigationItem: NavigationItem = {
   href: "/admin",
   icon: Settings,
   label: "Administración",
+};
+
+const administratorWorkspaceItems: readonly NavigationItem[] = [
+  { href: "/admin", icon: LayoutDashboard, label: "Resumen" },
+  {
+    href: "/admin/colaboradores",
+    icon: UsersRound,
+    label: "Colaboradores",
+  },
+  {
+    href: "/admin/ausencias",
+    icon: ClipboardCheck,
+    label: "Aprobar ausencias",
+  },
+  {
+    href: "/admin/desarrollo",
+    icon: ChartNoAxesColumnIncreasing,
+    label: "Desarrollo",
+  },
+  { href: "/admin/accounts", icon: ShieldCheck, label: "Cuentas y acceso" },
+];
+
+export type WorkspaceNavigationSection = {
+  items: readonly NavigationItem[];
+  label: string;
 };
 
 export function getWorkspaceNavigation(
@@ -36,6 +71,27 @@ export function getWorkspaceNavigation(
     administratorNavigationItem,
     ...navigationItems.slice(2),
   ];
+}
+
+export function getDesktopWorkspaceNavigationSections(
+  role: PlatformRole,
+  unreadNotificationCount = 0,
+): readonly WorkspaceNavigationSection[] {
+  const workspaceItems = baseNavigationItems.map((item) =>
+    item.href === "/" && unreadNotificationCount > 0
+      ? {
+          ...item,
+          badge: unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount),
+        }
+      : item,
+  );
+
+  return role === "administrator"
+    ? [
+        { items: workspaceItems, label: "Espacio de trabajo" },
+        { items: administratorWorkspaceItems, label: "Administración" },
+      ]
+    : [{ items: workspaceItems, label: "Espacio de trabajo" }];
 }
 
 export function getActiveNavigationHref(

@@ -176,7 +176,7 @@
   margin: 0;
 }
 
-@media (width > 56rem) {
+@media (width >= 64rem) {
   .header {
     display: none;
   }

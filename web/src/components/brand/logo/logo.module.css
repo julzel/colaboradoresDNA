@@ -13,20 +13,28 @@
   display: none;
 }
 
-:root[data-theme="dark"] .light {
+.forceLight .light {
   display: none;
 }
 
-:root[data-theme="dark"] .dark {
+.forceLight .dark {
+  display: block;
+}
+
+:root[data-theme="dark"] .logo:not(.forceLight) .light {
+  display: none;
+}
+
+:root[data-theme="dark"] .logo:not(.forceLight) .dark {
   display: block;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .light {
+  :root:not([data-theme]) .logo:not(.forceLight) .light {
     display: none;
   }
 
-  :root:not([data-theme]) .dark {
+  :root:not([data-theme]) .logo:not(.forceLight) .dark {
     display: block;
   }
 }

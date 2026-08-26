@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getDesktopWorkspaceNavigationSections,
   getActiveNavigationHref,
   getWorkspaceBreadcrumbs,
   getWorkspaceNavigation,
@@ -46,5 +47,22 @@ describe("administrator navigation", () => {
       { href: "/admin", label: "Administración" },
       { label: "Desarrollo" },
     ]);
+  });
+
+  it("expands administration destinations in the desktop shell", () => {
+    const sections = getDesktopWorkspaceNavigationSections("administrator", 2);
+
+    expect(sections.map((section) => section.label)).toEqual([
+      "Espacio de trabajo",
+      "Administración",
+    ]);
+    expect(sections[1]?.items.map((item) => item.href)).toEqual([
+      "/admin",
+      "/admin/colaboradores",
+      "/admin/ausencias",
+      "/admin/desarrollo",
+      "/admin/accounts",
+    ]);
+    expect(sections[0]?.items[0]).toMatchObject({ badge: "2", href: "/" });
   });
 });

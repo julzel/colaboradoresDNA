@@ -44,11 +44,11 @@
 
 .primary {
   background: var(--background-primary-action);
-  color: var(--neutral-0);
+  color: var(--color-brand-contrast);
 }
 
 .primary:hover:not(:disabled) {
-  background: var(--background-primary-action);
+  background: var(--color-brand-hover);
   box-shadow: var(--shadow-md);
 }
 

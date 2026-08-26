@@ -3,10 +3,10 @@
   display: none;
 }
 
-@media (width <= 56rem) {
+@media (width < 64rem) {
   .tabBar {
     position: fixed;
-    z-index: 30;
+    z-index: 40;
     right: 0;
     bottom: 0;
     left: 0;
@@ -16,13 +16,14 @@
       max(var(--space-2), env(safe-area-inset-left));
     border-top: 1px solid var(--color-border);
     background: var(--color-topbar);
-    box-shadow: 0 -0.5rem 1.75rem rgb(13 23 24 / 8%);
-    backdrop-filter: blur(1rem) saturate(1.35);
+    box-shadow: 0 -0.5rem 2rem rgb(6 22 20 / 8%);
+    backdrop-filter: blur(1rem) saturate(1.25);
   }
 
   .tabList {
     display: grid;
-    max-width: 34rem;
+    max-width: 36rem;
+    min-height: var(--mobile-tabbar-height);
     margin: 0 auto;
     padding: 0;
     list-style: none;
@@ -38,7 +39,7 @@
     display: flex;
     width: 100%;
     min-width: 0;
-    min-height: 3.75rem;
+    min-height: var(--mobile-tabbar-height);
     align-items: center;
     justify-content: center;
     flex-direction: column;
@@ -50,7 +51,7 @@
     color: var(--color-text-muted);
     cursor: pointer;
     font-size: 0.6875rem;
-    font-weight: 700;
+    font-weight: 650;
     line-height: 1;
     text-decoration: none;
   }
@@ -69,11 +70,13 @@
   }
 
   .tab svg {
-    stroke-width: 1.8;
+    stroke-width: 1.75;
   }
 
-  .tab[aria-current="page"] {
+  .tab[aria-current="page"],
+  .tab[aria-expanded="true"] {
     color: var(--color-brand-text);
+    font-weight: 750;
   }
 
   .tab[aria-current="page"] .tabIcon,
@@ -98,7 +101,7 @@
     border: 2px solid var(--color-topbar);
     border-radius: var(--radius-full);
     background: var(--color-accent);
-    color: #fff;
+    color: var(--color-accent-contrast);
     font-size: 0.5625rem;
     font-weight: 800;
     line-height: 1;
@@ -106,26 +109,31 @@
 
   .sheet[open] {
     position: fixed;
-    inset: auto var(--space-3) calc(4.5rem + env(safe-area-inset-bottom));
+    inset: auto 0 0;
     display: block;
-    width: min(calc(100% - 1.5rem), 32rem);
-    max-height: min(70dvh, 36rem);
+    width: min(100%, 40rem);
+    max-width: none;
+    max-height: 92dvh;
     overflow-y: auto;
     margin: 0 auto;
-    padding: var(--space-2) var(--space-4) var(--space-5);
+    padding: var(--space-2) var(--space-4)
+      calc(var(--space-6) + env(safe-area-inset-bottom));
     border: 1px solid var(--color-border);
-    border-radius: 1.25rem;
+    border-bottom: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     background: var(--color-surface);
-    box-shadow: 0 1.5rem 4rem rgb(4 18 20 / 28%);
-    animation: sheet-in 180ms ease-out;
+    box-shadow: 0 -1.5rem 4rem rgb(6 22 20 / 28%);
+    overscroll-behavior: contain;
+    animation: sheet-in 240ms ease-out;
   }
 
   .sheet::backdrop {
-    background: rgb(4 18 20 / 46%);
+    background: var(--color-overlay, rgb(6 22 20 / 58%));
+    backdrop-filter: blur(0.125rem);
   }
 
   .sheetHandle {
-    width: 2.25rem;
+    width: 2.5rem;
     height: 0.25rem;
     margin: 0 auto var(--space-3);
     border-radius: var(--radius-full);
@@ -133,26 +141,32 @@
   }
 
   .sheetHeader {
+    position: sticky;
+    z-index: 1;
+    top: calc(-1 * var(--space-2));
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    margin-bottom: var(--space-3);
+    margin: 0 calc(-1 * var(--space-4)) var(--space-3);
+    padding: var(--space-2) var(--space-4) var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
   }
 
   .sheetEyebrow {
     margin: 0 0 var(--space-1);
     color: var(--color-text-subtle);
     font-size: 0.6875rem;
-    font-weight: 800;
-    letter-spacing: 0.09em;
+    font-weight: 750;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   .sheetHeader h2 {
     margin: 0;
-    font-size: var(--text-lg);
-    letter-spacing: -0.02em;
+    font-size: var(--text-xl);
+    letter-spacing: -0.025em;
   }
 
   .closeButton {
@@ -183,7 +197,7 @@
     align-items: center;
     gap: var(--space-3);
     padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     background: var(--color-surface-subtle);
     color: var(--color-text);
     font-size: var(--text-sm);
@@ -199,12 +213,16 @@
 
   .sheetIcon {
     display: grid;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.5rem;
+    height: 2.5rem;
     place-items: center;
     border-radius: var(--radius-md);
     background: var(--color-surface);
     color: var(--color-brand-text);
+  }
+
+  .sheetIcon svg {
+    stroke-width: 1.75;
   }
 
   .sheetBadge {
@@ -215,15 +233,16 @@
     padding-inline: var(--space-1);
     border-radius: var(--radius-full);
     background: var(--color-accent-soft);
-    color: var(--color-accent-contrast);
+    color: var(--color-accent);
     font-size: 0.6875rem;
+    font-weight: 750;
   }
 
   .accountSection {
     display: grid;
     gap: var(--space-2);
-    margin-top: var(--space-4);
-    padding: var(--space-4) var(--space-3) 0;
+    margin-top: var(--space-5);
+    padding: var(--space-5) var(--space-3) 0;
     border-top: 1px solid var(--color-border);
   }
 
@@ -231,8 +250,8 @@
     margin: 0;
     color: var(--color-text-subtle);
     font-size: 0.6875rem;
-    font-weight: 800;
-    letter-spacing: 0.09em;
+    font-weight: 750;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
@@ -240,7 +259,7 @@
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
 
   .accountSummary strong {
@@ -251,8 +270,8 @@
 
   .accountAvatar {
     display: grid;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.5rem;
+    height: 2.5rem;
     flex: 0 0 auto;
     overflow: hidden;
     place-items: center;
@@ -289,7 +308,7 @@
     cursor: pointer;
     font: inherit;
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 650;
     text-align: left;
     text-decoration: none;
   }
@@ -306,7 +325,7 @@
 @keyframes sheet-in {
   from {
     opacity: 0;
-    transform: translateY(0.75rem);
+    transform: translateY(1.5rem);
   }
 }
 

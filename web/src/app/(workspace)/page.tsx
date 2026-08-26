@@ -62,7 +62,11 @@ export default async function HomePage() {
       </header>
 
       <Container>
-        <ElevatedSurface as="section" className={styles.notifications}>
+        <ElevatedSurface
+          as="section"
+          className={styles.notifications}
+          id="notifications"
+        >
           <div className={styles.sectionHeader}>
             <div>
               <p className="eyebrow">Notificaciones</p>

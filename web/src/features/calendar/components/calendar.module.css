@@ -71,7 +71,7 @@
 
 .viewSelector [aria-current="page"] {
   background: var(--background-primary-action);
-  color: var(--neutral-0);
+  color: var(--color-brand-contrast);
 }
 
 @media (width < 40rem) {

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { AuthControls } from "@/components/auth/auth-controls";
 import { Logo } from "@/components/brand/logo/logo";
 import { MobileNavigation } from "@/components/layout/mobile-navigation/mobile-navigation";
 import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-header";
@@ -36,23 +35,30 @@ export function WorkspaceShell({
           className={styles.brand}
           href="/"
         >
-          <Logo priority />
-          <span>Colaboradores</span>
+          <Logo priority tone="light" />
+          <span className={styles.brandCopy}>Colaboradores</span>
         </Link>
 
-        <p className={styles.navLabel}>Navegación</p>
         <WorkspaceNavigation
           role={role}
           unreadNotificationCount={unreadNotificationCount}
         />
-        <div className={styles.sidebarAccount}>
-          <p className={styles.navLabel}>Cuenta</p>
-          <AuthControls displayName={displayName} />
+        <div className={styles.sidebarFooter}>
+          <span aria-hidden="true" className={styles.footerMark} />
+          <p>
+            Personas que hacen crecer
+            <br />a nuestra empresa.
+          </p>
         </div>
       </aside>
 
       <div className={styles.mainColumn}>
-        <WorkspaceHeader displayName={displayName} greeting={greeting} />
+        <WorkspaceHeader
+          displayName={displayName}
+          greeting={greeting}
+          profileImageUrl={profileImageUrl}
+          unreadNotificationCount={unreadNotificationCount}
+        />
         <main className={styles.content} id="main-content">
           {children}
         </main>
