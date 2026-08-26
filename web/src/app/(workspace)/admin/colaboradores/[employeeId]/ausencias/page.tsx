@@ -39,7 +39,6 @@ export default async function EmployeePtoAdministrationPage({
           <div>
             <p className="eyebrow">Administración</p>
             <h1>Saldo de ausencias</h1>
-            <p>{detail.employeeName}</p>
           </div>
           <ButtonLink href={`/admin/colaboradores/${employeeId}/ausencias/nueva`}>
             Nueva solicitud

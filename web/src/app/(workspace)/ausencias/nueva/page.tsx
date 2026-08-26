@@ -19,21 +19,10 @@ export default async function NewPtoRequestPage() {
         <header className={styles.header}>
           <div>
             <h1>Nueva solicitud</h1>
-            <p>
-              Saldo actual:{" "}
-              {dashboard.balanceUnits === null
-                ? "sin configurar"
-                : `${formatBalance(dashboard.balanceUnits)} días`}
-              .
-            </p>
           </div>
         </header>
         <PtoRequestForm />
       </div>
     </Container>
   );
-}
-
-function formatBalance(units: number) {
-  return new Intl.NumberFormat("es-CR", { maximumFractionDigits: 1 }).format(units / 2);
 }

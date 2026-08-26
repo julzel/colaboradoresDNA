@@ -22,7 +22,6 @@
   letter-spacing: -0.04em;
 }
 
-.headingDescription,
 .directoryCount,
 .emptyDescription {
   margin: var(--space-1) 0 0;
@@ -399,10 +398,6 @@
 
   .heading {
     align-items: flex-start;
-  }
-
-  .headingDescription {
-    font-size: var(--text-sm);
   }
 
   .moduleIcon {

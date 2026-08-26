@@ -98,10 +98,6 @@ export default async function EmployeeDetailPage({
           <div>
             <p className={`eyebrow ${styles.detailEyebrow}`}>Colaborador</p>
             <h1>{displayName}</h1>
-            <p className={styles.muted}>
-              {detail.currentAssignment?.positionTitle ?? "Sin puesto asignado"} ·{" "}
-              {detail.currentAssignment?.departmentName ?? "Sin departamento"}
-            </p>
             <div className={styles.statusRow}>
               <StatusBadge
                 tone={

@@ -39,7 +39,6 @@ export default async function EditSchedulePage({
           <div>
             <p className="eyebrow">Colaborador</p>
             <h1>Cambiar horario</h1>
-            <p>El horario anterior se conservará en el historial.</p>
           </div>
         </header>
         <ScheduleForm employeeId={employeeId} initialDays={initialDays} />

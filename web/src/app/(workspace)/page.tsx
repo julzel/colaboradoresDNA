@@ -1,5 +1,6 @@
 import { Bell, Clock3, Coffee, MoonStar, Sun, Sunset } from "lucide-react";
 
+import { AdministratorModuleLinks } from "@/components/admin/administrator-module-links/administrator-module-links";
 import { Button } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
@@ -60,6 +61,12 @@ export default async function HomePage() {
           </h1>
         </div>
       </header>
+
+      {dashboard.role === "administrator" && (
+        <Container>
+          <AdministratorModuleLinks />
+        </Container>
+      )}
 
       <Container>
         <ElevatedSurface

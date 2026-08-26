@@ -49,11 +49,6 @@
   letter-spacing: -0.04em;
 }
 
-.heroDescription {
-  margin: var(--space-2) 0 0;
-  color: var(--color-text-muted);
-}
-
 .heroActions {
   display: flex;
   flex-wrap: wrap;

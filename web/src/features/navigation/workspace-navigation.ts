@@ -4,7 +4,6 @@ import {
   ClipboardCheck,
   ClipboardClock,
   House,
-  LayoutDashboard,
   Settings,
   ShieldCheck,
   UsersRound,
@@ -26,7 +25,6 @@ const administratorNavigationItem: NavigationItem = {
 };
 
 const administratorWorkspaceItems: readonly NavigationItem[] = [
-  { href: "/admin", icon: LayoutDashboard, label: "Resumen" },
   {
     href: "/admin/colaboradores",
     icon: UsersRound,

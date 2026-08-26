@@ -47,14 +47,6 @@ export default async function PtoRequestDetailPage({
           <div>
             <p className="eyebrow">Solicitud de {request.requesterName}</p>
             <h1>{ptoCategoryLabels[request.category]}</h1>
-            <p>
-              {request.startDate} a {request.endDate}
-            </p>
-            {request.createdByName && (
-              <p className={styles.muted}>
-                Solicitud creada por {request.createdByName} en nombre del colaborador.
-              </p>
-            )}
           </div>
           <StatusBadge tone={statusTones[request.status]}>
             {ptoStatusLabels[request.status]}

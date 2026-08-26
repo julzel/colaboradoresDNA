@@ -28,7 +28,6 @@ export default async function EditPersonalInformationPage({
           <div>
             <p className="eyebrow">Colaborador</p>
             <h1>Editar información personal</h1>
-            <p>Los valores normalizados se calculan y validan en el servidor.</p>
           </div>
         </header>
         <PersonalInformationForm employee={employee} />

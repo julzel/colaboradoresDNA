@@ -90,7 +90,7 @@
   --color-sidebar-surface-hover: rgb(49 199 207 / 18%);
   --color-sidebar-border: rgb(181 199 194 / 18%);
   --background-navigation:
-    radial-gradient(circle at 12% 5%, rgb(49 199 207 / 16%), transparent 28%),
+    radial-gradient(circle at 12% 95%, rgb(49 199 207 / 16%), transparent 28%),
     var(--color-sidebar);
   --background-primary-action: var(--brand-cyan);
   --color-topbar: rgb(247 245 239 / 92%);
@@ -193,7 +193,7 @@
   --color-sidebar-surface-hover: rgb(49 199 207 / 20%);
   --color-sidebar-border: rgb(49 199 207 / 20%);
   --background-navigation:
-    radial-gradient(circle at 12% 5%, rgb(49 199 207 / 18%), transparent 30%),
+    radial-gradient(circle at 12% 95%, rgb(49 199 207 / 18%), transparent 30%),
     var(--color-sidebar);
   --background-primary-action: var(--brand-cyan);
   --color-topbar: rgb(6 22 20 / 90%);
@@ -254,7 +254,7 @@
     --color-sidebar-surface-hover: rgb(49 199 207 / 20%);
     --color-sidebar-border: rgb(49 199 207 / 20%);
     --background-navigation:
-      radial-gradient(circle at 12% 5%, rgb(49 199 207 / 18%), transparent 30%),
+      radial-gradient(circle at 12% 95%, rgb(49 199 207 / 18%), transparent 30%),
       var(--color-sidebar);
     --background-primary-action: var(--brand-cyan);
     --color-topbar: rgb(6 22 20 / 90%);

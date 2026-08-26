@@ -141,9 +141,9 @@ installed PWA. Use the monospace stack only for technical identifiers.
 | Eyebrow              | 0.75rem   | 0.75rem  | 750    | 1.3         | Rare category label                  |
 
 Titles use `--color-text`, a slight negative letter spacing between `-0.015em`
-and `-0.035em`, and no more than two lines. Subtitles use body or body-small,
-`--color-text-muted`, a maximum readable width of 60 characters, and sit 4–8px
-below the title.
+and `-0.035em`, and no more than two lines. Page headers contain the title,
+optional eyebrow, and actions only; do not add descriptive subtitles below a
+page title. Supporting context belongs in the relevant card or form section.
 
 Do not use title case, full-uppercase headings, or multiple display-sized
 headings on one screen. Eyebrows may be uppercase with `0.08em` tracking, but
@@ -252,7 +252,7 @@ Use CSS Grid for page regions and Flexbox for one-dimensional control groups.
 A standard page contains, in order:
 
 1. Optional breadcrumb or mobile back action.
-2. Page title, subtitle, and primary action.
+2. Page title and primary action.
 3. Optional summary/filters.
 4. Main content.
 5. Secondary or destructive actions at the end of the relevant region.

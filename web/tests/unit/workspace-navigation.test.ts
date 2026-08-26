@@ -57,7 +57,6 @@ describe("administrator navigation", () => {
       "Administración",
     ]);
     expect(sections[1]?.items.map((item) => item.href)).toEqual([
-      "/admin",
       "/admin/colaboradores",
       "/admin/ausencias",
       "/admin/desarrollo",
