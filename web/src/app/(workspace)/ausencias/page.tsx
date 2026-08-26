@@ -14,10 +14,8 @@ import {
   ptoCategoryLabels,
   ptoStatusLabels,
 } from "@/features/pto/domain/pto";
-import {
-  getPtoDashboard,
-  type PtoRequestView,
-} from "@/features/pto/server/pto-service";
+import { getPtoDashboard } from "@/features/pto/server/pto-service";
+import type { PtoRequestView } from "@/features/pto/view-models/pto-view";
 
 export const metadata: Metadata = { title: "Solicitudes de ausencia" };
 

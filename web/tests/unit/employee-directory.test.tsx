@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { EmployeeDirectory } from "@/features/employees/components/employee-directory";
-import type { EmployeeDirectoryItem } from "@/features/employees/server/employee-read-repository";
+import type { EmployeeDirectoryItem } from "@/features/employees/view-models/employee-view";
 
 const items: EmployeeDirectoryItem[] = [
   {

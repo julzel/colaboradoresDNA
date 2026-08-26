@@ -3,30 +3,18 @@ import "server-only";
 import { ObjectId } from "mongodb";
 
 import { developmentObjectIdSchema } from "@/features/development/domain/shared";
-import type {
-  EmployeeDocument,
-  EmploymentStatus,
-} from "@/features/employees/domain/employee";
+import type { EmployeeDocument } from "@/features/employees/domain/employee";
 import {
   formatEmployeePreferredDisplayName,
   getDisplayNameInitials,
 } from "@/features/employees/domain/employee";
 import type { EmployeeAssignmentDocument } from "@/features/employees/domain/assignment";
 import type { DepartmentDocument } from "@/features/employees/domain/department";
+import type {
+  DevelopmentEmployeeIdentity,
+  DevelopmentEmployeeReference,
+} from "@/features/development/view-models/development-view";
 import { getDatabase } from "@/lib/server/mongodb";
-
-export type DevelopmentEmployeeReference = {
-  employmentStatus: EmploymentStatus;
-  id: string;
-};
-
-export type DevelopmentEmployeeIdentity = DevelopmentEmployeeReference & {
-  departmentName: string | null;
-  displayName: string;
-  initials: string;
-  platformUserId: string;
-  positionTitle: string | null;
-};
 
 export const developmentEmployeeReferenceProjection = {
   _id: 1,

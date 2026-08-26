@@ -13,8 +13,10 @@ import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surfa
 import { BackLink } from "@/components/ui/navigation/back-link";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import type { OneOnOneTimelineSummary } from "@/features/development/domain/one-on-one";
-import type { DevelopmentEmployeeIdentity } from "@/features/development/server/development-employee-read-repository";
-import type { DevelopmentRecordSummary } from "@/features/development/server/development-read-repository";
+import type {
+  DevelopmentEmployeeIdentity,
+  DevelopmentRecordSummary,
+} from "@/features/development/view-models/development-view";
 
 import styles from "./development-record.module.css";
 

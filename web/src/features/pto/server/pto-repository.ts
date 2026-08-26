@@ -15,34 +15,12 @@ import {
   type PtoBalanceDocument,
   type PtoBalanceLedgerDocument,
   type PtoDraftInput,
+  type PtoRequest,
   type PtoRequestDocument,
-  type PtoStatus,
 } from "@/features/pto/domain/pto";
 import { recordPtoAudit } from "@/features/pto/server/pto-audit-repository";
 import { ensurePtoIndexes } from "@/features/pto/server/pto-indexes";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
-
-export type PtoRequest = Omit<
-  PtoRequestDocument,
-  | "_id"
-  | "assignedApproverPlatformUserId"
-  | "createdByPlatformUserId"
-  | "requesterEmployeeId"
-  | "requesterPlatformUserId"
-  | "statusHistory"
-> & {
-  assignedApproverPlatformUserId: string | null;
-  createdByPlatformUserId: string;
-  id: string;
-  requesterEmployeeId: string;
-  requesterPlatformUserId: string;
-  statusHistory: Array<{
-    actorPlatformUserId: string;
-    from: PtoStatus | null;
-    occurredAt: Date;
-    to: PtoStatus;
-  }>;
-};
 
 async function getPtoCollections() {
   const database = await getDatabase();

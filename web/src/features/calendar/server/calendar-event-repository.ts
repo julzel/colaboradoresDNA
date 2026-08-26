@@ -20,17 +20,17 @@ import {
 } from "@/features/employees/domain/employee";
 import { ensureCalendarIndexes } from "@/features/calendar/server/calendar-indexes";
 import { recordCalendarAudit } from "@/features/calendar/server/calendar-audit-repository";
+import type {
+  CalendarEventDetail,
+  CalendarEventTargetOptions,
+  InternalOneOnOneCalendarEventSummary,
+} from "@/features/calendar/view-models/calendar-event-view";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
 
 export type CalendarActor = {
   departmentId: string | null;
   platformUserId: string;
   role: PlatformRole;
-};
-
-export type CalendarEventTargetOptions = {
-  departments: Array<{ id: string; name: string }>;
-  people: Array<{ displayName: string; id: string }>;
 };
 
 export type CalendarEventNotification = Pick<
@@ -44,21 +44,6 @@ export type CalendarEventNotification = Pick<
   | "startsAt"
   | "title"
 >;
-
-export type CalendarEventDetail = {
-  canDelete: boolean;
-  canManage: boolean;
-  departmentName: string | null;
-  event: CalendarEvent;
-  invitees: Array<{ displayName: string; id: string }>;
-  organizerName: string;
-};
-
-export type InternalOneOnOneCalendarEventSummary = {
-  endsAt: string;
-  id: string;
-  startsAt: string;
-};
 
 export class InternalCalendarIntegrationError extends Error {
   constructor(public readonly code: "invalid_schedule" | "transaction_required") {

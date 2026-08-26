@@ -34,7 +34,8 @@ web/
 ├── scripts/                Controlled bootstrap and maintenance operations
 ├── src/app/                 Routes, layouts, error states, and Route Handlers
 ├── src/components/ui/       Reusable, domain-neutral UI primitives
-├── src/features/<feature>/  Feature-owned actions, components, data, and schemas
+├── src/features/<feature>/  Feature-owned actions, components, domain, server,
+│                            and UI-facing view models
 ├── src/lib/server/          Server-only shared infrastructure
 ├── src/styles/              Global CSS tokens and base styles
 ├── tests/unit/              Unit tests
@@ -44,6 +45,11 @@ web/
 
 Route files compose feature modules. Feature modules own their domain logic;
 avoid creating broad `utils` or `helpers` folders.
+
+UI-facing DTOs live in `view-models/` (or `domain/` when they are true domain
+types), never in repository modules. Components depend on these stable contracts;
+query services and repositories produce them without exposing persistence-module
+ownership to the UI.
 
 ## Rendering and data access
 

@@ -11,7 +11,7 @@ import {
   CalendarBirthdayQuickDetailContent,
   CalendarPtoQuickDetailContent,
 } from "@/features/calendar/components/calendar-quick-detail-content";
-import type { CalendarEventDetail } from "@/features/calendar/server/calendar-event-repository";
+import type { CalendarEventDetail } from "@/features/calendar/view-models/calendar-event-view";
 
 const navigationMocks = vi.hoisted(() => ({
   back: vi.fn(),

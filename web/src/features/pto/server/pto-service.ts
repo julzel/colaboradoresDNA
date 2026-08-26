@@ -16,6 +16,7 @@ import {
   PtoDomainError,
   ptoDraftInputSchema,
   type PtoDraftInput,
+  type PtoRequest,
 } from "@/features/pto/domain/pto";
 import {
   adjustPtoBalance,
@@ -35,14 +36,8 @@ import {
   reassignPtoRequestApprover,
   submitPtoDraft,
   updatePtoDraft,
-  type PtoRequest,
 } from "@/features/pto/server/pto-repository";
-
-export type PtoRequestView = PtoRequest & {
-  approverName: string | null;
-  createdByName: string | null;
-  requesterName: string;
-};
+import type { PtoRequestView } from "@/features/pto/view-models/pto-view";
 
 async function requirePtoEmployee() {
   const { platformUser } = await requirePlatformUser();

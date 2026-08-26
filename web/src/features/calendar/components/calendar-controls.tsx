@@ -12,7 +12,7 @@ import {
   formatCalendarMonth,
   getCurrentCalendarMonth,
 } from "@/features/calendar/domain/calendar-utils";
-import type { CalendarEventTargetOptions } from "@/features/calendar/server/calendar-event-repository";
+import type { CalendarEventTargetOptions } from "@/features/calendar/view-models/calendar-event-view";
 
 import styles from "./calendar.module.css";
 

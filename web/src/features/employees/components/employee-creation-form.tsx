@@ -18,7 +18,7 @@ import {
   dayOfWeekOrder,
   type ScheduledDay,
 } from "@/features/employees/domain/schedule";
-import type { EmployeeManagerOption } from "@/features/employees/server/employee-read-repository";
+import type { EmployeeManagerOption } from "@/features/employees/view-models/employee-view";
 
 import styles from "./employee-management.module.css";
 import { FormErrorSummary } from "./form-error-summary";

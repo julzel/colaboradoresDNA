@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { TextField } from "@/components/ui/form-field/form-field";
-import type { EmployeeDirectoryItem } from "@/features/employees/server/employee-read-repository";
+import type { EmployeeDirectoryItem } from "@/features/employees/view-models/employee-view";
 
 import { EmployeeDirectoryMobileList } from "./employee-directory-mobile-list";
 import {
