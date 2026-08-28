@@ -1,131 +1,82 @@
 import type { Metadata } from "next";
-import { ClipboardClock, Plus } from "lucide-react";
-import Link from "next/link";
+import {
+  ArrowRight,
+  CalendarPlus,
+  ClipboardClock,
+  Clock3,
+  Umbrella,
+} from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
-import { StatusBadge } from "@/components/ui/status-badge/status-badge";
-import { formatCalendarMonth } from "@/features/calendar/domain/calendar-utils";
-import { PtoCategoryBadge } from "@/features/pto/components/pto-category-badge";
 import styles from "@/features/pto/components/pto.module.css";
-import {
-  formatPtoDateRange,
-  formatPtoDays,
-  ptoStatusLabels,
-} from "@/features/pto/domain/pto";
+import { formatPtoDays } from "@/features/pto/domain/pto";
 import { getPtoDashboard } from "@/features/pto/server/pto-service";
-import type { PtoRequestView } from "@/features/pto/view-models/pto-view";
 
 export const metadata: Metadata = { title: "Solicitudes de ausencia" };
 
-const statusTones = {
-  approved: "success",
-  cancelled: "neutral",
-  denied: "danger",
-  draft: "neutral",
-  pending: "warning",
-} as const;
-
-function RequestList({
-  empty,
-  requests,
-}: {
-  empty: string;
-  requests: PtoRequestView[];
-}) {
-  if (!requests.length) return <p className={styles.muted}>{empty}</p>;
-  return (
-    <ul className={styles.list}>
-      {requests.map((request) => (
-        <li className={styles.requestPeriodItem} key={request.id}>
-          <p className={styles.requestPeriod}>
-            {formatCalendarMonth(request.startDate.slice(0, 7))}
-          </p>
-          <div className={styles.requestCard}>
-            <div>
-              <div className={styles.requestLinkRow}>
-                <Link className={styles.requestLink} href={`/ausencias/${request.id}`}>
-                  <PtoCategoryBadge category={request.category} />
-                </Link>
-                <StatusBadge tone={statusTones[request.status]}>
-                  {ptoStatusLabels[request.status]}
-                </StatusBadge>
-              </div>
-              <p className={`${styles.muted} ${styles.requestDate}`}>
-                {formatPtoDateRange(request.startDate, request.endDate)} ·{" "}
-                {formatPtoDays(request.durationUnits)} días
-              </p>
-            </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 export default async function PtoDashboardPage() {
   const dashboard = await getPtoDashboard();
+
   return (
     <Container>
       <div className={styles.page}>
         <header className={styles.header}>
           <div className={styles.headerContent}>
-            <p className="eyebrow">Ausencias</p>
             <div className={styles.moduleTitle}>
               <span className={styles.moduleIcon}>
                 <ClipboardClock aria-hidden="true" size={24} strokeWidth={1.8} />
               </span>
-              <h1>Solicitudes</h1>
+              <h1>Solicitudes de Ausencias</h1>
               <div className={styles.moduleActions}>
-                {dashboard.canManage && (
-                  <ButtonLink href="/admin/ausencias" size="small" variant="secondary">
-                    Administrar solicitudes
-                  </ButtonLink>
-                )}
-                {dashboard.canRequest && (
-                  <ButtonLink
-                    aria-label="Nueva solicitud"
-                    className={styles.newRequestButton}
-                    href="/ausencias/nueva"
-                    size="small"
-                    title="Nueva solicitud"
-                  >
-                    <Plus aria-hidden="true" size={18} />
-                  </ButtonLink>
-                )}
+                <ButtonLink href="/ausencias/nueva" size="small">
+                  <CalendarPlus aria-hidden="true" size={17} />
+                  Nueva solicitud
+                </ButtonLink>
               </div>
             </div>
           </div>
         </header>
 
-        <ElevatedSurface as="section" className={styles.dashboardSummary}>
-          <div className={styles.summaryItem} data-summary="available">
-            <p className={styles.summaryLabel}>Vacaciones disponibles</p>
-            <p className={styles.summaryValue}>
-              {!dashboard.canRequest
-                ? "No aplica"
-                : dashboard.balanceUnits === null
-                  ? "Sin configurar"
-                  : `${formatPtoDays(dashboard.balanceUnits)} días`}
-            </p>
-          </div>
-          <div className={styles.summaryItem} data-summary="pending">
-            <p className={styles.summaryLabel}>Pendientes</p>
-            <p className={styles.summaryValue}>
-              {
-                dashboard.ownRequests.filter((request) => request.status === "pending")
-                  .length
-              }
-            </p>
-          </div>
-        </ElevatedSurface>
+        <section aria-label="Resumen de ausencias" className={styles.summaryCards}>
+          <ElevatedSurface as="div" className={styles.summaryCard}>
+            <span className={styles.summaryCardIcon} data-tone="vacation">
+              <Umbrella aria-hidden="true" size={29} strokeWidth={1.8} />
+            </span>
+            <div className={styles.summaryCardContent}>
+              <h2>Saldo de vacaciones</h2>
+              <p className={styles.summaryMetric}>
+                <strong>
+                  {dashboard.balanceUnits === null
+                    ? "—"
+                    : formatPtoDays(dashboard.balanceUnits ?? 0)}
+                </strong>
+                <span>
+                  {dashboard.balanceUnits === null
+                    ? "saldo sin configurar"
+                    : "días disponibles"}
+                </span>
+              </p>
+            </div>
+          </ElevatedSurface>
 
-        <section className={styles.requestSection}>
-          <RequestList
-            empty="Todavía no tenés solicitudes."
-            requests={dashboard.ownRequests}
-          />
+          <ElevatedSurface as="div" className={styles.summaryCard}>
+            <span className={styles.summaryCardIcon} data-tone="pending">
+              <Clock3 aria-hidden="true" size={29} strokeWidth={1.8} />
+            </span>
+            <div className={styles.summaryCardContent}>
+              <h2>Solicitudes pendientes</h2>
+              <p className={styles.summaryMetric}>
+                <strong>{dashboard.pendingApprovals.length}</strong>
+                <span>
+                  {dashboard.pendingApprovals.length === 1
+                    ? "solicitud"
+                    : "solicitudes"}
+                </span>
+              </p>
+            </div>
+          </ElevatedSurface>
         </section>
       </div>
     </Container>

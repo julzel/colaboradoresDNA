@@ -21,7 +21,6 @@ import {
 } from "@/features/pto/domain/pto";
 import { initialPtoActionState } from "@/features/pto/domain/pto-action-state";
 
-import { PtoCategoryBadge } from "./pto-category-badge";
 import styles from "./pto.module.css";
 
 type EditablePtoRequest = {
@@ -94,7 +93,6 @@ export function PtoRequestForm({
         <div className={styles.categoryField}>
           <SelectField
             defaultValue={selectedCategory}
-            description="Solo Vacaciones descuenta del saldo disponible."
             error={state.errors?.category}
             id="category"
             label="Categoría"
@@ -112,7 +110,6 @@ export function PtoRequestForm({
               ),
             )}
           </SelectField>
-          <PtoCategoryBadge category={selectedCategory} />
         </div>
         <div className={styles.fullWidth}>
           <TextAreaField

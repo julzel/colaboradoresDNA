@@ -29,9 +29,15 @@
 
 .moduleTitle {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
   width: 100%;
+}
+
+.moduleTitle h1 {
+  flex: 1 1 12rem;
+  min-width: 0;
 }
 
 .headerContent {
@@ -75,6 +81,74 @@ a.newRequestButton {
 .detailGrid {
   display: grid;
   gap: var(--space-4);
+}
+
+.summaryCards {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.summaryCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+  padding: var(--space-5);
+}
+
+.summaryCardIcon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  place-items: center;
+}
+
+.summaryCardIcon[data-tone="vacation"] {
+  background: var(--color-pto-vacation-soft);
+  color: var(--color-pto-vacation);
+}
+
+.summaryCardIcon[data-tone="pending"] {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.summaryCardContent {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
+.summaryCardContent h2 {
+  max-width: 18rem;
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: var(--line-tight);
+}
+
+.summaryMetric {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.summaryMetric strong {
+  color: var(--color-text);
+  font-size: var(--text-2xl);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.summaryMetric span {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 650;
 }
 
 .summaryGrid {
@@ -377,6 +451,18 @@ a.newRequestButton {
   }
 }
 
+@media (width >= 40rem) {
+  .summaryCards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width >= 64rem) {
+  .summaryCards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 @media (width <= 32rem) {
   .header {
     display: grid;
@@ -388,5 +474,14 @@ a.newRequestButton {
   .definitionList > div,
   .ledgerItem {
     grid-template-columns: 1fr;
+  }
+
+  .moduleActions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .moduleActions a {
+    flex: 1;
   }
 }
