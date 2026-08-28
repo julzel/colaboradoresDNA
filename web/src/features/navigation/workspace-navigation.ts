@@ -75,14 +75,21 @@ export function getDesktopWorkspaceNavigationSections(
   role: PlatformRole,
   unreadNotificationCount = 0,
 ): readonly WorkspaceNavigationSection[] {
-  const workspaceItems = baseNavigationItems.map((item) =>
-    item.href === "/" && unreadNotificationCount > 0
-      ? {
-          ...item,
-          badge: unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount),
-        }
-      : item,
-  );
+  const workspaceItems = baseNavigationItems.map((item) => {
+    if (item.href === "/") {
+      return unreadNotificationCount > 0
+        ? {
+            ...item,
+            badge:
+              unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount),
+          }
+        : item;
+    }
+
+    return item.href === "/calendario"
+      ? { ...item, href: "/calendario?vista=mes" }
+      : item;
+  });
 
   return role === "administrator"
     ? [
@@ -97,11 +104,14 @@ export function getActiveNavigationHref(
   items: readonly NavigationItem[],
 ) {
   const activeItem = items
-    .filter(
-      (item) =>
-        item.href === pathname ||
-        (item.href !== "/" && pathname.startsWith(`${item.href}/`)),
-    )
+    .filter((item) => {
+      const itemPathname = item.href.split("?")[0] ?? item.href;
+
+      return (
+        itemPathname === pathname ||
+        (itemPathname !== "/" && pathname.startsWith(`${itemPathname}/`))
+      );
+    })
     .sort((first, second) => second.href.length - first.href.length)[0];
 
   return activeItem?.href ?? "/";

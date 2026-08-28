@@ -63,5 +63,12 @@ describe("administrator navigation", () => {
       "/admin/accounts",
     ]);
     expect(sections[0]?.items[0]).toMatchObject({ badge: "2", href: "/" });
+    expect(sections[0]?.items[1]).toMatchObject({
+      href: "/calendario?vista=mes",
+      label: "Calendario",
+    });
+    expect(getActiveNavigationHref("/calendario", sections[0]?.items ?? [])).toBe(
+      "/calendario?vista=mes",
+    );
   });
 });

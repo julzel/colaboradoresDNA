@@ -1,4 +1,4 @@
-import { CakeSlice, CalendarDays, Clock3, MapPin, Umbrella } from "lucide-react";
+import { Clock3, MapPin } from "lucide-react";
 import Link from "next/link";
 
 import type { CalendarEntry } from "@/features/calendar/domain/calendar-entry";
@@ -7,10 +7,12 @@ import {
   formatCalendarTime,
 } from "@/features/calendar/domain/calendar-utils";
 
+import { CalendarEntryIcon } from "./calendar-entry-presentation";
 import styles from "./calendar.module.css";
 
 type CalendarEntryItemProps = {
   entry: CalendarEntry;
+  variant?: "compact" | "default";
 };
 
 function getTimeLabel(entry: CalendarEntry) {
@@ -29,13 +31,10 @@ function getTimeLabel(entry: CalendarEntry) {
   )}`;
 }
 
-export function CalendarEntryItem({ entry }: CalendarEntryItemProps) {
-  const Icon =
-    entry.kind === "birthday"
-      ? CakeSlice
-      : entry.kind === "pto"
-        ? Umbrella
-        : CalendarDays;
+export function CalendarEntryItem({
+  entry,
+  variant = "default",
+}: CalendarEntryItemProps) {
   const title = entry.detailHref ? (
     <Link href={entry.detailHref}>{entry.title}</Link>
   ) : (
@@ -47,13 +46,14 @@ export function CalendarEntryItem({ entry }: CalendarEntryItemProps) {
       className={styles.entry}
       data-event-type={entry.eventType ?? undefined}
       data-kind={entry.kind}
+      data-variant={variant}
     >
       <span
         className={styles.entryIcon}
         data-event-type={entry.eventType ?? undefined}
         data-kind={entry.kind}
       >
-        <Icon aria-hidden="true" size={19} />
+        <CalendarEntryIcon aria-hidden="true" entry={entry} size={19} />
       </span>
       <div className={styles.entryContent}>
         <div className={styles.entryHeading}>

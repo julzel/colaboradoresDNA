@@ -1,7 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
-import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { CalendarCreateEventTrigger } from "@/features/calendar/components/calendar-create-event-trigger";
 import {
   createCalendarUrl,
@@ -33,28 +32,8 @@ export function CalendarControls({
     <header className={styles.pageHeader}>
       <h1 className="sr-only">Calendario</h1>
 
-      <ElevatedSurface as="section" className={styles.controls}>
-        <div className={styles.periodNavigation}>
-          <ButtonLink
-            aria-label="Mes anterior"
-            href={getAdjacentCalendarMonth(query, -1)}
-            size="small"
-            variant="quiet"
-          >
-            <ChevronLeft aria-hidden="true" size={20} />
-          </ButtonLink>
-          <h2 aria-live="polite">{formatCalendarMonth(query.month)}</h2>
-          <ButtonLink
-            aria-label="Mes siguiente"
-            href={getAdjacentCalendarMonth(query, 1)}
-            size="small"
-            variant="quiet"
-          >
-            <ChevronRight aria-hidden="true" size={20} />
-          </ButtonLink>
-        </div>
-
-        <div className={styles.controlActions}>
+      <section aria-label="Controles del calendario" className={styles.controls}>
+        <div className={styles.calendarToolbarStart}>
           <ButtonLink
             href={createCalendarUrl({
               month: currentMonth,
@@ -65,6 +44,30 @@ export function CalendarControls({
           >
             Hoy
           </ButtonLink>
+          <div className={styles.periodNavigation}>
+            <ButtonLink
+              aria-label="Mes anterior"
+              className={`${styles.periodButton} ${styles.periodPrevious}`}
+              href={getAdjacentCalendarMonth(query, -1)}
+              size="small"
+              variant="secondary"
+            >
+              <ChevronLeft aria-hidden="true" size={20} />
+            </ButtonLink>
+            <ButtonLink
+              aria-label="Mes siguiente"
+              className={`${styles.periodButton} ${styles.periodNext}`}
+              href={getAdjacentCalendarMonth(query, 1)}
+              size="small"
+              variant="secondary"
+            >
+              <ChevronRight aria-hidden="true" size={20} />
+            </ButtonLink>
+          </div>
+          <h2 aria-live="polite">{formatCalendarMonth(query.month)}</h2>
+        </div>
+
+        <div className={styles.controlActions}>
           <nav aria-label="Vista del calendario" className={styles.viewSelector}>
             <ButtonLink
               aria-current={query.view === "agenda" ? "page" : undefined}
@@ -90,14 +93,14 @@ export function CalendarControls({
               Mes
             </ButtonLink>
           </nav>
-          {canCreateEvents && eventFormOptions && (
+          {query.view !== "month" && canCreateEvents && eventFormOptions && (
             <CalendarCreateEventTrigger
               className={styles.createEventButton}
               options={eventFormOptions}
             />
           )}
         </div>
-      </ElevatedSurface>
+      </section>
     </header>
   );
 }
