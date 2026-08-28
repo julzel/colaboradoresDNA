@@ -22,7 +22,7 @@ export default async function NewEmployeePtoRequestPage({
     <Container>
       <div className={styles.page}>
         <BackLink href={`/admin/colaboradores/${employeeId}/ausencias`}>
-          Volver al saldo de ausencias
+          Volver al saldo de vacaciones
         </BackLink>
         <header className={styles.header}>
           <div>

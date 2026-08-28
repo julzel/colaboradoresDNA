@@ -6,6 +6,17 @@ const environmentSchema = z.object({
   MONGODB_URI: z.string().url().startsWith("mongodb"),
 });
 
+// Keep this list aligned with ptoCategories in src/features/pto/domain/pto.ts.
+const ptoCategories = [
+  "vacation",
+  "incapacity",
+  "maternity",
+  "paternity",
+  "unpaid_leave",
+  "bereavement",
+  "other",
+];
+
 const collectionIndexes = {
   pto_audit: [
     {
@@ -99,6 +110,42 @@ async function bootstrap() {
         ),
       ),
     );
+
+    const requests = database.collection("pto_requests");
+    const now = new Date();
+    const [sickMigration, personalMigration] = await Promise.all([
+      requests.updateMany(
+        { category: "sick" },
+        { $set: { category: "incapacity", updatedAt: now } },
+      ),
+      requests.updateMany(
+        { category: "personal" },
+        { $set: { category: "other", updatedAt: now } },
+      ),
+    ]);
+
+    await database.command({
+      collMod: "pto_requests",
+      validationAction: "error",
+      validationLevel: "strict",
+      validator: {
+        $jsonSchema: {
+          bsonType: "object",
+          properties: {
+            category: {
+              description: "Must be a supported leave category",
+              enum: ptoCategories,
+            },
+          },
+          required: ["category"],
+        },
+      },
+    });
+
+    const migratedCount = sickMigration.modifiedCount + personalMigration.modifiedCount;
+    if (migratedCount > 0) {
+      console.info(`Se migraron ${migratedCount} categorías de ausencias heredadas.`);
+    }
     console.info("El modelo de ausencias quedó listo.");
   } finally {
     await client.close();

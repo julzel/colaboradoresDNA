@@ -75,8 +75,8 @@ function domainState(error: unknown): EmployeeActionState {
     return {
       message:
         error.code === "balance_exists"
-          ? "El colaborador ya tiene un saldo de ausencias."
-          : "No fue posible registrar el saldo inicial de ausencias.",
+          ? "El colaborador ya tiene un saldo de vacaciones."
+          : "No fue posible registrar el saldo inicial de vacaciones.",
       status: "error",
     };
   }

@@ -216,6 +216,73 @@ a.newRequestButton {
   font-weight: 500;
 }
 
+.categoryBadge {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.3rem var(--space-2);
+  border: 1px solid color-mix(in srgb, currentcolor 28%, transparent);
+  border-radius: var(--radius-full);
+  background: var(--category-background);
+  color: var(--category-color);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.categoryBadge svg {
+  flex: 0 0 auto;
+}
+
+.categoryBadge[data-size="large"] {
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xl);
+}
+
+.categoryBadge[data-category="vacation"] {
+  --category-color: var(--color-pto-vacation);
+  --category-background: var(--color-pto-vacation-soft);
+}
+
+.categoryBadge[data-category="incapacity"] {
+  --category-color: var(--color-pto-incapacity);
+  --category-background: var(--color-pto-incapacity-soft);
+}
+
+.categoryBadge[data-category="maternity"] {
+  --category-color: var(--color-pto-maternity);
+  --category-background: var(--color-pto-maternity-soft);
+}
+
+.categoryBadge[data-category="paternity"] {
+  --category-color: var(--color-pto-paternity);
+  --category-background: var(--color-pto-paternity-soft);
+}
+
+.categoryBadge[data-category="unpaid_leave"] {
+  --category-color: var(--color-pto-unpaid-leave);
+  --category-background: var(--color-pto-unpaid-leave-soft);
+}
+
+.categoryBadge[data-category="bereavement"] {
+  --category-color: var(--color-pto-bereavement);
+  --category-background: var(--color-pto-bereavement-soft);
+}
+
+.categoryBadge[data-category="other"] {
+  --category-color: var(--color-pto-other);
+  --category-background: var(--color-pto-other-soft);
+}
+
+.categoryField {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
 .requestDate {
   margin-top: var(--space-2);
   font-size: var(--text-md);

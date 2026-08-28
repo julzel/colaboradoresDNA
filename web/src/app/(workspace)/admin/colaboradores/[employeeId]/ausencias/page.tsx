@@ -13,7 +13,7 @@ import styles from "@/features/pto/components/pto.module.css";
 import { formatPtoDays } from "@/features/pto/domain/pto";
 import { getEmployeePtoAdministration } from "@/features/pto/server/pto-service";
 
-export const metadata: Metadata = { title: "Saldo de ausencias" };
+export const metadata: Metadata = { title: "Saldo de vacaciones" };
 
 const ledgerLabels = {
   adjustment: "Ajuste",
@@ -38,7 +38,7 @@ export default async function EmployeePtoAdministrationPage({
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Administración</p>
-            <h1>Saldo de ausencias</h1>
+            <h1>Saldo de vacaciones</h1>
           </div>
           <ButtonLink href={`/admin/colaboradores/${employeeId}/ausencias/nueva`}>
             Nueva solicitud
@@ -47,7 +47,7 @@ export default async function EmployeePtoAdministrationPage({
 
         <div className={styles.twoColumns}>
           <ElevatedSurface as="section" className={styles.card}>
-            <p className="eyebrow">Saldo actual</p>
+            <p className="eyebrow">Saldo actual de vacaciones</p>
             <p className={styles.metric}>
               {detail.balanceUnits === null
                 ? "Sin configurar"
@@ -65,7 +65,7 @@ export default async function EmployeePtoAdministrationPage({
           </ElevatedSurface>
 
           <ElevatedSurface as="section" className={styles.card}>
-            <h2>Historial del saldo</h2>
+            <h2>Historial del saldo de vacaciones</h2>
             {detail.ledger.length ? (
               <ol className={styles.ledger}>
                 {detail.ledger.map((entry) => (

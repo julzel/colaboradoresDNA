@@ -6,10 +6,10 @@ import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
+import { PtoCategoryBadge } from "@/features/pto/components/pto-category-badge";
 import styles from "@/features/pto/components/pto.module.css";
 import {
   formatPtoDays,
-  ptoCategoryLabels,
   ptoStatusLabels,
   ptoStatusSchema,
   type PtoStatus,
@@ -117,7 +117,8 @@ export default async function PtoAdministrationPage({
                       className={styles.requestLink}
                       href={`/ausencias/${request.id}`}
                     >
-                      {request.requesterName} · {ptoCategoryLabels[request.category]}
+                      {request.requesterName} ·{" "}
+                      <PtoCategoryBadge category={request.category} />
                     </Link>
                     <p className={styles.muted}>
                       {request.startDate} a {request.endDate} ·{" "}

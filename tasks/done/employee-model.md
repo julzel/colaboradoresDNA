@@ -106,19 +106,19 @@ be independent editable sources of truth.
 
 The platform description adds the following relevant fields:
 
-| UI field                   | Suggested code field            |    Required     | Source or purpose                                                                         |
-| -------------------------- | ------------------------------- | :-------------: | ----------------------------------------------------------------------------------------- |
-| Correo personal            | Access record `normalizedEmail` |       Yes       | Required for the Clerk invitation and login; no corporate domain is required.             |
-| Puesto                     | Assignment `positionTitle`      |       Yes       | Explicitly required by organization administration.                                       |
-| Departamento               | Assignment `departmentId`       |       Yes       | Required for directory, scoped calendars, reporting, and authorization.                   |
-| Jefatura directa           | Assignment `managerEmployeeId`  |       No        | Required for reporting relationships and PTO approval routing.                            |
-| Rol de plataforma          | Access record `role`            |       Yes       | `administrator`, `supervisor`, or `collaborator`; not inferred from job title.            |
-| Estado laboral             | `employmentStatus`              |       Yes       | Separate from invitation/session status.                                                  |
-| Acceso a plataforma        | `platformUserId`                |       Yes       | Stable one-to-one link; the access record may still be invited.                           |
-| Fecha de ingreso           | `employmentStartedOn`           |       Yes       | Required; future-dated hires are allowed.                                                 |
-| Fecha de salida            | `employmentEndedOn`             |       No        | Set when employment ends; never used to delete history.                                   |
-| Horario vigente            | Related schedule record         |       Yes       | Effective-dated weekly schedule described below.                                          |
-| Saldo inicial de ausencias | Separate PTO balance            | Later milestone | Required by the platform description, but should not be embedded in the employee profile. |
+| UI field                    | Suggested code field            |    Required     | Source or purpose                                                                         |
+| --------------------------- | ------------------------------- | :-------------: | ----------------------------------------------------------------------------------------- |
+| Correo personal             | Access record `normalizedEmail` |       Yes       | Required for the Clerk invitation and login; no corporate domain is required.             |
+| Puesto                      | Assignment `positionTitle`      |       Yes       | Explicitly required by organization administration.                                       |
+| Departamento                | Assignment `departmentId`       |       Yes       | Required for directory, scoped calendars, reporting, and authorization.                   |
+| Jefatura directa            | Assignment `managerEmployeeId`  |       No        | Required for reporting relationships and PTO approval routing.                            |
+| Rol de plataforma           | Access record `role`            |       Yes       | `administrator`, `supervisor`, or `collaborator`; not inferred from job title.            |
+| Estado laboral              | `employmentStatus`              |       Yes       | Separate from invitation/session status.                                                  |
+| Acceso a plataforma         | `platformUserId`                |       Yes       | Stable one-to-one link; the access record may still be invited.                           |
+| Fecha de ingreso            | `employmentStartedOn`           |       Yes       | Required; future-dated hires are allowed.                                                 |
+| Fecha de salida             | `employmentEndedOn`             |       No        | Set when employment ends; never used to delete history.                                   |
+| Horario vigente             | Related schedule record         |       Yes       | Effective-dated weekly schedule described below.                                          |
+| Saldo inicial de vacaciones | Separate PTO balance            | Later milestone | Required by the platform description, but should not be embedded in the employee profile. |
 
 The platform may create a future-dated employee. Access remains governed by the
 platform access record, while employment-effective queries use

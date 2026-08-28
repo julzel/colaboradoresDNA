@@ -34,7 +34,7 @@ export function PtoOpeningBalanceForm({ employeeId }: { employeeId: string }) {
         defaultValue="0"
         description="Puede ser cero o negativo. Usá incrementos de medio día."
         id="openingBalanceDays"
-        label="Saldo inicial (días)"
+        label="Saldo inicial de vacaciones (días)"
         name="openingBalanceDays"
         required
         step="0.5"

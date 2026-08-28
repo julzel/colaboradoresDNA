@@ -7,11 +7,11 @@ import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { formatCalendarMonth } from "@/features/calendar/domain/calendar-utils";
+import { PtoCategoryBadge } from "@/features/pto/components/pto-category-badge";
 import styles from "@/features/pto/components/pto.module.css";
 import {
   formatPtoDateRange,
   formatPtoDays,
-  ptoCategoryLabels,
   ptoStatusLabels,
 } from "@/features/pto/domain/pto";
 import { getPtoDashboard } from "@/features/pto/server/pto-service";
@@ -46,7 +46,7 @@ function RequestList({
             <div>
               <div className={styles.requestLinkRow}>
                 <Link className={styles.requestLink} href={`/ausencias/${request.id}`}>
-                  {ptoCategoryLabels[request.category]}
+                  <PtoCategoryBadge category={request.category} />
                 </Link>
                 <StatusBadge tone={statusTones[request.status]}>
                   {ptoStatusLabels[request.status]}
@@ -101,7 +101,7 @@ export default async function PtoDashboardPage() {
 
         <ElevatedSurface as="section" className={styles.dashboardSummary}>
           <div className={styles.summaryItem} data-summary="available">
-            <p className={styles.summaryLabel}>Disponible</p>
+            <p className={styles.summaryLabel}>Vacaciones disponibles</p>
             <p className={styles.summaryValue}>
               {!dashboard.canRequest
                 ? "No aplica"

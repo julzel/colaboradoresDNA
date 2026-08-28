@@ -7,7 +7,17 @@ import {
   objectIdStringSchema,
 } from "@/features/employees/domain/shared";
 
-export const ptoCategorySchema = z.enum(["vacation", "sick", "personal", "other"]);
+export const ptoCategories = [
+  "vacation",
+  "incapacity",
+  "maternity",
+  "paternity",
+  "unpaid_leave",
+  "bereavement",
+  "other",
+] as const;
+
+export const ptoCategorySchema = z.enum(ptoCategories);
 export const ptoStatusSchema = z.enum([
   "draft",
   "pending",
@@ -19,10 +29,20 @@ export const ptoStatusSchema = z.enum([
 export type PtoCategory = z.infer<typeof ptoCategorySchema>;
 export type PtoStatus = z.infer<typeof ptoStatusSchema>;
 
+export function normalizePtoCategory(category: unknown): PtoCategory {
+  if (category === "sick") return "incapacity";
+  if (category === "personal") return "other";
+  const parsed = ptoCategorySchema.safeParse(category);
+  return parsed.success ? parsed.data : "other";
+}
+
 export const ptoCategoryLabels: Record<PtoCategory, string> = {
   vacation: "Vacaciones",
-  sick: "Enfermedad",
-  personal: "Permiso personal",
+  incapacity: "Incapacidad",
+  maternity: "Maternidad",
+  paternity: "Paternidad",
+  unpaid_leave: "Permiso sin goce salarial",
+  bereavement: "Duelo",
   other: "Otro",
 };
 
@@ -34,13 +54,16 @@ export const ptoStatusLabels: Record<PtoStatus, string> = {
   pending: "Pendiente",
 };
 
-// The MVP has one generic absence balance. Keep this decision centralized so a
-// future confirmed category policy changes one tested boundary.
+// Vacation is the only category that changes the PTO balance. Keep this policy
+// centralized so submission warnings and transactional approval stay aligned.
 export const ptoCategoryConsumesBalance: Record<PtoCategory, boolean> = {
   vacation: true,
-  sick: true,
-  personal: true,
-  other: true,
+  incapacity: false,
+  maternity: false,
+  paternity: false,
+  unpaid_leave: false,
+  bereavement: false,
+  other: false,
 };
 
 export const ptoUnitsSchema = z.number().int();

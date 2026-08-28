@@ -189,7 +189,7 @@ export default async function EmployeeDetailPage({
               </ButtonLink>
             }
             icon={Umbrella}
-            title="Saldo de ausencias"
+            title="Saldo de vacaciones"
           >
             <p className={styles.muted}>
               Consultá el saldo, registrá la apertura o aplicá un ajuste auditable.

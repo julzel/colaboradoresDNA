@@ -6,6 +6,7 @@ import type { PlatformUserDocument } from "@/features/auth/domain/platform-user"
 import type { EmployeeDocument } from "@/features/employees/domain/employee";
 import { objectIdStringSchema } from "@/features/employees/domain/shared";
 import {
+  normalizePtoCategory,
   PtoDomainError,
   ptoBalanceAdjustmentInputSchema,
   ptoCategoryConsumesBalance,
@@ -45,6 +46,7 @@ function toPtoRequest(document: PtoRequestDocument): PtoRequest {
   } = document;
   return {
     ...request,
+    category: normalizePtoCategory(request.category),
     assignedApproverPlatformUserId:
       assignedApproverPlatformUserId?.toHexString() ?? null,
     createdByPlatformUserId: (

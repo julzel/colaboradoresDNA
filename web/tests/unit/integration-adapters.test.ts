@@ -99,6 +99,7 @@ describe("cross-feature integration adapters", () => {
         "507f1f77bcf86cd799439099",
       ),
     ).resolves.toEqual({
+      category: "vacation",
       categoryLabel: "Vacaciones",
       durationLabel: "1,5",
       endDate: "2026-08-27",

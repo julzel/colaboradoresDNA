@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { BackLink } from "@/components/ui/navigation/back-link";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
+import { PtoCategoryBadge } from "@/features/pto/components/pto-category-badge";
 import styles from "@/features/pto/components/pto.module.css";
 import {
   PtoCancelForm,
@@ -13,11 +14,7 @@ import {
   PtoReassignmentForm,
   PtoSubmitForm,
 } from "@/features/pto/components/pto-transition-forms";
-import {
-  formatPtoDays,
-  ptoCategoryLabels,
-  ptoStatusLabels,
-} from "@/features/pto/domain/pto";
+import { formatPtoDays, ptoStatusLabels } from "@/features/pto/domain/pto";
 import { getPtoRequestDetail } from "@/features/pto/server/pto-service";
 
 export const metadata: Metadata = { title: "Solicitud de ausencia" };
@@ -46,7 +43,9 @@ export default async function PtoRequestDetailPage({
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Solicitud de {request.requesterName}</p>
-            <h1>{ptoCategoryLabels[request.category]}</h1>
+            <h1>
+              <PtoCategoryBadge category={request.category} size="large" />
+            </h1>
           </div>
           <StatusBadge tone={statusTones[request.status]}>
             {ptoStatusLabels[request.status]}
@@ -62,7 +61,7 @@ export default async function PtoRequestDetailPage({
               )}
               {warnings.wouldBeNegative && warnings.projectedBalanceUnits !== null && (
                 <li>
-                  El saldo proyectado será de{" "}
+                  El saldo de vacaciones proyectado será de{" "}
                   {formatPtoDays(warnings.projectedBalanceUnits)} días.
                 </li>
               )}
@@ -95,7 +94,7 @@ export default async function PtoRequestDetailPage({
               )}
               {request.balanceBeforeUnits !== null && (
                 <div>
-                  <dt>Efecto en saldo</dt>
+                  <dt>Efecto en saldo de vacaciones</dt>
                   <dd>
                     {formatPtoDays(request.balanceBeforeUnits)} →{" "}
                     {formatPtoDays(request.balanceAfterUnits ?? 0)} días
