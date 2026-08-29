@@ -216,15 +216,18 @@ administrator created on behalf of an employee:
 
 ### 1. Category balance effects
 
-The MVP uses one generic absence balance. All categories consume that balance
-when approved:
+The PTO balance represents vacation availability. Only an approved vacation
+request consumes that balance:
 
-| Category   | Balance effect |
-| ---------- | -------------- |
-| `vacation` | `-duration`    |
-| `sick`     | `-duration`    |
-| `personal` | `-duration`    |
-| `other`    | `-duration`    |
+| Category       | Balance effect |
+| -------------- | -------------- |
+| `vacation`     | `-duration`    |
+| `incapacity`   | none           |
+| `maternity`    | none           |
+| `paternity`    | none           |
+| `unpaid_leave` | none           |
+| `bereavement`  | none           |
+| `other`        | none           |
 
 Recommended model:
 
@@ -250,12 +253,15 @@ colleagues or the entire company.
 
 Use exactly these internal enum values and Spanish labels:
 
-| Code value | Spanish label    |
-| ---------- | ---------------- |
-| `vacation` | Vacaciones       |
-| `sick`     | Enfermedad       |
-| `personal` | Permiso personal |
-| `other`    | Otro             |
+| Code value     | Spanish label             |
+| -------------- | ------------------------- |
+| `vacation`     | Vacaciones                |
+| `incapacity`   | Incapacidad               |
+| `maternity`    | Maternidad                |
+| `paternity`    | Paternidad                |
+| `unpaid_leave` | Permiso sin goce salarial |
+| `bereavement`  | Duelo                     |
+| `other`        | Otro                      |
 
 Category labels are presentation data. They do not imply separate balances,
 allowances, accrual rates, documentation requirements, or approval rules.
@@ -432,7 +438,14 @@ type PtoRequestDocument = {
   startDate: string;
   endDate: string;
   durationUnits: number;
-  category: "vacation" | "sick" | "personal" | "other";
+  category:
+    | "vacation"
+    | "incapacity"
+    | "maternity"
+    | "paternity"
+    | "unpaid_leave"
+    | "bereavement"
+    | "other";
   collaboratorNote: string | null;
   status: PtoRequestStatus;
   statusHistory: PtoStatusHistoryEntry[];
@@ -667,7 +680,7 @@ Rules:
 - `description`, collaborator note, decision note, balance, and ledger data are
   never included.
 - The category is not exposed in a shared calendar projection unless product
-  explicitly approves that visibility; `Enfermedad` is potentially sensitive.
+  explicitly approves that visibility; `Incapacidad` is potentially sensitive.
 - Recommended visibility is requester, assigned approver, and administrators.
 - A detail link is returned only when the viewer can read the underlying
   request.
@@ -747,8 +760,9 @@ consumer without creating an unused schedule UI in this delivery.
 4. Administrator requests enter the same pool and are hidden from their own
    approval queue.
 5. No requester can approve their own request.
-6. Missing assignment and missing opening balance are configuration blockers
-   with safe Spanish messages; the draft remains intact.
+6. Missing assignment is a configuration blocker for every category. A missing
+   opening vacation balance blocks only vacation submissions; the draft remains
+   intact in either case and the UI shows a safe Spanish message.
 7. Successful submission snapshots the approver, records actor and timestamp,
    and changes exactly once to `pending`.
 

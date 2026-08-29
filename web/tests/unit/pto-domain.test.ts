@@ -5,7 +5,11 @@ import {
   daysToUnits,
   formatPtoDateRange,
   formatPtoDays,
+  normalizePtoCategory,
   ptoAdjustmentDaysSchema,
+  ptoCategories,
+  ptoCategoryConsumesBalance,
+  ptoCategoryLabels,
   ptoDraftInputSchema,
   ptoDurationDaysSchema,
   ptoOpeningBalanceDaysSchema,
@@ -14,6 +18,32 @@ import {
 } from "@/features/pto/domain/pto";
 
 describe("PTO domain", () => {
+  it("defines the supported leave categories in UI order", () => {
+    expect(
+      ptoCategories.map((category) => [category, ptoCategoryLabels[category]]),
+    ).toEqual([
+      ["vacation", "Vacaciones"],
+      ["incapacity", "Incapacidad"],
+      ["maternity", "Maternidad"],
+      ["paternity", "Paternidad"],
+      ["unpaid_leave", "Permiso sin goce salarial"],
+      ["bereavement", "Duelo"],
+      ["other", "Otro"],
+    ]);
+  });
+
+  it("only charges vacation requests to the PTO balance", () => {
+    expect(
+      ptoCategories.filter((category) => ptoCategoryConsumesBalance[category]),
+    ).toEqual(["vacation"]);
+  });
+
+  it("normalizes legacy and unknown stored categories safely", () => {
+    expect(normalizePtoCategory("sick")).toBe("incapacity");
+    expect(normalizePtoCategory("personal")).toBe("other");
+    expect(normalizePtoCategory("unexpected-value")).toBe("other");
+  });
+
   it("stores day values as exact half-day units", () => {
     expect(daysToUnits(1.5)).toBe(3);
     expect(unitsToDays(3)).toBe(1.5);

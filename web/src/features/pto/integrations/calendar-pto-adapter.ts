@@ -18,6 +18,7 @@ export const calendarPtoIntegration: CalendarPtoIntegration = {
     if (!detail || detail.request.status !== "approved") return null;
 
     return {
+      category: detail.request.category,
       categoryLabel: ptoCategoryLabels[detail.request.category],
       durationLabel: formatPtoDays(detail.request.durationUnits),
       endDate: detail.request.endDate,

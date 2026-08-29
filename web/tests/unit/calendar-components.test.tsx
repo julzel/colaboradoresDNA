@@ -232,6 +232,7 @@ describe("calendar quick details", () => {
     render(
       <CalendarPtoQuickDetailContent
         detail={{
+          category: "vacation",
           categoryLabel: "Vacaciones",
           durationLabel: "1,5",
           endDate: "2026-07-12",

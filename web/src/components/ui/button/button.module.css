@@ -44,7 +44,7 @@
 
 .primary {
   background: var(--background-primary-action);
-  color: var(--color-brand-contrast);
+  color: var(--neutral-0);
 }
 
 .primary:hover:not(:disabled) {

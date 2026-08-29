@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
-import { ButtonLink } from "@/components/ui/button/button";
+import { Button, ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import {
@@ -34,13 +34,20 @@ type EditablePtoRequest = {
 
 export function PtoRequestForm({
   employeeId,
+  onCancel,
+  presentation = "page",
   request,
 }: {
   employeeId?: string;
+  onCancel?: () => void;
+  presentation?: "modal" | "page";
   request?: EditablePtoRequest;
 }) {
   const saveAction = employeeId ? saveEmployeePtoDraftAction : savePtoDraftAction;
   const [state, action] = useActionState(saveAction, initialPtoActionState);
+  const [selectedCategory, setSelectedCategory] = useState<PtoCategory>(
+    request?.category ?? "vacation",
+  );
   const cancelHref = employeeId
     ? request
       ? `/ausencias/${request.id}`
@@ -49,7 +56,12 @@ export function PtoRequestForm({
       ? `/ausencias/${request.id}`
       : "/ausencias";
   return (
-    <ElevatedSurface action={action} as="form" className={styles.formCard}>
+    <ElevatedSurface
+      action={action}
+      as="form"
+      className={styles.formCard}
+      data-presentation={presentation}
+    >
       {employeeId && <input name="employeeId" type="hidden" value={employeeId} />}
       {request && <input name="requestId" type="hidden" value={request.id} />}
       {state.message && (
@@ -87,22 +99,27 @@ export function PtoRequestForm({
           step="0.5"
           type="number"
         />
-        <SelectField
-          defaultValue={request?.category ?? "vacation"}
-          error={state.errors?.category}
-          id="category"
-          label="Categoría"
-          name="category"
-          required
-        >
-          {(Object.entries(ptoCategoryLabels) as Array<[PtoCategory, string]>).map(
-            ([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ),
-          )}
-        </SelectField>
+        <div className={styles.categoryField}>
+          <SelectField
+            defaultValue={selectedCategory}
+            error={state.errors?.category}
+            id="category"
+            label="Categoría"
+            name="category"
+            onChange={(event) =>
+              setSelectedCategory(event.currentTarget.value as PtoCategory)
+            }
+            required
+          >
+            {(Object.entries(ptoCategoryLabels) as Array<[PtoCategory, string]>).map(
+              ([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ),
+            )}
+          </SelectField>
+        </div>
         <div className={styles.fullWidth}>
           <TextAreaField
             defaultValue={request?.collaboratorNote ?? ""}
@@ -120,9 +137,15 @@ export function PtoRequestForm({
         <SubmitButton pendingLabel="Guardando…">
           {employeeId && !request ? "Crear solicitud" : "Guardar borrador"}
         </SubmitButton>
-        <ButtonLink href={cancelHref} variant="quiet">
-          Cancelar
-        </ButtonLink>
+        {onCancel ? (
+          <Button onClick={onCancel} variant="quiet">
+            Cancelar
+          </Button>
+        ) : (
+          <ButtonLink href={cancelHref} variant="quiet">
+            Cancelar
+          </ButtonLink>
+        )}
       </div>
     </ElevatedSurface>
   );

@@ -187,6 +187,7 @@ describe("calendar service authorization and aggregation", () => {
 
   it("returns only approved leave fields needed by the calendar summary", async () => {
     mocks.getVisibleApprovedAbsenceDetail.mockResolvedValue({
+      category: "vacation",
       categoryLabel: "Vacaciones",
       durationLabel: "1",
       endDate: "2026-07-12",
@@ -199,6 +200,7 @@ describe("calendar service authorization and aggregation", () => {
     await expect(
       getVisibleCalendarPtoDetail("507f1f77bcf86cd799439099"),
     ).resolves.toEqual({
+      category: "vacation",
       categoryLabel: "Vacaciones",
       durationLabel: "1",
       endDate: "2026-07-12",
