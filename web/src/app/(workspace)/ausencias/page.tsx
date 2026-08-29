@@ -194,6 +194,7 @@ export default async function PtoDashboardPage({
                       aria-label={`Ver solicitud de ${ptoCategoryLabels[request.category]}`}
                       className={styles.historyRow}
                       href={`/ausencias/${request.id}`}
+                      scroll={false}
                     >
                       <div className={styles.historyRequestType}>
                         <PtoCategoryIcon category={request.category} />
