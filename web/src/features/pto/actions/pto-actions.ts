@@ -51,9 +51,9 @@ function ptoErrorState(error: unknown): PtoActionState {
     const messages: Record<PtoDomainError["code"], string> = {
       approver_ineligible:
         "No hay una persona aprobadora elegible. Revisá la jefatura asignada.",
-      balance_exists: "Este colaborador ya tiene un saldo de ausencias.",
+      balance_exists: "Este colaborador ya tiene un saldo de vacaciones.",
       balance_missing:
-        "No hay un saldo inicial registrado. Administración debe configurarlo primero.",
+        "No hay un saldo inicial de vacaciones. Administración debe configurarlo primero.",
       employee_missing: "No encontramos un colaborador activo asociado a esta cuenta.",
       forbidden: "No tenés permiso para realizar esta acción.",
       request_missing: "No encontramos la solicitud.",

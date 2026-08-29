@@ -79,10 +79,6 @@ export default async function ProfilePage() {
         <header className={styles.pageHeader}>
           <p className="eyebrow">Cuenta personal</p>
           <h1>Mi perfil</h1>
-          <p>
-            Consultá tu información y elegí cómo querés aparecer en los espacios
-            sociales de la aplicación.
-          </p>
         </header>
 
         <ElevatedSurface as="section" className={styles.hero}>

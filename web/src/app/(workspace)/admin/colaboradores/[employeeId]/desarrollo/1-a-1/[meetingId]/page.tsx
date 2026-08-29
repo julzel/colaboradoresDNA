@@ -53,7 +53,6 @@ export default async function OneOnOnePage({
             <div>
               <p className="eyebrow">Borrador</p>
               <h1>Continuar 1:1 con {detail.employee.displayName}</h1>
-              <p>Guardado por última vez en la versión {detail.meeting.version}.</p>
             </div>
           </div>
         </ElevatedSurface>

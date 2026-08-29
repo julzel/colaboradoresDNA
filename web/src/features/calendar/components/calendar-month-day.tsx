@@ -1,4 +1,3 @@
-import { CakeSlice, CalendarDays, Umbrella } from "lucide-react";
 import Link from "next/link";
 
 import { type CalendarEntry } from "@/features/calendar/domain/calendar-entry";
@@ -8,6 +7,11 @@ import {
 } from "@/features/calendar/domain/calendar-query";
 import { formatCalendarDate } from "@/features/calendar/domain/calendar-utils";
 
+import {
+  CalendarEntryIcon,
+  getCalendarEntryPreviewDetail,
+  getCalendarEntryPreviewTitle,
+} from "./calendar-entry-presentation";
 import styles from "./calendar.module.css";
 
 type CalendarMonthDayProps = {
@@ -43,6 +47,7 @@ export function CalendarMonthDay({
       className={styles.monthDay}
       data-current-month={day.inCurrentMonth}
       data-selected={isSelected}
+      data-today={isToday}
       role="gridcell"
     >
       <Link
@@ -59,16 +64,11 @@ export function CalendarMonthDay({
       </Link>
       <div aria-hidden="true" className={styles.mobileIndicators}>
         {visibleEntries.map((entry) => {
-          const Icon =
-            entry.kind === "birthday"
-              ? CakeSlice
-              : entry.kind === "pto"
-                ? Umbrella
-                : CalendarDays;
           return (
-            <Icon
+            <CalendarEntryIcon
               data-event-type={entry.eventType ?? undefined}
               data-kind={entry.kind}
+              entry={entry}
               key={entry.id}
               size={12}
             />
@@ -76,8 +76,23 @@ export function CalendarMonthDay({
         })}
       </div>
       <div className={styles.desktopPreviews}>
-        {visibleEntries.map((entry) =>
-          entry.detailHref ? (
+        {visibleEntries.map((entry) => {
+          const content = (
+            <>
+              <CalendarEntryIcon
+                aria-hidden="true"
+                className={styles.eventPreviewIcon}
+                entry={entry}
+                size={14}
+              />
+              <span className={styles.eventPreviewCopy}>
+                <strong>{getCalendarEntryPreviewTitle(entry)}</strong>
+                <span>{getCalendarEntryPreviewDetail(entry)}</span>
+              </span>
+            </>
+          );
+
+          return entry.detailHref ? (
             <Link
               className={styles.eventPreview}
               data-event-type={entry.eventType ?? undefined}
@@ -85,7 +100,7 @@ export function CalendarMonthDay({
               href={entry.detailHref}
               key={entry.id}
             >
-              {entry.title}
+              {content}
             </Link>
           ) : (
             <span
@@ -94,10 +109,10 @@ export function CalendarMonthDay({
               data-kind={entry.kind}
               key={entry.id}
             >
-              {entry.title}
+              {content}
             </span>
-          ),
-        )}
+          );
+        })}
         {remaining > 0 && (
           <Link
             className={styles.moreEvents}
@@ -107,7 +122,7 @@ export function CalendarMonthDay({
               view: "month",
             })}
           >
-            Ver {remaining} más
+            +{remaining} más
           </Link>
         )}
       </div>

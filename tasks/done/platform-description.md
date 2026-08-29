@@ -108,22 +108,25 @@ avoid inconsistent translations.
 
 ### Initial terminology
 
-| English code concept | Spanish interface text  |
-| -------------------- | ----------------------- |
-| Administrator        | Administrador           |
-| Supervisor           | Supervisor              |
-| Collaborator         | Colaborador             |
-| PTO requests         | Solicitudes de ausencia |
-| Available balance    | Saldo disponible        |
-| Vacation             | Vacaciones              |
-| Sick                 | Enfermedad              |
-| Personal             | Permiso personal        |
-| Other                | Otro                    |
-| Draft                | Borrador                |
-| Pending              | Pendiente               |
-| Approved             | Aprobada                |
-| Denied               | Rechazada               |
-| Cancelled            | Cancelada               |
+| English code concept | Spanish interface text         |
+| -------------------- | ------------------------------ |
+| Administrator        | Administrador                  |
+| Supervisor           | Supervisor                     |
+| Collaborator         | Colaborador                    |
+| PTO requests         | Solicitudes de ausencia        |
+| Available balance    | Saldo de vacaciones disponible |
+| Vacation             | Vacaciones                     |
+| Incapacity           | Incapacidad                    |
+| Maternity            | Maternidad                     |
+| Paternity            | Paternidad                     |
+| Unpaid leave         | Permiso sin goce salarial      |
+| Bereavement          | Duelo                          |
+| Other                | Otro                           |
+| Draft                | Borrador                       |
+| Pending              | Pendiente                      |
+| Approved             | Aprobada                       |
+| Denied               | Rechazada                      |
+| Cancelled            | Cancelada                      |
 
 Product copy may be refined during interface design, but the same concept must
 use the same Spanish term throughout the platform.
@@ -393,6 +396,8 @@ may continue to use the concise `pto` domain name.
 
 #### PTO balance
 
+- The balance represents vacation availability; other absence categories do
+  not change it.
 - An administrator assigns an initial balance when creating a collaborator.
 - Existing collaborators receive a manually entered opening balance during
   migration.
@@ -406,12 +411,15 @@ may continue to use the concise `pto` domain name.
 
 Internal enum values and Spanish labels:
 
-| Code value | Spanish label    |
-| ---------- | ---------------- |
-| `vacation` | Vacaciones       |
-| `sick`     | Enfermedad       |
-| `personal` | Permiso personal |
-| `other`    | Otro             |
+| Code value     | Spanish label             |
+| -------------- | ------------------------- |
+| `vacation`     | Vacaciones                |
+| `incapacity`   | Incapacidad               |
+| `maternity`    | Maternidad                |
+| `paternity`    | Paternidad                |
+| `unpaid_leave` | Permiso sin goce salarial |
+| `bereavement`  | Duelo                     |
+| `other`        | Otro                      |
 
 Allowance policies and automatic accrual are intentionally not defined in this
 MVP and must not be inferred.

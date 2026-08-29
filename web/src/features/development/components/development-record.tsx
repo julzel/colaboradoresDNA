@@ -89,10 +89,6 @@ export function DevelopmentRecord({
             )}
           </div>
           <h1>{employee.displayName}</h1>
-          <p className={styles.heroDescription}>
-            {employee.positionTitle ?? "Sin puesto asignado"} ·{" "}
-            {employee.departmentName ?? "Sin departamento"}
-          </p>
         </div>
         <div className={styles.heroActions}>
           {isActive && (

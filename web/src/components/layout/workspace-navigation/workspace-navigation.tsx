@@ -6,28 +6,41 @@ import { SideNavigation } from "@/components/ui/navigation/side-navigation";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
 import {
   getActiveNavigationHref,
-  getWorkspaceNavigation,
+  getDesktopWorkspaceNavigationSections,
 } from "@/features/navigation/workspace-navigation";
 
+import styles from "./workspace-navigation.module.css";
+
 type WorkspaceNavigationProps = {
+  expanded?: boolean;
   label?: string;
   role: PlatformRole;
   unreadNotificationCount?: number;
 };
 
 export function WorkspaceNavigation({
+  expanded = false,
   label = "Navegación principal",
   role,
   unreadNotificationCount = 0,
 }: WorkspaceNavigationProps) {
   const pathname = usePathname();
-  const items = getWorkspaceNavigation(role, unreadNotificationCount);
+  const sections = getDesktopWorkspaceNavigationSections(role, unreadNotificationCount);
+  const items = sections.flatMap((section) => section.items);
+  const currentHref = getActiveNavigationHref(pathname, items);
 
   return (
-    <SideNavigation
-      currentHref={getActiveNavigationHref(pathname, items)}
-      items={items}
-      label={label}
-    />
+    <div aria-label={label} className={styles.navigation} role="group">
+      {sections.map((section) => (
+        <div key={section.label}>
+          <SideNavigation
+            currentHref={currentHref}
+            expanded={expanded}
+            items={section.items}
+            label={section.label}
+          />
+        </div>
+      ))}
+    </div>
   );
 }

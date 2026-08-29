@@ -120,8 +120,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { color: "#07bbc7", media: "(prefers-color-scheme: light)" },
-    { color: "#041618", media: "(prefers-color-scheme: dark)" },
+    { color: "#f7f5ef", media: "(prefers-color-scheme: light)" },
+    { color: "#061614", media: "(prefers-color-scheme: dark)" },
   ],
 };
 
@@ -136,13 +136,13 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           afterSignOutUrl="/sign-in"
           appearance={{
             variables: {
-              borderRadius: "0.625rem",
+              borderRadius: "0.75rem",
               colorBackground: "var(--color-surface)",
               colorForeground: "var(--color-text)",
               colorInput: "var(--color-surface)",
               colorInputForeground: "var(--color-text)",
               colorMutedForeground: "var(--color-text-muted)",
-              colorPrimary: "#07bbc7",
+              colorPrimary: "#31c7cf",
               fontFamily: "var(--font-sans)",
             },
           }}

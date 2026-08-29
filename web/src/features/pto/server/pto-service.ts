@@ -14,6 +14,7 @@ import {
 } from "@/features/employees/server/employee-repository";
 import {
   PtoDomainError,
+  ptoCategoryConsumesBalance,
   ptoDraftInputSchema,
   type PtoDraftInput,
   type PtoRequest,
@@ -311,7 +312,10 @@ export async function submitOwnPtoDraft({ requestId }: { requestId: string }) {
   ) {
     throw new PtoDomainError("employee_missing");
   }
-  if (!(await findPtoBalance(employee.id))) {
+  if (
+    ptoCategoryConsumesBalance[request.category] &&
+    !(await findPtoBalance(employee.id))
+  ) {
     throw new PtoDomainError("balance_missing");
   }
   const approverPlatformUserId = await resolveSubmissionApprover({

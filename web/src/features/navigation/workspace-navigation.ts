@@ -1,4 +1,13 @@
-import { CalendarDays, ClipboardClock, House, Settings } from "lucide-react";
+import {
+  CalendarDays,
+  ChartNoAxesColumnIncreasing,
+  ClipboardCheck,
+  ClipboardClock,
+  House,
+  Settings,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react";
 
 import type { NavigationItem } from "@/components/ui/navigation/side-navigation";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
@@ -13,6 +22,30 @@ const administratorNavigationItem: NavigationItem = {
   href: "/admin",
   icon: Settings,
   label: "Administración",
+};
+
+const administratorWorkspaceItems: readonly NavigationItem[] = [
+  {
+    href: "/admin/colaboradores",
+    icon: UsersRound,
+    label: "Colaboradores",
+  },
+  {
+    href: "/admin/ausencias",
+    icon: ClipboardCheck,
+    label: "Aprobar ausencias",
+  },
+  {
+    href: "/admin/desarrollo",
+    icon: ChartNoAxesColumnIncreasing,
+    label: "Desarrollo",
+  },
+  { href: "/admin/accounts", icon: ShieldCheck, label: "Cuentas y acceso" },
+];
+
+export type WorkspaceNavigationSection = {
+  items: readonly NavigationItem[];
+  label: string;
 };
 
 export function getWorkspaceNavigation(
@@ -38,16 +71,47 @@ export function getWorkspaceNavigation(
   ];
 }
 
+export function getDesktopWorkspaceNavigationSections(
+  role: PlatformRole,
+  unreadNotificationCount = 0,
+): readonly WorkspaceNavigationSection[] {
+  const workspaceItems = baseNavigationItems.map((item) => {
+    if (item.href === "/") {
+      return unreadNotificationCount > 0
+        ? {
+            ...item,
+            badge:
+              unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount),
+          }
+        : item;
+    }
+
+    return item.href === "/calendario"
+      ? { ...item, href: "/calendario?vista=mes" }
+      : item;
+  });
+
+  return role === "administrator"
+    ? [
+        { items: workspaceItems, label: "Espacio de trabajo" },
+        { items: administratorWorkspaceItems, label: "Administración" },
+      ]
+    : [{ items: workspaceItems, label: "Espacio de trabajo" }];
+}
+
 export function getActiveNavigationHref(
   pathname: string,
   items: readonly NavigationItem[],
 ) {
   const activeItem = items
-    .filter(
-      (item) =>
-        item.href === pathname ||
-        (item.href !== "/" && pathname.startsWith(`${item.href}/`)),
-    )
+    .filter((item) => {
+      const itemPathname = item.href.split("?")[0] ?? item.href;
+
+      return (
+        itemPathname === pathname ||
+        (itemPathname !== "/" && pathname.startsWith(`${itemPathname}/`))
+      );
+    })
     .sort((first, second) => second.href.length - first.href.length)[0];
 
   return activeItem?.href ?? "/";

@@ -80,6 +80,7 @@ describe("PTO submission routing", () => {
     });
     mocks.findPtoBalance.mockResolvedValue({ currentBalanceUnits: 10 });
     mocks.findPtoRequestById.mockResolvedValue({
+      category: "vacation",
       createdByPlatformUserId: actorId,
       requesterEmployeeId: employeeId,
       requesterPlatformUserId: actorId,
@@ -164,6 +165,57 @@ describe("PTO submission routing", () => {
       approverPlatformUserId: null,
       requestId,
     });
+  });
+
+  it("submits a non-vacation request without an initialized balance", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "supervisor" },
+    });
+    mocks.findPtoRequestById.mockResolvedValue({
+      category: "incapacity",
+      createdByPlatformUserId: actorId,
+      requesterEmployeeId: employeeId,
+      requesterPlatformUserId: actorId,
+    });
+    mocks.findEmployeeById.mockResolvedValue({
+      employmentStatus: "active",
+      id: employeeId,
+    });
+    mocks.findPlatformUserById.mockResolvedValue({
+      id: actorId,
+      role: "supervisor",
+      status: "active",
+    });
+
+    await submitOwnPtoDraft({ requestId });
+
+    expect(mocks.findPtoBalance).not.toHaveBeenCalled();
+    expect(mocks.submitPtoDraft).toHaveBeenCalledWith({
+      actorPlatformUserId: actorId,
+      approverPlatformUserId: null,
+      requestId,
+    });
+  });
+
+  it("requires an initialized balance before submitting vacation", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "supervisor" },
+    });
+    mocks.findEmployeeById.mockResolvedValue({
+      employmentStatus: "active",
+      id: employeeId,
+    });
+    mocks.findPlatformUserById.mockResolvedValue({
+      id: actorId,
+      role: "supervisor",
+      status: "active",
+    });
+    mocks.findPtoBalance.mockResolvedValue(null);
+
+    await expect(submitOwnPtoDraft({ requestId })).rejects.toMatchObject({
+      code: "balance_missing",
+    });
+    expect(mocks.submitPtoDraft).not.toHaveBeenCalled();
   });
 
   it("routes an administrator request to the shared administrator pool", async () => {

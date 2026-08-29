@@ -198,7 +198,7 @@ export function EmployeeCreationForm({
           <TextField
             defaultValue="0"
             id="initialPtoBalanceDays"
-            label="Saldo inicial de ausencias (días)"
+            label="Saldo inicial de vacaciones (días)"
             name="initialPtoBalanceDays"
             required
             step="0.5"
@@ -269,7 +269,7 @@ export function EmployeeCreationForm({
             <dd>{review.employmentStartedOn}</dd>
           </div>
           <div>
-            <dt>Saldo inicial de ausencias</dt>
+            <dt>Saldo inicial de vacaciones</dt>
             <dd>{review.initialPtoBalanceDays} días</dd>
           </div>
         </dl>

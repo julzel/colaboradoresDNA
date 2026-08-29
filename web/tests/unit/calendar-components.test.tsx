@@ -113,6 +113,63 @@ describe("calendar views", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("No hay actividades para este día.")).toBeInTheDocument();
   });
+
+  it("builds the month legend and selected-day actions from visible entries", () => {
+    render(
+      <CalendarMonth
+        canCreateEvents
+        entries={[
+          {
+            allDay: true,
+            canManage: false,
+            description: null,
+            detailHref: "/calendario/cumpleanos/person/2026",
+            endAt: "2026-07-14T06:00:00.000Z",
+            endDate: "2026-07-13",
+            id: "birthday:person:2026",
+            kind: "birthday",
+            label: "Cumpleaños",
+            location: null,
+            meetingUrl: null,
+            note: null,
+            startAt: "2026-07-13T06:00:00.000Z",
+            startDate: "2026-07-13",
+            title: "Ana Mora",
+          },
+          {
+            allDay: true,
+            canManage: false,
+            description: null,
+            detailHref: "/calendario/ausencias/request",
+            endAt: "2026-07-14T06:00:00.000Z",
+            endDate: "2026-07-13",
+            id: "pto:request",
+            kind: "pto",
+            label: "Ausencia · 1 día",
+            location: null,
+            meetingUrl: null,
+            note: null,
+            startAt: "2026-07-13T06:00:00.000Z",
+            startDate: "2026-07-13",
+            title: "Luis Vargas",
+          },
+        ]}
+        eventFormOptions={{ departments: [], people: [] }}
+        query={{ day: "2026-07-13", month: "2026-07", view: "month" }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("region", { name: "Leyenda del calendario" }),
+    ).toHaveTextContent("Cumpleaños");
+    expect(
+      screen.getByRole("region", { name: "Leyenda del calendario" }),
+    ).toHaveTextContent("Ausencias");
+    expect(screen.getByText("2 eventos")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Nuevo evento" })).toHaveTextContent(
+      "Nuevo evento",
+    );
+  });
 });
 
 describe("calendar event detail", () => {
@@ -175,6 +232,7 @@ describe("calendar quick details", () => {
     render(
       <CalendarPtoQuickDetailContent
         detail={{
+          category: "vacation",
           categoryLabel: "Vacaciones",
           durationLabel: "1,5",
           endDate: "2026-07-12",

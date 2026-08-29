@@ -45,10 +45,6 @@ export default async function NewOneOnOnePage({
             <div>
               <p className="eyebrow">Nuevo seguimiento</p>
               <h1>1:1 con {employee.displayName}</h1>
-              <p>
-                {employee.positionTitle ?? "Sin puesto"} ·{" "}
-                {employee.departmentName ?? "Sin departamento"}
-              </p>
             </div>
           </div>
         </ElevatedSurface>

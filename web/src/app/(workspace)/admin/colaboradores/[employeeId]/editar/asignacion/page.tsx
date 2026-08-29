@@ -29,7 +29,6 @@ export default async function EditAssignmentPage({
           <div>
             <p className="eyebrow">Colaborador</p>
             <h1>Cambiar asignación</h1>
-            <p>La asignación anterior se conservará en el historial.</p>
           </div>
         </header>
         <AssignmentForm

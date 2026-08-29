@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/ui/button/button";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { formatCalendarDate } from "@/features/calendar/domain/calendar-utils";
 import type { CalendarPtoQuickDetail } from "@/features/calendar/view-models/calendar-pto-view";
+import { PtoCategoryBadge } from "@/features/pto/components/pto-category-badge";
 
 import styles from "./calendar.module.css";
 
@@ -27,9 +28,7 @@ export function CalendarPtoQuickDetailContent({
   return (
     <div className={styles.eventDetailContent}>
       <div className={styles.eventDetailOverview}>
-        <span className={styles.quickDetailLabel} data-kind="pto">
-          {detail.categoryLabel}
-        </span>
+        <PtoCategoryBadge category={detail.category} />
         <StatusBadge tone="success">{detail.statusLabel}</StatusBadge>
       </div>
 

@@ -28,7 +28,6 @@ export default async function EditAccessPage({
           <div>
             <p className="eyebrow">Colaborador</p>
             <h1>Gestionar acceso y relación laboral</h1>
-            <p>El acceso y el estado laboral se administran por separado.</p>
           </div>
         </header>
         <AccessManagementForm

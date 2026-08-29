@@ -5,7 +5,6 @@ import { Container } from "@/components/ui/container/container";
 import { BackLink } from "@/components/ui/navigation/back-link";
 import styles from "@/features/pto/components/pto.module.css";
 import { PtoRequestForm } from "@/features/pto/components/pto-request-form";
-import { formatPtoDays } from "@/features/pto/domain/pto";
 import { getEmployeePtoAdministration } from "@/features/pto/server/pto-service";
 
 export const metadata: Metadata = { title: "Nueva solicitud de ausencia" };
@@ -23,18 +22,12 @@ export default async function NewEmployeePtoRequestPage({
     <Container>
       <div className={styles.page}>
         <BackLink href={`/admin/colaboradores/${employeeId}/ausencias`}>
-          Volver al saldo de ausencias
+          Volver al saldo de vacaciones
         </BackLink>
         <header className={styles.header}>
           <div>
             <p className="eyebrow">Administración</p>
             <h1>Nueva solicitud</h1>
-            <p>
-              {detail.employeeName} · Saldo actual:{" "}
-              {detail.balanceUnits === null
-                ? "Sin configurar"
-                : `${formatPtoDays(detail.balanceUnits)} días`}
-            </p>
           </div>
         </header>
         <PtoRequestForm employeeId={employeeId} />

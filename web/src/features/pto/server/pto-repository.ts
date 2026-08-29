@@ -6,6 +6,7 @@ import type { PlatformUserDocument } from "@/features/auth/domain/platform-user"
 import type { EmployeeDocument } from "@/features/employees/domain/employee";
 import { objectIdStringSchema } from "@/features/employees/domain/shared";
 import {
+  normalizePtoCategory,
   PtoDomainError,
   ptoBalanceAdjustmentInputSchema,
   ptoCategoryConsumesBalance,
@@ -45,6 +46,7 @@ function toPtoRequest(document: PtoRequestDocument): PtoRequest {
   } = document;
   return {
     ...request,
+    category: normalizePtoCategory(request.category),
     assignedApproverPlatformUserId:
       assignedApproverPlatformUserId?.toHexString() ?? null,
     createdByPlatformUserId: (
@@ -637,7 +639,7 @@ export async function listPtoRequestsForRequester(employeeId: string) {
   const { requests } = await getPtoCollections();
   const documents = await requests
     .find({ requesterEmployeeId: new ObjectId(employeeId) })
-    .sort({ createdAt: -1 })
+    .sort({ startDate: -1, createdAt: -1 })
     .toArray();
   return documents.map(toPtoRequest);
 }

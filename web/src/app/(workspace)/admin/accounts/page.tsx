@@ -140,10 +140,6 @@ export default async function AccountsPage() {
         <div>
           <p className={styles.eyebrow}>Administración</p>
           <h1>Cuentas y acceso</h1>
-          <p>
-            Invitá personas, reenviá accesos vencidos y desactivá cuentas sin borrar su
-            historial.
-          </p>
         </div>
         <Link className={styles.backLink} href="/admin">
           Volver a administración

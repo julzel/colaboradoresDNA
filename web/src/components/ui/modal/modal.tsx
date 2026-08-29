@@ -17,6 +17,7 @@ import styles from "./modal.module.css";
 type ModalProps = {
   children: ReactNode;
   description?: string;
+  icon?: ReactNode;
   onClose?: () => void;
   title: string;
 };
@@ -30,7 +31,7 @@ const focusableSelector = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
-export function Modal({ children, description, onClose, title }: ModalProps) {
+export function Modal({ children, description, icon, onClose, title }: ModalProps) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -124,9 +125,12 @@ export function Modal({ children, description, onClose, title }: ModalProps) {
         tabIndex={-1}
       >
         <header className={styles.header}>
-          <div>
-            <h2 id={titleId}>{title}</h2>
-            {description && <p id={descriptionId}>{description}</p>}
+          <div className={styles.heading}>
+            {icon && <span className={styles.titleIcon}>{icon}</span>}
+            <div>
+              <h2 id={titleId}>{title}</h2>
+              {description && <p id={descriptionId}>{description}</p>}
+            </div>
           </div>
           <button
             aria-label="Cerrar"

@@ -186,9 +186,6 @@ export function DevelopmentDashboardShell({
         <div>
           <p className="eyebrow">Administración</p>
           <h1 id="development-title">Desarrollo</h1>
-          <p className={styles.headingDescription}>
-            Priorizá los seguimientos y abrí el registro de cada colaborador.
-          </p>
         </div>
       </header>
 

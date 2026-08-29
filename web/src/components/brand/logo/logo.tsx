@@ -8,11 +8,18 @@ const logoHeight = Math.round((42 / 108) * logoWidth);
 type LogoProps = {
   className?: string;
   priority?: boolean;
+  tone?: "adaptive" | "light";
 };
 
-export function Logo({ className = "", priority = false }: LogoProps) {
+export function Logo({
+  className = "",
+  priority = false,
+  tone = "adaptive",
+}: LogoProps) {
   return (
-    <span className={`${styles.logo} ${className}`.trim()}>
+    <span
+      className={`${styles.logo} ${tone === "light" ? styles.forceLight : ""} ${className}`.trim()}
+    >
       <Image
         alt=""
         className={`${styles.image} ${styles.light}`}

@@ -48,7 +48,7 @@
 }
 
 .primary:hover:not(:disabled) {
-  background: var(--background-primary-action);
+  background: var(--color-brand-hover);
   box-shadow: var(--shadow-md);
 }
 
