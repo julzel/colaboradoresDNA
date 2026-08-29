@@ -38,6 +38,15 @@ warning projections and approval transactions use that mapping. Non-vacation
 requests can be submitted and approved without an initialized vacation balance;
 their request balance snapshots remain `null` and no ledger entry is created.
 
+## New request UI
+
+Collaborators create leave requests from `/ausencias` with the **Nueva
+solicitud** action. It opens the shared accessible modal as a mobile bottom
+sheet and as a centered dialog on larger screens. The form is rendered in place;
+there is no standalone `/ausencias/nueva` route. Saving a draft still redirects
+to the created request detail, while **Cancelar**, the close button, Escape, and
+the backdrop dismiss the modal without navigation.
+
 ## Database bootstrap and migration
 
 Run `pnpm bootstrap:pto-model` from `web` with the deployment environment

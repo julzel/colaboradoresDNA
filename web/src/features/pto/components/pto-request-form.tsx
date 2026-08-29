@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 
-import { ButtonLink } from "@/components/ui/button/button";
+import { Button, ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import {
@@ -34,9 +34,13 @@ type EditablePtoRequest = {
 
 export function PtoRequestForm({
   employeeId,
+  onCancel,
+  presentation = "page",
   request,
 }: {
   employeeId?: string;
+  onCancel?: () => void;
+  presentation?: "modal" | "page";
   request?: EditablePtoRequest;
 }) {
   const saveAction = employeeId ? saveEmployeePtoDraftAction : savePtoDraftAction;
@@ -52,7 +56,12 @@ export function PtoRequestForm({
       ? `/ausencias/${request.id}`
       : "/ausencias";
   return (
-    <ElevatedSurface action={action} as="form" className={styles.formCard}>
+    <ElevatedSurface
+      action={action}
+      as="form"
+      className={styles.formCard}
+      data-presentation={presentation}
+    >
       {employeeId && <input name="employeeId" type="hidden" value={employeeId} />}
       {request && <input name="requestId" type="hidden" value={request.id} />}
       {state.message && (
@@ -128,9 +137,15 @@ export function PtoRequestForm({
         <SubmitButton pendingLabel="Guardando…">
           {employeeId && !request ? "Crear solicitud" : "Guardar borrador"}
         </SubmitButton>
-        <ButtonLink href={cancelHref} variant="quiet">
-          Cancelar
-        </ButtonLink>
+        {onCancel ? (
+          <Button onClick={onCancel} variant="quiet">
+            Cancelar
+          </Button>
+        ) : (
+          <ButtonLink href={cancelHref} variant="quiet">
+            Cancelar
+          </ButtonLink>
+        )}
       </div>
     </ElevatedSurface>
   );

@@ -47,3 +47,17 @@ export function PtoCategoryBadge({
     </span>
   );
 }
+
+export function PtoCategoryIcon({ category }: { category: PtoCategory }) {
+  const normalizedCategory = normalizePtoCategory(category);
+  const Icon = ptoCategoryIcons[normalizedCategory] ?? CircleEllipsis;
+  return (
+    <span
+      aria-hidden="true"
+      className={styles.categoryIcon}
+      data-category={normalizedCategory}
+    >
+      <Icon color="var(--category-color)" size={20} />
+    </span>
+  );
+}

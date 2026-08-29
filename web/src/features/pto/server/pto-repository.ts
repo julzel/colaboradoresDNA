@@ -639,7 +639,7 @@ export async function listPtoRequestsForRequester(employeeId: string) {
   const { requests } = await getPtoCollections();
   const documents = await requests
     .find({ requesterEmployeeId: new ObjectId(employeeId) })
-    .sort({ createdAt: -1 })
+    .sort({ startDate: -1, createdAt: -1 })
     .toArray();
   return documents.map(toPtoRequest);
 }

@@ -63,11 +63,6 @@
   margin-left: auto;
 }
 
-a.newRequestButton {
-  width: var(--control-height-sm);
-  padding-inline: 0;
-}
-
 .header p,
 .muted {
   margin: var(--space-2) 0 0;
@@ -126,6 +121,7 @@ a.newRequestButton {
   margin: 0;
   color: var(--color-text);
   font-size: var(--text-sm);
+  font-weight: 400;
   line-height: var(--line-tight);
 }
 
@@ -148,7 +144,197 @@ a.newRequestButton {
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--text-xs);
+  font-weight: 300;
+}
+
+.historyPanel {
+  overflow: hidden;
+}
+
+.historyPanel > h2 {
+  margin: 0;
+  padding: var(--space-5) var(--space-4) var(--space-3);
+  font-size: var(--text-md);
+  line-height: var(--line-tight);
+}
+
+.historyTabs {
+  display: flex;
+  gap: var(--space-8);
+  overflow: auto hidden;
+  padding-inline: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  scrollbar-width: thin;
+}
+
+.historyTabs a {
+  position: relative;
+  flex: 0 0 auto;
+  padding: var(--space-5) var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.historyTabs a[data-active="false"]:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-brand-text);
+}
+
+.historyTabs a[data-active="true"] {
+  color: var(--color-brand-text);
+}
+
+.historyTabs a[data-active="true"]::after {
+  position: absolute;
+  right: calc(var(--space-2) * -1);
+  bottom: -1px;
+  left: calc(var(--space-2) * -1);
+  height: 2px;
+  background: var(--color-brand);
+  content: "";
+}
+
+.historyTableHeader {
+  display: none;
+}
+
+.historyList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historyList > li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.historyRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.historyRow:hover {
+  background: var(--color-surface-subtle);
+}
+
+.historyRequestType {
+  display: flex;
+  grid-row: 1;
+  grid-column: 1;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.historyRequestType strong,
+.historyRequestType span {
+  display: block;
+}
+
+.historyRequestType strong {
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+
+.historyDetails {
+  display: grid;
+  grid-row: 2;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.historyCell {
+  min-width: 0;
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: var(--line-body);
+}
+
+.historyCell::before {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-text-muted);
+  content: attr(data-label);
+  font-size: 0.6875rem;
   font-weight: 650;
+}
+
+.historyTimestampValue {
+  display: block;
+}
+
+.historyCell .historyStatus {
+  font-weight: 400;
+}
+
+.historyChevron {
+  grid-row: 1;
+  grid-column: 2;
+  color: var(--color-text-muted);
+}
+
+.historyEmpty {
+  margin: 0;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.historyFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 650;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pagination > a,
+.pagination > span {
+  display: grid;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  border-radius: var(--radius-md);
+  color: var(--color-brand-text);
+  place-items: center;
+  text-decoration: none;
+}
+
+.pagination > a:hover {
+  background: var(--color-surface-muted);
+}
+
+.pagination > span[data-disabled="true"] {
+  color: var(--color-text-subtle);
+  opacity: 0.55;
+}
+
+.pagination .currentPage {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .summaryGrid {
@@ -234,6 +420,11 @@ a.newRequestButton {
   padding: var(--space-5);
 }
 
+.formCard[data-presentation="modal"] {
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .metric {
   margin: 0;
   font-size: var(--text-2xl);
@@ -310,43 +501,70 @@ a.newRequestButton {
   flex: 0 0 auto;
 }
 
+.categoryIcon {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  background: var(--category-background);
+  color: var(--category-color);
+  line-height: 0;
+}
+
+.categoryIcon svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  transform: translate(-50%, -50%);
+}
+
 .categoryBadge[data-size="large"] {
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-xl);
 }
 
-.categoryBadge[data-category="vacation"] {
+.categoryBadge[data-category="vacation"],
+.categoryIcon[data-category="vacation"] {
   --category-color: var(--color-pto-vacation);
   --category-background: var(--color-pto-vacation-soft);
 }
 
-.categoryBadge[data-category="incapacity"] {
+.categoryBadge[data-category="incapacity"],
+.categoryIcon[data-category="incapacity"] {
   --category-color: var(--color-pto-incapacity);
   --category-background: var(--color-pto-incapacity-soft);
 }
 
-.categoryBadge[data-category="maternity"] {
+.categoryBadge[data-category="maternity"],
+.categoryIcon[data-category="maternity"] {
   --category-color: var(--color-pto-maternity);
   --category-background: var(--color-pto-maternity-soft);
 }
 
-.categoryBadge[data-category="paternity"] {
+.categoryBadge[data-category="paternity"],
+.categoryIcon[data-category="paternity"] {
   --category-color: var(--color-pto-paternity);
   --category-background: var(--color-pto-paternity-soft);
 }
 
-.categoryBadge[data-category="unpaid_leave"] {
+.categoryBadge[data-category="unpaid_leave"],
+.categoryIcon[data-category="unpaid_leave"] {
   --category-color: var(--color-pto-unpaid-leave);
   --category-background: var(--color-pto-unpaid-leave-soft);
 }
 
-.categoryBadge[data-category="bereavement"] {
+.categoryBadge[data-category="bereavement"],
+.categoryIcon[data-category="bereavement"] {
   --category-color: var(--color-pto-bereavement);
   --category-background: var(--color-pto-bereavement-soft);
 }
 
-.categoryBadge[data-category="other"] {
+.categoryBadge[data-category="other"],
+.categoryIcon[data-category="other"] {
   --category-color: var(--color-pto-other);
   --category-background: var(--color-pto-other-soft);
 }
@@ -457,6 +675,58 @@ a.newRequestButton {
   }
 }
 
+@media (width >= 56rem) {
+  .historyPanel > h2,
+  .historyTabs,
+  .historyRow,
+  .historyFooter {
+    padding-inline: var(--space-5);
+  }
+
+  .historyTableHeader,
+  .historyRow {
+    display: grid;
+    grid-template-columns: minmax(9rem, 1.25fr) minmax(28rem, 4fr) auto;
+    gap: var(--space-4);
+  }
+
+  .historyTableHeader {
+    align-items: center;
+    padding: var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    font-weight: 650;
+  }
+
+  .historyTableHeader > div,
+  .historyDetails {
+    display: grid;
+    grid-template-columns: 1.25fr 0.7fr 0.9fr 1.1fr;
+    gap: var(--space-4);
+    align-items: center;
+  }
+
+  .historyRequestType {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .historyDetails {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .historyCell::before {
+    display: none;
+  }
+
+  .historyChevron {
+    grid-row: 1;
+    grid-column: 3;
+  }
+}
+
 @media (width >= 64rem) {
   .summaryCards {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -481,7 +751,7 @@ a.newRequestButton {
     margin-left: 0;
   }
 
-  .moduleActions a {
+  .moduleActions > :is(a, button) {
     flex: 1;
   }
 }
