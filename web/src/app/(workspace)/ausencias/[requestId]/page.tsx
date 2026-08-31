@@ -35,7 +35,6 @@ export default async function PtoRequestDetailPage({
         <BackLink href="/ausencias">Volver a solicitudes</BackLink>
         <header className={styles.header}>
           <div>
-            <p className="eyebrow">Solicitud de {request.requesterName}</p>
             <h1>
               <PtoCategoryBadge category={request.category} size="large" />
             </h1>
