@@ -15,7 +15,6 @@ export default async function PtoRequestDetailModal({
 
   return (
     <Modal
-      description={`Solicitud de ${detail.request.requesterName}`}
       title="Detalle de solicitud"
     >
       <PtoRequestDetailContent detail={detail} presentation="modal" />
