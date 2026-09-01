@@ -28,6 +28,7 @@ describe("cross-feature integration boundaries", () => {
   it("keeps consumer-owned ports free of provider implementation imports", () => {
     const ports = [
       "src/features/calendar/integrations/calendar-development-port.ts",
+      "src/features/calendar/integrations/calendar-holiday-port.ts",
       "src/features/calendar/integrations/calendar-pto-port.ts",
       "src/features/development/integrations/development-calendar-port.ts",
     ];

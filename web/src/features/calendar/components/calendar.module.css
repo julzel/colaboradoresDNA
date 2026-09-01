@@ -147,6 +147,11 @@
   color: var(--color-success);
 }
 
+.entryIcon[data-kind="holiday"] {
+  background: var(--color-calendar-holiday-soft);
+  color: var(--color-calendar-holiday);
+}
+
 .entryIcon[data-kind="event"][data-event-type="training"] {
   background: var(--color-event-training-soft);
   color: var(--color-event-training);
@@ -220,6 +225,10 @@
 
 .entryLabel[data-kind="pto"] {
   color: var(--color-success);
+}
+
+.entryLabel[data-kind="holiday"] {
+  color: var(--color-calendar-holiday);
 }
 
 .manageBadge {
@@ -403,6 +412,10 @@
   color: var(--color-success);
 }
 
+.mobileIndicators [data-kind="holiday"] {
+  color: var(--color-calendar-holiday);
+}
+
 .mobileIndicators [data-event-type="training"] {
   color: var(--color-event-training);
 }
@@ -571,6 +584,10 @@
 
 .legendDot[data-kind="pto"] {
   background: var(--color-success);
+}
+
+.legendDot[data-kind="holiday"] {
+  background: var(--color-calendar-holiday);
 }
 
 .legendDot[data-kind="event"][data-event-type="training"] {
@@ -1025,6 +1042,11 @@
   .eventPreview[data-kind="pto"] {
     background: var(--color-success-soft);
     color: var(--color-success);
+  }
+
+  .eventPreview[data-kind="holiday"] {
+    background: var(--color-calendar-holiday-soft);
+    color: var(--color-calendar-holiday);
   }
 
   .eventPreview[data-kind="event"][data-event-type="training"] {

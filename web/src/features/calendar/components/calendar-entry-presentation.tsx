@@ -1,4 +1,4 @@
-import { CakeSlice, CalendarDays, Umbrella } from "lucide-react";
+import { CakeSlice, CalendarDays, Flag, Umbrella } from "lucide-react";
 import type { ComponentProps } from "react";
 
 import type { CalendarEntry } from "@/features/calendar/domain/calendar-entry";
@@ -10,6 +10,7 @@ type CalendarEntryIconProps = ComponentProps<typeof CalendarDays> & {
 
 export function CalendarEntryIcon({ entry, ...props }: CalendarEntryIconProps) {
   if (entry.kind === "birthday") return <CakeSlice {...props} />;
+  if (entry.kind === "holiday") return <Flag {...props} />;
   if (entry.kind === "pto") return <Umbrella {...props} />;
   return <CalendarDays {...props} />;
 }
@@ -20,12 +21,14 @@ export function getCalendarEntryCategoryKey(entry: CalendarEntry) {
 
 export function getCalendarEntryCategoryLabel(entry: CalendarEntry) {
   if (entry.kind === "birthday") return "Cumpleaños";
+  if (entry.kind === "holiday") return "Feriados nacionales";
   if (entry.kind === "pto") return "Ausencias";
   return entry.label;
 }
 
 export function getCalendarEntryPreviewTitle(entry: CalendarEntry) {
   if (entry.kind === "birthday") return "Cumpleaños";
+  if (entry.kind === "holiday") return "Feriado";
   if (entry.kind === "pto") return entry.label.split(" · ")[0];
   return entry.title;
 }

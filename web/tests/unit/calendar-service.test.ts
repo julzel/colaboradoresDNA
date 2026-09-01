@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   findEmployeeByPlatformUserId: vi.fn(),
   getVisibleApprovedAbsenceDetail: vi.fn(),
   getCalendarEventDetail: vi.fn(),
+  listPublicHolidays: vi.fn(),
   listBirthdayCalendarEntries: vi.fn(),
   listCalendarEventTargetOptions: vi.fn(),
   listReadNotificationKeys: vi.fn(),
@@ -53,6 +54,12 @@ vi.mock("@/features/calendar/server/calendar-event-repository", () => ({
   listUpcomingCalendarEventNotifications: mocks.listUpcomingCalendarEventNotifications,
   listVisibleCalendarEvents: mocks.listVisibleCalendarEvents,
   updateCalendarEvent: mocks.updateCalendarEvent,
+}));
+
+vi.mock("@/features/calendar/integrations/nager-date-calendar-adapter", () => ({
+  calendarHolidayIntegration: {
+    listPublicHolidays: mocks.listPublicHolidays,
+  },
 }));
 
 vi.mock("@/features/development/integrations/calendar-development-adapter", () => ({
@@ -91,6 +98,7 @@ describe("calendar service authorization and aggregation", () => {
       departmentId: "507f1f77bcf86cd799439013",
     });
     mocks.listVisibleCalendarEvents.mockResolvedValue([]);
+    mocks.listPublicHolidays.mockResolvedValue([]);
     mocks.listVisibleApprovedAbsences.mockResolvedValue([]);
     mocks.listCalendarEventTargetOptions.mockResolvedValue({
       departments: [],
@@ -121,6 +129,7 @@ describe("calendar service authorization and aggregation", () => {
       endsAt: new Date("2026-08-01T06:00:00.000Z"),
       startsAt: new Date("2026-07-01T06:00:00.000Z"),
     });
+    expect(mocks.listPublicHolidays).toHaveBeenCalledWith(2026);
     expect(mocks.listBirthdayCalendarEntries).toHaveBeenCalledWith({
       viewerRole: "supervisor",
     });
@@ -145,6 +154,36 @@ describe("calendar service authorization and aggregation", () => {
       startDate: "2026-07-06",
       title: "Ana Mora",
     });
+  });
+
+  it("adds Costa Rican public holidays as read-only all-day entries", async () => {
+    mocks.listPublicHolidays.mockResolvedValue([
+      { date: "2026-07-25", name: "Anexión del Partido de Nicoya" },
+      { date: "2026-08-02", name: "Nuestra Señora de los Ángeles" },
+    ]);
+
+    const result = await getCalendarEntries("2026-07");
+
+    expect(result.entries.find((entry) => entry.kind === "holiday")).toEqual({
+      allDay: true,
+      canManage: false,
+      description: null,
+      detailHref: null,
+      endAt: "2026-07-26T06:00:00.000Z",
+      endDate: "2026-07-25",
+      id: "holiday:2026-07-25:Anexión del Partido de Nicoya",
+      kind: "holiday",
+      label: "Feriado nacional",
+      location: null,
+      meetingUrl: null,
+      note: null,
+      startAt: "2026-07-25T06:00:00.000Z",
+      startDate: "2026-07-25",
+      title: "Anexión del Partido de Nicoya",
+    });
+    expect(result.entries).not.toContainEqual(
+      expect.objectContaining({ startDate: "2026-08-02" }),
+    );
   });
 
   it("routes approved leave through a calendar summary", async () => {

@@ -83,6 +83,8 @@
   --color-event-celebration-soft: var(--color-accent-soft);
   --color-event-custom: var(--color-brand-text);
   --color-event-custom-soft: var(--color-brand-soft);
+  --color-calendar-holiday: var(--color-warning);
+  --color-calendar-holiday-soft: var(--color-warning-soft);
   --color-pto-vacation: #00a866;
   --color-pto-vacation-soft: var(--color-success-soft);
   --color-pto-incapacity: #ed3f4f;

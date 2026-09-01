@@ -153,6 +153,23 @@ describe("calendar views", () => {
             startDate: "2026-07-13",
             title: "Luis Vargas",
           },
+          {
+            allDay: true,
+            canManage: false,
+            description: null,
+            detailHref: null,
+            endAt: "2026-07-26T06:00:00.000Z",
+            endDate: "2026-07-25",
+            id: "holiday:2026-07-25:Anexión del Partido de Nicoya",
+            kind: "holiday",
+            label: "Feriado nacional",
+            location: null,
+            meetingUrl: null,
+            note: null,
+            startAt: "2026-07-25T06:00:00.000Z",
+            startDate: "2026-07-25",
+            title: "Anexión del Partido de Nicoya",
+          },
         ]}
         eventFormOptions={{ departments: [], people: [] }}
         query={{ day: "2026-07-13", month: "2026-07", view: "month" }}
@@ -165,6 +182,9 @@ describe("calendar views", () => {
     expect(
       screen.getByRole("region", { name: "Leyenda del calendario" }),
     ).toHaveTextContent("Ausencias");
+    expect(
+      screen.getByRole("region", { name: "Leyenda del calendario" }),
+    ).toHaveTextContent("Feriados nacionales");
     expect(screen.getByText("2 eventos")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Nuevo evento" })).toHaveTextContent(
       "Nuevo evento",
