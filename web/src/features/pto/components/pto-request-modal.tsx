@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button/button";
 import { Modal } from "@/components/ui/modal/modal";
 import { PtoRequestForm } from "@/features/pto/components/pto-request-form";
 
+import styles from "./pto-request-modal.module.css";
+
 export function PtoRequestModal() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -20,9 +22,15 @@ export function PtoRequestModal() {
 
   return (
     <>
-      <Button onClick={handleOpen} size="small">
+      <Button
+        aria-label="Nueva solicitud"
+        className={styles.trigger}
+        onClick={handleOpen}
+        size="small"
+        title="Nueva solicitud"
+      >
         <CalendarPlus aria-hidden="true" size={17} />
-        Nueva solicitud
+        <span className={styles.label}>Nueva solicitud</span>
       </Button>
       {isOpen && (
         <Modal
