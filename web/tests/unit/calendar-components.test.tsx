@@ -205,15 +205,18 @@ describe("calendar views", () => {
       />,
     );
 
-    const summary = screen.getByText("Feriados nacionales de 2026").closest("summary");
-    const disclosure = summary?.closest("details");
+    const trigger = screen.getByRole("button", {
+      name: /Feriados nacionales de 2026 3 feriados/i,
+    });
+    const disclosure = trigger.closest("section");
 
-    expect(disclosure).not.toHaveAttribute("open");
-    expect(summary).toHaveTextContent("3 feriados");
+    expect(disclosure).toHaveAttribute("data-open", "false");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
 
-    await user.click(summary as HTMLElement);
+    await user.click(trigger);
 
-    expect(disclosure).toHaveAttribute("open");
+    expect(disclosure).toHaveAttribute("data-open", "true");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("heading", { name: "ENERO" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "JULIO" })).toBeVisible();
     expect(screen.getByText("01")).toBeVisible();
@@ -222,6 +225,15 @@ describe("calendar views", () => {
     expect(screen.getByText("Jueves, 1 de enero")).toBeVisible();
     expect(screen.getByText("Anexión del Partido de Nicoya")).toBeVisible();
     expect(screen.getByText("Día de la Independencia")).toBeVisible();
+
+    await user.click(trigger);
+    expect(disclosure).toHaveAttribute("data-open", "false");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(trigger);
+    expect(disclosure).toHaveAttribute("data-open", "true");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Año Nuevo")).toBeVisible();
   });
 });
 

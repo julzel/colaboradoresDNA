@@ -71,6 +71,8 @@
   --color-danger-hover: #962b23;
   --color-danger-soft: var(--red-50);
   --color-danger-contrast: var(--neutral-0);
+  --color-danger-action: #b8382e;
+  --color-danger-action-hover: #962b23;
   --color-info: var(--blue-600);
   --color-info-soft: var(--blue-50);
   --color-event-training: var(--blue-600);
@@ -109,6 +111,7 @@
     radial-gradient(circle at 12% 95%, rgb(49 199 207 / 16%), transparent 28%),
     var(--color-sidebar);
   --background-primary-action: var(--brand-cyan);
+  --color-primary-action-text: var(--neutral-0);
   --color-topbar: rgb(247 245 239 / 92%);
   --color-skeleton: var(--neutral-100);
   --color-skeleton-highlight: rgb(255 255 255 / 72%);
@@ -212,6 +215,7 @@
     radial-gradient(circle at 12% 95%, rgb(49 199 207 / 18%), transparent 30%),
     var(--color-sidebar);
   --background-primary-action: var(--brand-cyan);
+  --color-primary-action-text: var(--color-brand-contrast);
   --color-topbar: rgb(6 22 20 / 90%);
   --color-skeleton: #1b3438;
   --color-skeleton-highlight: rgb(104 148 152 / 24%);
@@ -273,6 +277,7 @@
       radial-gradient(circle at 12% 95%, rgb(49 199 207 / 18%), transparent 30%),
       var(--color-sidebar);
     --background-primary-action: var(--brand-cyan);
+    --color-primary-action-text: var(--color-brand-contrast);
     --color-topbar: rgb(6 22 20 / 90%);
     --color-skeleton: #1b3438;
     --color-skeleton-highlight: rgb(104 148 152 / 24%);

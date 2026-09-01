@@ -22,7 +22,7 @@ import {
   UserCheck,
   UserRound,
   UsersRound,
-  Umbrella,
+  TreePalm,
 } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
@@ -188,7 +188,7 @@ export default async function EmployeeDetailPage({
                 Administrar
               </ButtonLink>
             }
-            icon={Umbrella}
+            icon={TreePalm}
             title="Saldo de vacaciones"
           >
             <p className={styles.muted}>

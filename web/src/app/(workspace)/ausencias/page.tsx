@@ -4,7 +4,7 @@ import {
   ChevronRight,
   ClipboardClock,
   Clock3,
-  Umbrella,
+  TreePalm,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -121,7 +121,7 @@ export default async function PtoDashboardPage({
         <section aria-label="Resumen de ausencias" className={styles.summaryCards}>
           <ElevatedSurface as="div" className={styles.summaryCard}>
             <span className={styles.summaryCardIcon} data-tone="vacation">
-              <Umbrella aria-hidden="true" size={29} strokeWidth={1.8} />
+              <TreePalm aria-hidden="true" size={29} strokeWidth={1.8} />
             </span>
             <div className={styles.summaryCardContent}>
               <h2>Saldo de vacaciones</h2>

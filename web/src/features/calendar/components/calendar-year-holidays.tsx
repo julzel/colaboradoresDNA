@@ -1,4 +1,7 @@
+"use client";
+
 import { ChevronDown, Flag } from "lucide-react";
+import { useId, useState } from "react";
 
 import { formatCalendarDate } from "@/features/calendar/domain/calendar-utils";
 import type { CalendarHolidayView } from "@/features/calendar/view-models/calendar-holiday-view";
@@ -34,6 +37,9 @@ function capitalizeLabel(label: string) {
 }
 
 export function CalendarYearHolidays({ holidays, year }: CalendarYearHolidaysProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const contentId = useId();
+  const titleId = `${contentId}-title`;
   const monthGroups = new Map<string, CalendarHolidayView[]>();
 
   for (const holiday of holidays) {
@@ -44,14 +50,20 @@ export function CalendarYearHolidays({ holidays, year }: CalendarYearHolidaysPro
   }
 
   return (
-    <details className={styles.yearHolidays}>
-      <summary className={styles.yearHolidaysSummary}>
+    <section className={styles.yearHolidays} data-open={isOpen}>
+      <button
+        aria-controls={contentId}
+        aria-expanded={isOpen}
+        className={styles.yearHolidaysSummary}
+        onClick={() => setIsOpen((current) => !current)}
+        type="button"
+      >
         <span className={styles.yearHolidaysHeading}>
           <span aria-hidden="true" className={styles.yearHolidaysIcon}>
             <Flag size={19} />
           </span>
           <span>
-            <strong className={styles.yearHolidaysTitle}>
+            <strong className={styles.yearHolidaysTitle} id={titleId}>
               Feriados nacionales de {year}
             </strong>
             <small className={styles.yearHolidaysCount}>
@@ -64,43 +76,58 @@ export function CalendarYearHolidays({ holidays, year }: CalendarYearHolidaysPro
           className={styles.yearHolidaysChevron}
           size={20}
         />
-      </summary>
+      </button>
 
-      {holidays.length ? (
-        <div className={styles.yearHolidayGroups}>
-          {[...monthGroups.entries()].map(([month, monthHolidays]) => (
-            <section className={styles.yearHolidayMonth} key={month}>
-              <h3 className={styles.yearHolidayMonthLabel}>
-                {formatHolidayMonth(monthHolidays[0]?.date ?? `${month}-01`)}
-              </h3>
-              <ul>
-                {monthHolidays.map((holiday) => {
-                  const fullDate = capitalizeLabel(formatCalendarDate(holiday.date));
+      <div
+        aria-hidden={!isOpen}
+        aria-labelledby={titleId}
+        className={styles.yearHolidaysBody}
+        id={contentId}
+        role="region"
+      >
+        <div className={styles.yearHolidaysBodyContent}>
+          {holidays.length ? (
+            <div className={styles.yearHolidayGroups}>
+              {[...monthGroups.entries()].map(([month, monthHolidays]) => (
+                <section className={styles.yearHolidayMonth} key={month}>
+                  <h3 className={styles.yearHolidayMonthLabel}>
+                    {formatHolidayMonth(monthHolidays[0]?.date ?? `${month}-01`)}
+                  </h3>
+                  <ul>
+                    {monthHolidays.map((holiday) => {
+                      const fullDate = capitalizeLabel(
+                        formatCalendarDate(holiday.date),
+                      );
 
-                  return (
-                    <li key={`${holiday.date}:${holiday.name}`}>
-                      <span aria-hidden="true" className={styles.yearHolidayDateTile}>
-                        <strong>{holiday.date.slice(-2)}</strong>
-                        <span className={styles.yearHolidayWeekday}>
-                          {formatHolidayWeekday(holiday.date)}
-                        </span>
-                      </span>
-                      <span className={styles.yearHolidayContent}>
-                        <strong>{holiday.name}</strong>
-                        <time dateTime={holiday.date}>{fullDate}</time>
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
+                      return (
+                        <li key={`${holiday.date}:${holiday.name}`}>
+                          <span
+                            aria-hidden="true"
+                            className={styles.yearHolidayDateTile}
+                          >
+                            <strong>{holiday.date.slice(-2)}</strong>
+                            <span className={styles.yearHolidayWeekday}>
+                              {formatHolidayWeekday(holiday.date)}
+                            </span>
+                          </span>
+                          <span className={styles.yearHolidayContent}>
+                            <strong>{holiday.name}</strong>
+                            <time dateTime={holiday.date}>{fullDate}</time>
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.yearHolidaysEmpty}>
+              No hay feriados nacionales disponibles para este año.
+            </p>
+          )}
         </div>
-      ) : (
-        <p className={styles.yearHolidaysEmpty}>
-          No hay feriados nacionales disponibles para este año.
-        </p>
-      )}
-    </details>
+      </div>
+    </section>
   );
 }

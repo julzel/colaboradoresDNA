@@ -255,7 +255,7 @@ export function OneOnOneForm({
                     className={styles.removeAction}
                     onClick={() => removeAction(actionItem.key)}
                     size="small"
-                    variant="quiet"
+                    variant="danger"
                   >
                     <Trash2 aria-hidden="true" size={16} />
                     Eliminar
