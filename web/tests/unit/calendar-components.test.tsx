@@ -197,6 +197,7 @@ describe("calendar views", () => {
     render(
       <CalendarYearHolidays
         holidays={[
+          { date: "2026-01-01", name: "Año Nuevo" },
           { date: "2026-07-25", name: "Anexión del Partido de Nicoya" },
           { date: "2026-09-15", name: "Día de la Independencia" },
         ]}
@@ -208,11 +209,17 @@ describe("calendar views", () => {
     const disclosure = summary?.closest("details");
 
     expect(disclosure).not.toHaveAttribute("open");
-    expect(summary).toHaveTextContent("2 feriados");
+    expect(summary).toHaveTextContent("3 feriados");
 
     await user.click(summary as HTMLElement);
 
     expect(disclosure).toHaveAttribute("open");
+    expect(screen.getByRole("heading", { name: "ENERO" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "JULIO" })).toBeVisible();
+    expect(screen.getByText("01")).toBeVisible();
+    expect(screen.getByText("JUE")).toBeVisible();
+    expect(screen.getByText("Año Nuevo")).toBeVisible();
+    expect(screen.getByText("Jueves, 1 de enero")).toBeVisible();
     expect(screen.getByText("Anexión del Partido de Nicoya")).toBeVisible();
     expect(screen.getByText("Día de la Independencia")).toBeVisible();
   });
