@@ -30,6 +30,13 @@ describe("Nager.Date calendar adapter", () => {
             localName: "Feriado local",
             name: "Local holiday",
           },
+          {
+            countryCode: "CR",
+            date: "2026-01-01",
+            global: true,
+            localName: "Año Nuevo",
+            name: "New Year's Day",
+          },
         ]),
         { status: 200 },
       ),
@@ -37,16 +44,14 @@ describe("Nager.Date calendar adapter", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(calendarHolidayIntegration.listPublicHolidays(2026)).resolves.toEqual([
-      {
-        date: "2026-07-25",
-        name: "Anexión del Partido de Nicoya",
-      },
+      { date: "2026-01-01", name: "Año Nuevo" },
+      { date: "2026-07-25", name: "Anexión del Partido de Nicoya" },
     ]);
     expect(fetchMock).toHaveBeenCalledWith(
       "https://date.nager.at/api/v3/PublicHolidays/2026/CR",
       expect.objectContaining({
         headers: { Accept: "application/json" },
-        next: { revalidate: 86_400 },
+        next: { revalidate: 2_592_000 },
       }),
     );
   });

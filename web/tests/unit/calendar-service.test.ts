@@ -184,6 +184,10 @@ describe("calendar service authorization and aggregation", () => {
     expect(result.entries).not.toContainEqual(
       expect.objectContaining({ startDate: "2026-08-02" }),
     );
+    expect(result.holidays).toEqual([
+      { date: "2026-07-25", name: "Anexión del Partido de Nicoya" },
+      { date: "2026-08-02", name: "Nuestra Señora de los Ángeles" },
+    ]);
   });
 
   it("routes approved leave through a calendar summary", async () => {

@@ -7,6 +7,7 @@ import { CalendarCreateEventTrigger } from "@/features/calendar/components/calen
 import { CalendarEventDetailContent } from "@/features/calendar/components/calendar-event-detail-content";
 import { CalendarEventForm } from "@/features/calendar/components/calendar-event-form";
 import { CalendarMonth } from "@/features/calendar/components/calendar-month";
+import { CalendarYearHolidays } from "@/features/calendar/components/calendar-year-holidays";
 import {
   CalendarBirthdayQuickDetailContent,
   CalendarPtoQuickDetailContent,
@@ -189,6 +190,31 @@ describe("calendar views", () => {
     expect(screen.getByRole("button", { name: "Nuevo evento" })).toHaveTextContent(
       "Nuevo evento",
     );
+  });
+
+  it("shows the yearly holidays in a collapsible chronological list", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarYearHolidays
+        holidays={[
+          { date: "2026-07-25", name: "Anexión del Partido de Nicoya" },
+          { date: "2026-09-15", name: "Día de la Independencia" },
+        ]}
+        year={2026}
+      />,
+    );
+
+    const summary = screen.getByText("Feriados nacionales de 2026").closest("summary");
+    const disclosure = summary?.closest("details");
+
+    expect(disclosure).not.toHaveAttribute("open");
+    expect(summary).toHaveTextContent("2 feriados");
+
+    await user.click(summary as HTMLElement);
+
+    expect(disclosure).toHaveAttribute("open");
+    expect(screen.getByText("Anexión del Partido de Nicoya")).toBeVisible();
+    expect(screen.getByText("Día de la Independencia")).toBeVisible();
   });
 });
 

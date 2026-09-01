@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { CalendarHolidayIntegration } from "@/features/calendar/integrations/calendar-holiday-port";
 
 const costaRicaCountryCode = "CR";
-const holidayCacheSeconds = 60 * 60 * 24;
+const holidayCacheSeconds = 60 * 60 * 24 * 30;
 
 const nagerDateHolidaySchema = z.object({
   countryCode: z.literal(costaRicaCountryCode),
@@ -45,7 +45,12 @@ export const calendarHolidayIntegration: CalendarHolidayIntegration = {
         .map((holiday) => ({
           date: holiday.date,
           name: holiday.localName.replace(/\s+/g, " "),
-        }));
+        }))
+        .sort(
+          (first, second) =>
+            first.date.localeCompare(second.date) ||
+            first.name.localeCompare(second.name, "es-CR"),
+        );
     } catch (error) {
       if (error instanceof CalendarHolidayIntegrationError) throw error;
       throw new CalendarHolidayIntegrationError();

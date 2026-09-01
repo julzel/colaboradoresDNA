@@ -227,6 +227,7 @@ export async function getCalendarEntries(month: string) {
       ...ptoEntries.map(ptoToEntry),
     ],
     eventFormOptions,
+    holidays,
   };
 }
 

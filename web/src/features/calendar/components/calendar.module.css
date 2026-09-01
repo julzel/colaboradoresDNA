@@ -562,6 +562,112 @@
   padding-inline: var(--space-1);
 }
 
+.yearHolidays {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-elevation-1);
+}
+
+.yearHolidaysSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  list-style: none;
+  cursor: pointer;
+}
+
+.yearHolidaysSummary::-webkit-details-marker {
+  display: none;
+}
+
+.yearHolidaysSummary:hover {
+  background: var(--color-surface-subtle);
+}
+
+.yearHolidaysSummary:focus-visible {
+  outline: 0;
+  box-shadow: inset var(--focus-ring);
+}
+
+.yearHolidaysHeading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.yearHolidaysHeading > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.yearHolidaysHeading strong {
+  font-size: var(--text-sm);
+}
+
+.yearHolidaysHeading small {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.yearHolidaysIcon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-calendar-holiday-soft);
+  color: var(--color-calendar-holiday);
+}
+
+.yearHolidaysChevron {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.yearHolidays[open] .yearHolidaysChevron {
+  transform: rotate(180deg);
+}
+
+.yearHolidaysList {
+  display: grid;
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  list-style: none;
+}
+
+.yearHolidaysList li {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.yearHolidaysList time {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  text-transform: capitalize;
+}
+
+.yearHolidayName {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.yearHolidaysEmpty {
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
 .legendItem {
   display: inline-flex;
   align-items: center;

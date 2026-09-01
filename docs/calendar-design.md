@@ -59,13 +59,14 @@ The visual hierarchy should come primarily from:
 ```text
 CalendarPage
 ├── CalendarToolbar
-└── CalendarContent
-    ├── MainCalendarColumn
-    │   ├── MonthGridCard
-    │   └── EventLegend
-    └── CalendarSidebar
-        ├── SelectedDayAgendaCard
-        └── MiniCalendarCard
+├── CalendarContent
+│   ├── MainCalendarColumn
+│   │   ├── MonthGridCard
+│   │   └── EventLegend
+│   └── CalendarSidebar
+│       ├── SelectedDayAgendaCard
+│       └── MiniCalendarCard
+└── AnnualHolidayDisclosure
 ```
 
 ### Main layout
@@ -1515,3 +1516,22 @@ When there is a conflict:
 4. reference screenshot
 
 in that priority order.
+
+---
+
+# 40. Annual Holiday Disclosure
+
+The implemented calendar includes a collapsed `AnnualHolidayDisclosure` below
+the active month or agenda view. Its summary shows the selected year and the
+number of nationwide Costa Rican holidays. Expanding it reveals a chronological
+list containing each holiday's localized name and formatted date.
+
+The disclosure uses native `details` and `summary` elements so it remains
+keyboard accessible without client-side state. It receives the same complete
+year response used to populate holiday entries in the active month, so opening
+the disclosure does not make another HTTP request.
+
+Holiday data comes from the server-only Nager.Date adapter. Responses are
+validated before use and cached by year for 30 days. The year is part of the
+provider URL and cache key, so navigating to another year loads and caches that
+year independently. No holiday data is written to the deployment filesystem.
