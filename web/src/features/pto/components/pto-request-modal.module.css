@@ -1,0 +1,14 @@
+.trigger {
+  flex: 0 0 auto;
+}
+
+@media (width < 40rem) {
+  .trigger {
+    width: var(--control-height-sm);
+    padding-inline: 0;
+  }
+
+  .label {
+    display: none;
+  }
+}

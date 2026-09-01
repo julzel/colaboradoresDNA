@@ -1020,13 +1020,4 @@
   .ledgerItem {
     grid-template-columns: 1fr;
   }
-
-  .moduleActions {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .moduleActions > :is(a, button) {
-    flex: 1;
-  }
 }
