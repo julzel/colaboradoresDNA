@@ -11,10 +11,13 @@ employee setup UI and is isolated below.
 The administrator scheduler is available at `/admin/horarios`. It provides a
 date-aware, searchable roster with weekly and alternating schedule previews.
 `/admin/horarios/[employeeId]` provides the v2 schedule detail/editor, effective
-date management, exact shift inputs, alternating-week setup, and history. The
-remaining interface work is:
-
-- read-only schedule presentation for a collaborator viewing their own schedule.
+date management, exact shift inputs, alternating-week setup, and history.
+`/perfil/horario` provides the collaborator-facing, read-only schedule view. It
+derives the employee from the authenticated account, never accepts an arbitrary
+employee identifier, and identifies the active week in an alternating cycle.
+The collaborator administration detail does not duplicate schedule controls;
+administrative schedule viewing and changes live exclusively under
+`/admin/horarios`.
 
 The editor presents each week as a horizontally scrollable grid of 30-minute
 blocks from `07:00` through `17:00`, with a sticky weekday column.

@@ -227,6 +227,11 @@
   text-decoration: underline;
 }
 
+.scheduleLink {
+  justify-self: start;
+  margin-top: var(--space-5);
+}
+
 .missingState {
   max-width: 44rem;
   margin: clamp(var(--space-8), 8vw, var(--space-16)) auto;

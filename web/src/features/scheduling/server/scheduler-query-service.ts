@@ -3,9 +3,11 @@ import "server-only";
 import { scheduleDateSchema } from "@/features/scheduling/domain/schedule";
 import {
   getEmployeeScheduleHistoryAsAdministrator,
+  getOwnEmployeeSchedule,
   getSchedulerRosterAsAdministrator,
 } from "@/features/scheduling/server/scheduler-service";
 import {
+  buildOwnScheduleView,
   buildSchedulerDashboardView,
   buildSchedulerDetailView,
 } from "@/features/scheduling/view-models/scheduler-view";
@@ -28,6 +30,14 @@ export async function getSchedulerDashboardPageData(requestedDate?: string) {
   const roster = await getSchedulerRosterAsAdministrator(selectedDate);
 
   return buildSchedulerDashboardView(roster, selectedDate);
+}
+
+export async function getOwnSchedulePageData(requestedDate?: string) {
+  const parsedDate = scheduleDateSchema.safeParse(requestedDate);
+  const selectedDate = parsedDate.success ? parsedDate.data : todayInCostaRica();
+  const schedule = await getOwnEmployeeSchedule(selectedDate);
+
+  return buildOwnScheduleView(schedule, selectedDate);
 }
 
 export async function getSchedulerDetailPageData(

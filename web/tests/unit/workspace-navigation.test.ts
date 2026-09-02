@@ -87,4 +87,12 @@ describe("administrator navigation", () => {
       { label: "Colaborador" },
     ]);
   });
+
+  it("nests the read-only schedule under the collaborator profile", () => {
+    expect(getWorkspaceBreadcrumbs("/perfil/horario")).toEqual([
+      { href: "/", label: "Inicio" },
+      { href: "/perfil", label: "Mi perfil" },
+      { label: "Mi horario" },
+    ]);
+  });
 });

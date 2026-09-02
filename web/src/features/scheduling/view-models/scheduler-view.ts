@@ -1,5 +1,6 @@
 import {
   calculateAverageWeeklySchedule,
+  resolveScheduleDate,
   scheduleDayOfWeekOrder,
   type ScheduleDayOfWeek,
   type ScheduleRecord,
@@ -74,6 +75,15 @@ export type SchedulerDetailView = Readonly<{
   };
   employee: { displayName: string; id: string };
   history: readonly SchedulerRosterItemView[];
+}>;
+
+export type OwnScheduleView = Readonly<{
+  activeWeekIndex: number | null;
+  effectiveLabel: string | null;
+  scheduleSummary: string | null;
+  selectedDate: string;
+  status: SchedulerRosterStatus;
+  weeks: readonly SchedulerWeekView[];
 }>;
 
 type SchedulerRosterSource = Readonly<{
@@ -256,6 +266,28 @@ export function buildSchedulerDetailView(input: {
         schedule,
       }),
     ),
+  };
+}
+
+export function buildOwnScheduleView(
+  schedule: ScheduleRecord | null,
+  selectedDate: string,
+): OwnScheduleView {
+  const item = buildItem({
+    displayName: "",
+    id: schedule?.employeeId ?? "own-schedule",
+    schedule,
+  });
+
+  return {
+    activeWeekIndex: schedule
+      ? resolveScheduleDate(schedule, selectedDate).cycleWeekIndex
+      : null,
+    effectiveLabel: item.effectiveLabel,
+    scheduleSummary: item.scheduleSummary,
+    selectedDate,
+    status: item.status,
+    weeks: item.weeks,
   };
 }
 

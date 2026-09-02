@@ -9,7 +9,6 @@ import {
   CalendarClock,
   CalendarX2,
   Cake,
-  Clock3,
   History,
   IdCard,
   KeyRound,
@@ -35,7 +34,6 @@ import { resendEmployeeInvitation } from "@/features/employees/actions/employee-
 import { EmployeeDetailCard } from "@/features/employees/components/employee-detail-card";
 import { EmployeeDetailItem } from "@/features/employees/components/employee-detail-item";
 import { IdentificationReveal } from "@/features/employees/components/identification-reveal";
-import { ScheduleSummary } from "@/features/employees/components/schedule-summary";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeeDetailPageData } from "@/features/employees/server/employee-query-service";
 
@@ -273,24 +271,6 @@ export default async function EmployeeDetailPage({
                 {detail.currentAssignment?.managerName ?? "Sin asignar"}
               </EmployeeDetailItem>
             </dl>
-          </EmployeeDetailCard>
-
-          <EmployeeDetailCard
-            action={
-              detail.employee.employmentStatus === "active" ? (
-                <ButtonLink
-                  href={`/admin/horarios/${employeeId}`}
-                  size="small"
-                  variant="quiet"
-                >
-                  <PenLine aria-hidden="true" size={18} /> Editar
-                </ButtonLink>
-              ) : undefined
-            }
-            icon={Clock3}
-            title="Horario actual"
-          >
-            <ScheduleSummary schedule={detail.currentSchedule} />
           </EmployeeDetailCard>
 
           <EmployeeDetailCard

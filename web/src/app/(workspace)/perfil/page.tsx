@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   BriefcaseBusiness,
+  CalendarClock,
   CalendarDays,
   ContactRound,
   KeyRound,
@@ -189,6 +190,15 @@ export default async function ProfilePage() {
               <h2>Horario actual</h2>
             </header>
             <ScheduleSummary schedule={profile.currentSchedule} />
+            <ButtonLink
+              className={styles.scheduleLink}
+              href="/perfil/horario"
+              size="small"
+              variant="secondary"
+            >
+              <CalendarClock aria-hidden="true" size={17} />
+              Ver mi horario
+            </ButtonLink>
           </ElevatedSurface>
 
           <ElevatedSurface as="section" className={`${styles.card} ${styles.wideCard}`}>

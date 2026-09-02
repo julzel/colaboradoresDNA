@@ -131,6 +131,14 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
     ] as const;
   }
 
+  if (pathname.startsWith("/perfil/horario")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/perfil", label: "Mi perfil" },
+      { label: "Mi horario" },
+    ] as const;
+  }
+
   if (pathname.startsWith("/perfil")) {
     return [{ href: "/", label: "Inicio" }, { label: "Mi perfil" }] as const;
   }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ScheduleRecord } from "@/features/scheduling/domain/schedule";
 import {
+  buildOwnScheduleView,
   buildSchedulerDashboardView,
   buildSchedulerDetailView,
 } from "@/features/scheduling/view-models/scheduler-view";
@@ -80,5 +81,24 @@ describe("scheduler dashboard view", () => {
     expect(
       detail.editor.weeks[0]?.find((day) => day.dayOfWeek === "tuesday"),
     ).toMatchObject({ enabled: true, endTime: "16:30", startTime: "07:30" });
+  });
+
+  it("identifies the active week for a collaborator's alternating schedule", () => {
+    const alternatingSchedule: ScheduleRecord = {
+      ...weeklySchedule,
+      weeks: [weeklySchedule.weeks[0], { shifts: [] }],
+    };
+
+    expect(buildOwnScheduleView(alternatingSchedule, "2026-09-07")).toMatchObject({
+      activeWeekIndex: 1,
+      scheduleSummary: "1 días · 8.5 h por semana",
+      selectedDate: "2026-09-07",
+      status: "alternating",
+    });
+    expect(buildOwnScheduleView(null, "2026-09-07")).toMatchObject({
+      activeWeekIndex: null,
+      status: "missing",
+      weeks: [],
+    });
   });
 });
