@@ -9,7 +9,7 @@ import {
   PtoDomainError,
   ptoAdjustmentDaysSchema,
   ptoDecisionInputSchema,
-  ptoDraftInputSchema,
+  ptoDraftCommandSchema,
   ptoDurationDaysSchema,
   ptoOpeningBalanceDaysSchema,
 } from "@/features/pto/domain/pto";
@@ -56,7 +56,12 @@ function ptoErrorState(error: unknown): PtoActionState {
         "No hay un saldo inicial de vacaciones. Administración debe configurarlo primero.",
       employee_missing: "No encontramos un colaborador activo asociado a esta cuenta.",
       forbidden: "No tenés permiso para realizar esta acción.",
+      no_scheduled_workdays:
+        "El rango seleccionado no contiene días laborales según el horario asignado.",
+      partial_day_range: "Un medio día debe corresponder a una sola fecha laboral.",
       request_missing: "No encontramos la solicitud.",
+      schedule_incomplete:
+        "No se puede calcular la duración porque falta un horario asignado para parte del rango.",
       self_approval: "No podés aprobar tu propia solicitud.",
       stale_status:
         "La solicitud cambió mientras la estabas revisando. Actualizá la página.",
@@ -69,11 +74,11 @@ function ptoErrorState(error: unknown): PtoActionState {
 function parseDraft(formData: FormData) {
   const duration = ptoDurationDaysSchema.safeParse(getText(formData, "durationDays"));
   if (!duration.success) throw duration.error;
-  return ptoDraftInputSchema.parse({
+  return ptoDraftCommandSchema.parse({
     category: getText(formData, "category"),
     collaboratorNote: getText(formData, "collaboratorNote"),
-    durationUnits: duration.data,
     endDate: getText(formData, "endDate"),
+    requestedPortion: duration.data === 1 ? "half" : "full",
     startDate: getText(formData, "startDate"),
   });
 }

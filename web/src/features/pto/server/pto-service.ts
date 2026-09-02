@@ -13,12 +13,16 @@ import {
   findEmployeeByPlatformUserId,
 } from "@/features/employees/server/employee-repository";
 import {
+  PTO_SCHEDULE_DURATION_POLICY_VERSION,
   PtoDomainError,
   ptoCategoryConsumesBalance,
+  ptoDraftCommandSchema,
   ptoDraftInputSchema,
+  type PtoDraftCommand,
   type PtoDraftInput,
   type PtoRequest,
 } from "@/features/pto/domain/pto";
+import { PtoScheduleCalculationError } from "@/features/pto/integrations/pto-scheduling-port";
 import {
   adjustPtoBalance,
   cancelPtoRequest,
@@ -39,6 +43,47 @@ import {
   updatePtoDraft,
 } from "@/features/pto/server/pto-repository";
 import type { PtoRequestView } from "@/features/pto/view-models/pto-view";
+import { ptoSchedulingIntegration } from "@/features/scheduling/integrations/pto-scheduling-adapter";
+
+async function calculateDraftDuration(
+  employeeId: string,
+  request: PtoDraftCommand,
+): Promise<PtoDraftInput> {
+  let calculation;
+
+  try {
+    calculation = await ptoSchedulingIntegration.calculateFullDayLeave({
+      employeeId,
+      endDate: request.endDate,
+      startDate: request.startDate,
+    });
+  } catch (error) {
+    if (error instanceof PtoScheduleCalculationError) {
+      throw new PtoDomainError("schedule_incomplete");
+    }
+
+    throw error;
+  }
+
+  if (calculation.workingDates.length === 0) {
+    throw new PtoDomainError("no_scheduled_workdays");
+  }
+
+  if (request.requestedPortion === "half" && calculation.workingDates.length !== 1) {
+    throw new PtoDomainError("partial_day_range");
+  }
+
+  return ptoDraftInputSchema.parse({
+    ...request,
+    durationCalculation: {
+      ...calculation,
+      calculatedAt: new Date(),
+      calculationPolicyVersion: PTO_SCHEDULE_DURATION_POLICY_VERSION,
+    },
+    durationUnits:
+      request.requestedPortion === "half" ? 1 : calculation.workingDates.length * 2,
+  });
+}
 
 async function requirePtoEmployee() {
   const { platformUser } = await requirePlatformUser();
@@ -230,18 +275,21 @@ export async function getPtoRequestDetail(requestId: string) {
   };
 }
 
-export async function createOwnPtoDraft(request: PtoDraftInput) {
+export async function createOwnPtoDraft(request: PtoDraftCommand) {
   const { employee, platformUser } = await requirePtoEmployee();
   return createPtoDraft({
     actorPlatformUserId: platformUser.id,
     employeeId: employee.id,
-    request: ptoDraftInputSchema.parse(request),
+    request: await calculateDraftDuration(
+      employee.id,
+      ptoDraftCommandSchema.parse(request),
+    ),
   });
 }
 
 export async function createEmployeePtoDraftAsAdministrator(
   employeeId: string,
-  request: PtoDraftInput,
+  request: PtoDraftCommand,
 ) {
   const { platformUser } = await requirePlatformUser({ roles: ["administrator"] });
   const employee = await findEmployeeById(employeeId);
@@ -255,7 +303,10 @@ export async function createEmployeePtoDraftAsAdministrator(
   return createPtoDraft({
     actorPlatformUserId: platformUser.id,
     employeeId: employee.id,
-    request: ptoDraftInputSchema.parse(request),
+    request: await calculateDraftDuration(
+      employee.id,
+      ptoDraftCommandSchema.parse(request),
+    ),
     requesterPlatformUserId: requester.id,
   });
 }
@@ -263,7 +314,7 @@ export async function createEmployeePtoDraftAsAdministrator(
 export async function updateEmployeePtoDraftAsAdministrator(
   employeeId: string,
   requestId: string,
-  request: PtoDraftInput,
+  request: PtoDraftCommand,
 ) {
   const { platformUser } = await requirePlatformUser({ roles: ["administrator"] });
   const existing = await findPtoRequestById(requestId);
@@ -277,16 +328,22 @@ export async function updateEmployeePtoDraftAsAdministrator(
   return updatePtoDraft({
     actorPlatformUserId: platformUser.id,
     administratorOverride: true,
-    request: ptoDraftInputSchema.parse(request),
+    request: await calculateDraftDuration(
+      employeeId,
+      ptoDraftCommandSchema.parse(request),
+    ),
     requestId,
   });
 }
 
-export async function updateOwnPtoDraft(requestId: string, request: PtoDraftInput) {
-  const { platformUser } = await requirePtoEmployee();
+export async function updateOwnPtoDraft(requestId: string, request: PtoDraftCommand) {
+  const { employee, platformUser } = await requirePtoEmployee();
   return updatePtoDraft({
     actorPlatformUserId: platformUser.id,
-    request: ptoDraftInputSchema.parse(request),
+    request: await calculateDraftDuration(
+      employee.id,
+      ptoDraftCommandSchema.parse(request),
+    ),
     requestId,
   });
 }
@@ -322,10 +379,22 @@ export async function submitOwnPtoDraft({ requestId }: { requestId: string }) {
     platformUser: requester,
     requesterEmployeeId: employee.id,
   });
+  const calculatedRequest = await calculateDraftDuration(employee.id, {
+    category: request.category,
+    collaboratorNote: request.collaboratorNote,
+    endDate: request.endDate,
+    requestedPortion: request.requestedPortion,
+    startDate: request.startDate,
+  });
   return submitPtoDraft({
     actorPlatformUserId: platformUser.id,
     ...(isAdministratorProxy && { administratorOverride: true }),
     approverPlatformUserId,
+    duration: {
+      calculation: calculatedRequest.durationCalculation!,
+      units: calculatedRequest.durationUnits,
+    },
+    expectedUpdatedAt: request.updatedAt,
     requestId,
   });
 }

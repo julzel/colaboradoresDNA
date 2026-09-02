@@ -94,6 +94,24 @@ Mark `CLERK_SECRET_KEY` and `MONGODB_URI` as secret. Do not mark
 included in browser assets. Require approval before exposing secrets to
 previews created by untrusted contributors.
 
+### Initialize collaborators and scheduling for an environment
+
+After pointing `.env.local` at the target development database, initialize the
+employee model first and then the dedicated Scheduling slice:
+
+```bash
+cd web
+pnpm bootstrap:employee-model
+pnpm bootstrap:scheduling-model
+```
+
+Both commands are idempotent and should run with migration-capable credentials.
+The scheduling bootstrap reconciles its indexes and installs dual-read v1/v2
+validation. It leaves legacy unversioned schedules readable as v1 and never
+invents missing start or end times. Scheduling runtime paths do not need
+index-management privileges. See [Collaborator scheduling](./docs/scheduling.md)
+for the v2 model and compatibility policy.
+
 ### Initialize PTO for an environment
 
 After pointing `.env.local` at the target development database, create the PTO
@@ -154,6 +172,7 @@ Never configure Clerk live keys or a production database on this site. See the
 - [Deployment guide](./docs/deployment.md)
 - [Design system](./docs/design-system.md)
 - [Employee model](./docs/employee-model.md)
+- [Collaborator scheduling](./docs/scheduling.md)
 - [Collaborator development PRD](./docs/collaborator-development-prd.md)
 - [Collaborator development roadmap](./docs/collaborator-development-roadmap.md)
 - [Collaborator development security boundary](./docs/collaborator-development-security.md)

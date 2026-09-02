@@ -56,7 +56,8 @@ consuming feature owns the port and its narrow DTOs; the providing feature owns
 the adapter that translates its domain and service results into that contract.
 Feature services depend on those ports instead of importing another feature's
 service or repository directly. Provider-specific models stay behind the
-adapter, including the Calendar/PTO and Calendar/Development interactions.
+adapter, including the Calendar/PTO, Calendar/Development, and PTO/Scheduling
+interactions.
 
 ## Rendering and data access
 
@@ -112,7 +113,8 @@ Authentication and employee data use separate records:
 - `departments` contains editable organizational departments.
 - `employee_assignments` preserves effective-dated department, position, and
   reporting relationships.
-- `employee_schedules` preserves effective-dated weekly work patterns.
+- The dedicated Scheduling slice owns `employee_schedules` and preserves
+  effective-dated one- or two-week work patterns.
 - `employee_audit` records safe action names and changed field names without
   copying sensitive values.
 
@@ -120,6 +122,30 @@ Employee creation and effective-timeline writes use MongoDB transactions.
 Timeline lock documents serialize assignment graph and per-employee schedule
 changes so application-level overlap and reporting-cycle checks remain valid
 under concurrent requests.
+
+## Scheduling domain
+
+`src/features/scheduling/` owns collaborator work-pattern validation,
+effective-dated schedule persistence, schedule resolution, and neutral date-range
+calculations. The canonical v2 model stores exact same-day `HH:mm` shifts in an
+anchored one- or two-week cycle. Existing unversioned schedules remain readable
+as legacy v1 records, but their unknown clock times are never fabricated.
+
+Scheduling exposes authorized server services rather than persistence objects.
+Administrators can write and read schedules for collaborators; a collaborator's
+read service derives its target employee from the authenticated identity and is
+read-only. Future scheduler interfaces must depend on serializable domain or
+view-model contracts, not MongoDB documents.
+
+PTO owns the port through which it requests schedule-derived leave facts, and
+Scheduling owns the adapter. The neutral Scheduling calculation returns working
+dates and scheduled minutes without deciding balance units or holiday policy.
+See [Collaborator scheduling](./scheduling.md) for the model, compatibility,
+authorization, and leave-duration contracts.
+
+Scheduling index creation runs through the repeatable migration bootstrap, not
+the runtime repository. This keeps schema-administration privileges out of the
+Scheduling runtime path.
 
 ## Styling and accessibility
 

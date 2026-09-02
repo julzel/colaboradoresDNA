@@ -1,15 +1,19 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createEmployeePtoDraftAsAdministrator,
+  createOwnPtoDraft,
   decideAssignedPtoRequest,
   getPtoAdministrationDashboard,
   getPtoDashboard,
   getPtoRequestDetail,
   submitOwnPtoDraft,
+  updateOwnPtoDraft,
 } from "@/features/pto/server/pto-service";
+import { PtoScheduleCalculationError } from "@/features/pto/integrations/pto-scheduling-port";
 
 const mocks = vi.hoisted(() => ({
+  calculateFullDayLeave: vi.fn(),
   findEffectiveEmployeeAssignment: vi.fn(),
   findEmployeeById: vi.fn(),
   findEmployeeByPlatformUserId: vi.fn(),
@@ -24,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   listUpcomingApprovedProxyPtoRequests: vi.fn(),
   requirePlatformUser: vi.fn(),
   submitPtoDraft: vi.fn(),
+  updatePtoDraft: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -45,6 +50,12 @@ vi.mock("@/features/employees/server/employee-repository", () => ({
   findEmployeeByPlatformUserId: mocks.findEmployeeByPlatformUserId,
 }));
 
+vi.mock("@/features/scheduling/integrations/pto-scheduling-adapter", () => ({
+  ptoSchedulingIntegration: {
+    calculateFullDayLeave: mocks.calculateFullDayLeave,
+  },
+}));
+
 vi.mock("@/features/pto/server/pto-repository", () => ({
   adjustPtoBalance: vi.fn(),
   cancelPtoRequest: vi.fn(),
@@ -62,7 +73,7 @@ vi.mock("@/features/pto/server/pto-repository", () => ({
   listUpcomingApprovedProxyPtoRequests: mocks.listUpcomingApprovedProxyPtoRequests,
   reassignPtoRequestApprover: vi.fn(),
   submitPtoDraft: mocks.submitPtoDraft,
-  updatePtoDraft: vi.fn(),
+  updatePtoDraft: mocks.updatePtoDraft,
 }));
 
 const actorId = "507f1f77bcf86cd799439011";
@@ -70,10 +81,36 @@ const employeeId = "507f1f77bcf86cd799439012";
 const approverId = "507f1f77bcf86cd799439013";
 const managerEmployeeId = "507f1f77bcf86cd799439014";
 const requestId = "507f1f77bcf86cd799439015";
+const scheduleId = "507f1f77bcf86cd799439016";
+const requestUpdatedAt = new Date("2026-08-09T12:00:00.000Z");
+
+const defaultScheduleCalculation = {
+  sourceScheduleIds: [scheduleId],
+  totalScheduledMinutes: 480,
+  workingDates: ["2026-08-10"],
+};
+
+function expectedSubmittedDuration({
+  calculation = defaultScheduleCalculation,
+  units = calculation.workingDates.length * 2,
+}: {
+  calculation?: typeof defaultScheduleCalculation;
+  units?: number;
+} = {}) {
+  return {
+    calculation: {
+      ...calculation,
+      calculatedAt: expect.any(Date),
+      calculationPolicyVersion: 1,
+    },
+    units,
+  };
+}
 
 describe("PTO submission routing", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.calculateFullDayLeave.mockResolvedValue(defaultScheduleCalculation);
     mocks.findEmployeeByPlatformUserId.mockResolvedValue({
       employmentStatus: "active",
       id: employeeId,
@@ -81,9 +118,16 @@ describe("PTO submission routing", () => {
     mocks.findPtoBalance.mockResolvedValue({ currentBalanceUnits: 10 });
     mocks.findPtoRequestById.mockResolvedValue({
       category: "vacation",
+      collaboratorNote: null,
       createdByPlatformUserId: actorId,
+      durationCalculation: null,
+      durationUnits: 2,
+      endDate: "2026-08-10",
       requesterEmployeeId: employeeId,
       requesterPlatformUserId: actorId,
+      requestedPortion: "full",
+      startDate: "2026-08-10",
+      updatedAt: requestUpdatedAt,
     });
     mocks.getPtoRequestWarnings.mockResolvedValue({
       hasOverlap: false,
@@ -93,6 +137,10 @@ describe("PTO submission routing", () => {
     mocks.submitPtoDraft.mockResolvedValue({ id: requestId });
     mocks.listPendingPtoApprovals.mockResolvedValue([]);
     mocks.listPtoRequestsForAdministration.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("routes a collaborator only to the active assigned supervisor", async () => {
@@ -116,6 +164,8 @@ describe("PTO submission routing", () => {
     expect(mocks.submitPtoDraft).toHaveBeenCalledWith({
       actorPlatformUserId: actorId,
       approverPlatformUserId: approverId,
+      duration: expectedSubmittedDuration(),
+      expectedUpdatedAt: requestUpdatedAt,
       requestId,
     });
   });
@@ -141,6 +191,8 @@ describe("PTO submission routing", () => {
     expect(mocks.submitPtoDraft).toHaveBeenCalledWith({
       actorPlatformUserId: actorId,
       approverPlatformUserId: approverId,
+      duration: expectedSubmittedDuration(),
+      expectedUpdatedAt: requestUpdatedAt,
       requestId,
     });
   });
@@ -163,6 +215,8 @@ describe("PTO submission routing", () => {
     expect(mocks.submitPtoDraft).toHaveBeenCalledWith({
       actorPlatformUserId: actorId,
       approverPlatformUserId: null,
+      duration: expectedSubmittedDuration(),
+      expectedUpdatedAt: requestUpdatedAt,
       requestId,
     });
   });
@@ -173,9 +227,16 @@ describe("PTO submission routing", () => {
     });
     mocks.findPtoRequestById.mockResolvedValue({
       category: "incapacity",
+      collaboratorNote: null,
       createdByPlatformUserId: actorId,
+      durationCalculation: null,
+      durationUnits: 2,
+      endDate: "2026-08-10",
       requesterEmployeeId: employeeId,
       requesterPlatformUserId: actorId,
+      requestedPortion: "full",
+      startDate: "2026-08-10",
+      updatedAt: requestUpdatedAt,
     });
     mocks.findEmployeeById.mockResolvedValue({
       employmentStatus: "active",
@@ -193,6 +254,8 @@ describe("PTO submission routing", () => {
     expect(mocks.submitPtoDraft).toHaveBeenCalledWith({
       actorPlatformUserId: actorId,
       approverPlatformUserId: null,
+      duration: expectedSubmittedDuration(),
+      expectedUpdatedAt: requestUpdatedAt,
       requestId,
     });
   });
@@ -236,6 +299,8 @@ describe("PTO submission routing", () => {
     expect(mocks.submitPtoDraft).toHaveBeenCalledWith({
       actorPlatformUserId: actorId,
       approverPlatformUserId: null,
+      duration: expectedSubmittedDuration(),
+      expectedUpdatedAt: requestUpdatedAt,
       requestId,
     });
   });
@@ -245,8 +310,8 @@ describe("PTO submission routing", () => {
     const input = {
       category: "vacation" as const,
       collaboratorNote: null,
-      durationUnits: 2,
       endDate: "2026-08-10",
+      requestedPortion: "full" as const,
       startDate: "2026-08-10",
     };
     mocks.requirePlatformUser.mockResolvedValue({
@@ -268,8 +333,285 @@ describe("PTO submission routing", () => {
     expect(mocks.createPtoDraft).toHaveBeenCalledWith({
       actorPlatformUserId: adminId,
       employeeId,
-      request: input,
+      request: {
+        ...input,
+        durationCalculation: {
+          ...defaultScheduleCalculation,
+          calculatedAt: expect.any(Date),
+          calculationPolicyVersion: 1,
+        },
+        durationUnits: 2,
+      },
       requesterPlatformUserId: actorId,
+    });
+  });
+
+  it("derives one full leave unit pair per scheduled work date", async () => {
+    const calculation = {
+      ...defaultScheduleCalculation,
+      totalScheduledMinutes: 960,
+      workingDates: ["2026-08-10", "2026-08-12"],
+    };
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+    mocks.calculateFullDayLeave.mockResolvedValue(calculation);
+    mocks.createPtoDraft.mockResolvedValue({ id: requestId });
+
+    await createOwnPtoDraft({
+      category: "vacation",
+      collaboratorNote: null,
+      endDate: "2026-08-12",
+      requestedPortion: "full",
+      startDate: "2026-08-10",
+    });
+
+    expect(mocks.calculateFullDayLeave).toHaveBeenCalledWith({
+      employeeId,
+      endDate: "2026-08-12",
+      startDate: "2026-08-10",
+    });
+    expect(mocks.createPtoDraft).toHaveBeenCalledWith({
+      actorPlatformUserId: actorId,
+      employeeId,
+      request: {
+        category: "vacation",
+        collaboratorNote: null,
+        durationCalculation: {
+          ...calculation,
+          calculatedAt: expect.any(Date),
+          calculationPolicyVersion: 1,
+        },
+        durationUnits: 4,
+        endDate: "2026-08-12",
+        requestedPortion: "full",
+        startDate: "2026-08-10",
+      },
+    });
+  });
+
+  it("counts a short scheduled shift as one full leave day", async () => {
+    const calculation = {
+      ...defaultScheduleCalculation,
+      totalScheduledMinutes: 300,
+    };
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+    mocks.calculateFullDayLeave.mockResolvedValue(calculation);
+
+    await createOwnPtoDraft({
+      category: "vacation",
+      collaboratorNote: null,
+      endDate: "2026-08-10",
+      requestedPortion: "full",
+      startDate: "2026-08-10",
+    });
+
+    expect(mocks.createPtoDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          durationCalculation: expect.objectContaining({
+            totalScheduledMinutes: 300,
+          }),
+          durationUnits: 2,
+        }),
+      }),
+    );
+  });
+
+  it("retains the supported half-day unit for a single scheduled date", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+
+    await createOwnPtoDraft({
+      category: "vacation",
+      collaboratorNote: null,
+      endDate: "2026-08-10",
+      requestedPortion: "half",
+      startDate: "2026-08-10",
+    });
+
+    expect(mocks.createPtoDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          durationUnits: 1,
+          requestedPortion: "half",
+        }),
+      }),
+    );
+  });
+
+  it("rejects a half-day intent spanning multiple scheduled work dates", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+    mocks.calculateFullDayLeave.mockResolvedValue({
+      ...defaultScheduleCalculation,
+      totalScheduledMinutes: 960,
+      workingDates: ["2026-08-10", "2026-08-11"],
+    });
+
+    await expect(
+      createOwnPtoDraft({
+        category: "vacation",
+        collaboratorNote: null,
+        endDate: "2026-08-11",
+        requestedPortion: "half",
+        startDate: "2026-08-10",
+      }),
+    ).rejects.toMatchObject({ code: "partial_day_range" });
+    expect(mocks.createPtoDraft).not.toHaveBeenCalled();
+  });
+
+  it("recalculates duration when an own draft date range is updated", async () => {
+    const calculation = {
+      ...defaultScheduleCalculation,
+      sourceScheduleIds: ["507f1f77bcf86cd799439017"],
+      totalScheduledMinutes: 1_260,
+      workingDates: ["2026-08-11", "2026-08-13", "2026-08-14"],
+    };
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+    mocks.calculateFullDayLeave.mockResolvedValue(calculation);
+    mocks.updatePtoDraft.mockResolvedValue({ id: requestId });
+
+    await updateOwnPtoDraft(requestId, {
+      category: "incapacity",
+      collaboratorNote: "Reposo",
+      endDate: "2026-08-15",
+      requestedPortion: "full",
+      startDate: "2026-08-11",
+    });
+
+    expect(mocks.calculateFullDayLeave).toHaveBeenCalledWith({
+      employeeId,
+      endDate: "2026-08-15",
+      startDate: "2026-08-11",
+    });
+    expect(mocks.updatePtoDraft).toHaveBeenCalledWith({
+      actorPlatformUserId: actorId,
+      request: {
+        category: "incapacity",
+        collaboratorNote: "Reposo",
+        durationCalculation: {
+          ...calculation,
+          calculatedAt: expect.any(Date),
+          calculationPolicyVersion: 1,
+        },
+        durationUnits: 6,
+        endDate: "2026-08-15",
+        requestedPortion: "full",
+        startDate: "2026-08-11",
+      },
+      requestId,
+    });
+  });
+
+  it("maps incomplete scheduler coverage to a PTO domain error", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+    mocks.calculateFullDayLeave.mockRejectedValue(
+      new PtoScheduleCalculationError("schedule_incomplete"),
+    );
+
+    await expect(
+      createOwnPtoDraft({
+        category: "vacation",
+        collaboratorNote: null,
+        endDate: "2026-08-10",
+        requestedPortion: "full",
+        startDate: "2026-08-10",
+      }),
+    ).rejects.toMatchObject({ code: "schedule_incomplete" });
+    expect(mocks.createPtoDraft).not.toHaveBeenCalled();
+  });
+
+  it("rejects a covered date range with no scheduled workdays", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+    mocks.calculateFullDayLeave.mockResolvedValue({
+      ...defaultScheduleCalculation,
+      totalScheduledMinutes: 0,
+      workingDates: [],
+    });
+
+    await expect(
+      createOwnPtoDraft({
+        category: "vacation",
+        collaboratorNote: null,
+        endDate: "2026-08-10",
+        requestedPortion: "full",
+        startDate: "2026-08-10",
+      }),
+    ).rejects.toMatchObject({ code: "no_scheduled_workdays" });
+    expect(mocks.createPtoDraft).not.toHaveBeenCalled();
+  });
+
+  it("refreshes and freezes the schedule calculation when submitting a draft", async () => {
+    const now = new Date("2026-09-02T15:30:00.000Z");
+    const refreshedCalculation = {
+      ...defaultScheduleCalculation,
+      sourceScheduleIds: ["507f1f77bcf86cd799439017"],
+      totalScheduledMinutes: 780,
+      workingDates: ["2026-08-10", "2026-08-11"],
+    };
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "supervisor" },
+    });
+    mocks.findEmployeeById.mockResolvedValue({
+      employmentStatus: "active",
+      id: employeeId,
+    });
+    mocks.findPlatformUserById.mockResolvedValue({
+      id: actorId,
+      role: "supervisor",
+      status: "active",
+    });
+    mocks.findPtoRequestById.mockResolvedValue({
+      category: "vacation",
+      collaboratorNote: null,
+      createdByPlatformUserId: actorId,
+      durationCalculation: {
+        ...defaultScheduleCalculation,
+        calculatedAt: new Date("2026-08-01T00:00:00.000Z"),
+      },
+      durationUnits: 2,
+      endDate: "2026-08-11",
+      requesterEmployeeId: employeeId,
+      requesterPlatformUserId: actorId,
+      requestedPortion: "full",
+      startDate: "2026-08-10",
+      updatedAt: requestUpdatedAt,
+    });
+    mocks.calculateFullDayLeave.mockResolvedValue(refreshedCalculation);
+
+    await submitOwnPtoDraft({ requestId });
+
+    expect(mocks.calculateFullDayLeave).toHaveBeenCalledWith({
+      employeeId,
+      endDate: "2026-08-11",
+      startDate: "2026-08-10",
+    });
+    expect(mocks.submitPtoDraft).toHaveBeenCalledWith({
+      actorPlatformUserId: actorId,
+      approverPlatformUserId: null,
+      duration: {
+        calculation: {
+          ...refreshedCalculation,
+          calculatedAt: now,
+          calculationPolicyVersion: 1,
+        },
+        units: 4,
+      },
+      expectedUpdatedAt: requestUpdatedAt,
+      requestId,
     });
   });
 
@@ -279,9 +621,17 @@ describe("PTO submission routing", () => {
       platformUser: { id: adminId, role: "administrator" },
     });
     mocks.findPtoRequestById.mockResolvedValue({
+      category: "vacation",
+      collaboratorNote: null,
       createdByPlatformUserId: adminId,
+      durationCalculation: null,
+      durationUnits: 2,
+      endDate: "2026-08-10",
       requesterEmployeeId: employeeId,
       requesterPlatformUserId: actorId,
+      requestedPortion: "full",
+      startDate: "2026-08-10",
+      updatedAt: requestUpdatedAt,
     });
     mocks.findEmployeeById.mockImplementation(async (id: string) =>
       id === employeeId
@@ -301,6 +651,8 @@ describe("PTO submission routing", () => {
       actorPlatformUserId: adminId,
       administratorOverride: true,
       approverPlatformUserId: approverId,
+      duration: expectedSubmittedDuration(),
+      expectedUpdatedAt: requestUpdatedAt,
       requestId,
     });
   });
