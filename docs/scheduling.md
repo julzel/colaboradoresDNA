@@ -8,27 +8,31 @@ validation, effective-dated persistence, schedule resolution, and neutral work
 range calculations. A temporary v1 compatibility path remains for the existing
 employee setup UI and is isolated below.
 
-This delivery prepares the data and service layers for two later consumers:
+The first administrator UI consumer is available at `/admin/horarios`. It
+provides a date-aware, searchable roster with weekly and alternating schedule
+previews. The remaining interface work is:
 
-- an administrator scheduler interface for managing any collaborator's schedule;
+- the administrator detail/editor for managing one collaborator's schedule;
 - read-only schedule presentation for a collaborator viewing their own schedule.
 
-It does not implement or prescribe either interface. Pages and components must
-consume Scheduling service or view-model contracts so a future UI redesign does
-not require changes to the MongoDB representation or schedule calculations.
+Pages and components consume Scheduling services through feature-owned query
+and view-model contracts. A UI redesign therefore does not require changes to
+the MongoDB representation or schedule calculations.
 
 ## Slice boundaries
 
 ```text
 features/scheduling/
+├── components/    Scheduler presentation and responsive roster UI
 ├── domain/        Pure schemas, types, cycle resolution, and range calculation
 ├── integrations/ Feature ports and provider adapters
-└── server/        Authorized services, repositories, and index definitions
+├── server/        Authorized services, queries, repositories, and indexes
+└── view-models/   Serializable, presentation-ready schedule projections
 ```
 
-The authorized service currently returns serializable domain records. A future
-scheduler UI may add feature-owned view models without changing the domain,
-repository, or integration contracts.
+The authorized service returns serializable domain records. The scheduler query
+service maps those records into presentation-ready view models without exposing
+MongoDB documents to components.
 
 Scheduling owns the canonical model and database setup for the
 `employee_schedules` collection. Employee identity and audit behavior remain
@@ -140,9 +144,10 @@ employee cannot use it through self-service or PTO, and canonical writes require
 an active employee. A future rehire workflow must define whether such planned
 records are reactivated or explicitly voided.
 
-The current employee onboarding and schedule-edit screens still write the
-legacy v1 shape through their compatibility repository; that path is kept only
-until the deferred scheduler UI adopts the v2 service contract.
+The current employee onboarding and legacy schedule-edit screens still write
+the v1 shape through their compatibility repository. The `/admin/horarios`
+dashboard is read-only and already consumes the v2-aware roster service. The
+planned scheduler editor will replace the legacy write path.
 
 ## Authorized service boundaries
 
@@ -172,7 +177,7 @@ Hiding an edit control is not authorization. Future pages and Server Actions
 must call these authorized service boundaries even if their route or navigation
 is already restricted.
 
-### Service API prepared for the future UI
+### Service API used by the scheduler UI
 
 `web/src/features/scheduling/server/scheduler-service.ts` exposes:
 
@@ -195,7 +200,9 @@ is already restricted.
   feature ports.
 
 These functions accept and return domain commands/records rather than MongoDB
-documents. A future page, Server Action, REST handler, or different visual
+documents. `/admin/horarios` calls the roster service through
+`scheduler-query-service.ts`, which selects the effective date and builds the
+UI view model. A future Server Action, REST handler, or different visual
 scheduler can adapt the same service contract without moving schedule policy
 into the interface.
 
@@ -277,8 +284,10 @@ The repository uses an explicit dual reader:
 - `version: 1` continues to resolve working and non-working dates;
 - `version: 2` uses exact shifts and one- or two-week cycle resolution;
 - writes through the new Scheduling administrator service use v2;
-- the existing employee setup UI remains on its isolated v1 compatibility path
-  until the scheduler frontend is implemented.
+- the existing employee setup editor remains on its isolated v1 compatibility
+  path until the v2 scheduler editor is implemented;
+- `/admin/horarios` safely reads both legacy and v2 schedules through the
+  canonical roster boundary.
 
 A legacy full day retains its historical nominal eight hours and a half day its
 nominal four hours for compatibility calculations. Its clock time remains

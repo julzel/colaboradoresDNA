@@ -20,7 +20,7 @@
 
 .moduleGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   gap: var(--space-4);
   margin: 0;
   padding: 0;
@@ -73,6 +73,11 @@
 .moduleIcon[data-tone="accent"] {
   background: var(--color-accent-soft);
   color: var(--color-accent);
+}
+
+.moduleIcon[data-tone="schedule"] {
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
 }
 
 .moduleIcon[data-tone="development"] {

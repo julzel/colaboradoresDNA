@@ -14,6 +14,10 @@ describe("administrator module links", () => {
       "href",
       "/admin/colaboradores",
     );
+    expect(screen.getByRole("link", { name: /Horarios/ })).toHaveAttribute(
+      "href",
+      "/admin/horarios",
+    );
     expect(screen.getByRole("link", { name: /Aprobar ausencias/ })).toHaveAttribute(
       "href",
       "/admin/ausencias",

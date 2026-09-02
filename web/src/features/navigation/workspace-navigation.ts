@@ -1,5 +1,6 @@
 import {
   CalendarDays,
+  CalendarClock,
   ChartNoAxesColumnIncreasing,
   ClipboardCheck,
   ClipboardClock,
@@ -29,6 +30,11 @@ const administratorWorkspaceItems: readonly NavigationItem[] = [
     href: "/admin/colaboradores",
     icon: UsersRound,
     label: "Colaboradores",
+  },
+  {
+    href: "/admin/horarios",
+    icon: CalendarClock,
+    label: "Horarios",
   },
   {
     href: "/admin/ausencias",
@@ -146,6 +152,14 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
       { href: "/", label: "Inicio" },
       { href: "/admin", label: "Administración" },
       { label: "Solicitudes de ausencia" },
+    ] as const;
+  }
+
+  if (pathname.startsWith("/admin/horarios")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Horarios" },
     ] as const;
   }
 

@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  CalendarClock,
   ChartNoAxesColumnIncreasing,
   ClipboardCheck,
   ShieldCheck,
@@ -16,6 +17,13 @@ const administratorModules = [
     icon: UsersRound,
     label: "Colaboradores",
     tone: "brand",
+  },
+  {
+    description: "Consultá y organizá las jornadas de trabajo del equipo.",
+    href: "/admin/horarios",
+    icon: CalendarClock,
+    label: "Horarios",
+    tone: "schedule",
   },
   {
     description: "Revisá y gestioná las solicitudes de ausencia pendientes.",

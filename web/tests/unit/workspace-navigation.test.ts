@@ -37,6 +37,7 @@ describe("administrator navigation", () => {
       "/ausencias",
     ]);
     expect(getActiveNavigationHref("/admin/colaboradores", items)).toBe("/admin");
+    expect(getActiveNavigationHref("/admin/horarios", items)).toBe("/admin");
     expect(getActiveNavigationHref("/admin/ausencias", items)).toBe("/admin");
     expect(getActiveNavigationHref("/admin/desarrollo", items)).toBe("/admin");
   });
@@ -58,6 +59,7 @@ describe("administrator navigation", () => {
     ]);
     expect(sections[1]?.items.map((item) => item.href)).toEqual([
       "/admin/colaboradores",
+      "/admin/horarios",
       "/admin/ausencias",
       "/admin/desarrollo",
       "/admin/accounts",
@@ -70,5 +72,13 @@ describe("administrator navigation", () => {
     expect(getActiveNavigationHref("/calendario", sections[0]?.items ?? [])).toBe(
       "/calendario?vista=mes",
     );
+  });
+
+  it("places Horarios inside the administration hierarchy", () => {
+    expect(getWorkspaceBreadcrumbs("/admin/horarios")).toEqual([
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Horarios" },
+    ]);
   });
 });

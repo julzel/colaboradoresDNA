@@ -1,0 +1,45 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+  padding-block: var(--space-6) var(--space-12);
+}
+
+.header,
+.moduleTitle > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.moduleTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.moduleIcon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+  place-items: center;
+}
+
+.moduleTitle h1,
+.moduleTitle p {
+  margin: 0;
+}
+
+.moduleTitle h1 {
+  font-size: var(--text-2xl);
+  letter-spacing: -0.04em;
+  line-height: var(--line-tight);
+}
+
+.moduleTitle p {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+}
