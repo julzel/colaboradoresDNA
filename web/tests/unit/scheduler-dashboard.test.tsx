@@ -54,6 +54,10 @@ describe("scheduler dashboard", () => {
     expect(screen.getByRole("button", { name: /Alternantes 1/ })).toBeInTheDocument();
     expect(screen.getAllByText("08:00–17:00")).toHaveLength(2);
     expect(screen.getByText("Sin horario configurado")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Administrar" })[0]).toHaveAttribute(
+      "href",
+      "/admin/horarios/employee-1?fecha=2026-09-02",
+    );
   });
 
   it("filters by status and searches by collaborator name", () => {

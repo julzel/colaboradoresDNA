@@ -80,5 +80,11 @@ describe("administrator navigation", () => {
       { href: "/admin", label: "Administración" },
       { label: "Horarios" },
     ]);
+    expect(getWorkspaceBreadcrumbs("/admin/horarios/employee-1")).toEqual([
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/horarios", label: "Horarios" },
+      { label: "Colaborador" },
+    ]);
   });
 });

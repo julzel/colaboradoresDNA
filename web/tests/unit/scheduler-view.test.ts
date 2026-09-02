@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { ScheduleRecord } from "@/features/scheduling/domain/schedule";
-import { buildSchedulerDashboardView } from "@/features/scheduling/view-models/scheduler-view";
+import {
+  buildSchedulerDashboardView,
+  buildSchedulerDetailView,
+} from "@/features/scheduling/view-models/scheduler-view";
 
 const weeklySchedule: ScheduleRecord = {
   anchorDate: "2026-08-31",
@@ -57,5 +60,25 @@ describe("scheduler dashboard view", () => {
     );
     expect(view.items[1]).toMatchObject({ status: "alternating" });
     expect(view.items[2]).toMatchObject({ status: "missing", weeks: [] });
+  });
+
+  it("prepares exact v2 shifts for the editor without exposing persistence fields", () => {
+    const detail = buildSchedulerDetailView({
+      currentSchedule: weeklySchedule,
+      displayName: "Ana Mora",
+      employeeId: "employee-1",
+      history: [weeklySchedule],
+      selectedDate: "2026-09-02",
+    });
+
+    expect(detail.editor).toMatchObject({
+      anchorDate: "2026-08-31",
+      cycle: "weekly",
+      effectiveFrom: "2026-09-02",
+      hasLegacyTimes: false,
+    });
+    expect(
+      detail.editor.weeks[0]?.find((day) => day.dayOfWeek === "tuesday"),
+    ).toMatchObject({ enabled: true, endTime: "16:30", startTime: "07:30" });
   });
 });

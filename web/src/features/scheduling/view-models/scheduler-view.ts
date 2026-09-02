@@ -55,6 +55,27 @@ export type SchedulerDashboardView = Readonly<{
   selectedDate: string;
 }>;
 
+export type SchedulerEditorDayView = Readonly<{
+  dayLabel: string;
+  dayOfWeek: ScheduleDayOfWeek;
+  enabled: boolean;
+  endTime: string;
+  startTime: string;
+}>;
+
+export type SchedulerDetailView = Readonly<{
+  current: SchedulerRosterItemView;
+  editor: {
+    anchorDate: string;
+    cycle: "alternating" | "weekly";
+    effectiveFrom: string;
+    hasLegacyTimes: boolean;
+    weeks: readonly (readonly SchedulerEditorDayView[])[];
+  };
+  employee: { displayName: string; id: string };
+  history: readonly SchedulerRosterItemView[];
+}>;
+
 type SchedulerRosterSource = Readonly<{
   displayName: string;
   id: string;
@@ -150,6 +171,91 @@ function buildItem(source: SchedulerRosterSource): SchedulerRosterItemView {
         ? "alternating"
         : "configured",
     weeks: buildWeeks(source.schedule),
+  };
+}
+
+function mondayForDate(value: string) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+  return date.toISOString().slice(0, 10);
+}
+
+function editorDays(schedule: ScheduleRecord | null, weekIndex: number) {
+  return scheduleDayOfWeekOrder.map((dayOfWeek) => {
+    if (!schedule) {
+      return {
+        dayLabel: dayLabels[dayOfWeek],
+        dayOfWeek,
+        enabled: false,
+        endTime: "17:00",
+        startTime: "08:00",
+      };
+    }
+
+    if (schedule.version === 1) {
+      const day = schedule.days.find((candidate) => candidate.dayOfWeek === dayOfWeek)!;
+      return {
+        dayLabel: dayLabels[dayOfWeek],
+        dayOfWeek,
+        enabled: day.workFraction > 0,
+        endTime: "",
+        startTime: "",
+      };
+    }
+
+    const shift = schedule.weeks[weekIndex]?.shifts.find(
+      (candidate) => candidate.dayOfWeek === dayOfWeek,
+    );
+    return {
+      dayLabel: dayLabels[dayOfWeek],
+      dayOfWeek,
+      enabled: Boolean(shift),
+      endTime: shift?.endTime ?? "17:00",
+      startTime: shift?.startTime ?? "08:00",
+    };
+  });
+}
+
+export function buildSchedulerDetailView(input: {
+  currentSchedule: ScheduleRecord | null;
+  displayName: string;
+  employeeId: string;
+  history: readonly ScheduleRecord[];
+  selectedDate: string;
+}): SchedulerDetailView {
+  const current = buildItem({
+    displayName: input.displayName,
+    id: input.employeeId,
+    schedule: input.currentSchedule,
+  });
+  const cycle =
+    input.currentSchedule?.version === 2 && input.currentSchedule.weeks.length === 2
+      ? "alternating"
+      : "weekly";
+
+  return {
+    current,
+    editor: {
+      anchorDate:
+        input.currentSchedule?.version === 2
+          ? input.currentSchedule.anchorDate
+          : mondayForDate(input.selectedDate),
+      cycle,
+      effectiveFrom: input.selectedDate,
+      hasLegacyTimes: input.currentSchedule?.version === 1,
+      weeks: [
+        editorDays(input.currentSchedule, 0),
+        editorDays(cycle === "alternating" ? input.currentSchedule : null, 1),
+      ],
+    },
+    employee: { displayName: input.displayName, id: input.employeeId },
+    history: input.history.map((schedule) =>
+      buildItem({
+        displayName: input.displayName,
+        id: input.employeeId,
+        schedule,
+      }),
+    ),
   };
 }
 

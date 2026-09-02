@@ -155,6 +155,15 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
     ] as const;
   }
 
+  if (/^\/admin\/horarios\/[^/]+/.test(pathname)) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/horarios", label: "Horarios" },
+      { label: "Colaborador" },
+    ] as const;
+  }
+
   if (pathname.startsWith("/admin/horarios")) {
     return [
       { href: "/", label: "Inicio" },

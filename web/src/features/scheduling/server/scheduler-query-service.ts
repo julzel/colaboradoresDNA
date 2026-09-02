@@ -1,8 +1,14 @@
 import "server-only";
 
 import { scheduleDateSchema } from "@/features/scheduling/domain/schedule";
-import { getSchedulerRosterAsAdministrator } from "@/features/scheduling/server/scheduler-service";
-import { buildSchedulerDashboardView } from "@/features/scheduling/view-models/scheduler-view";
+import {
+  getEmployeeScheduleHistoryAsAdministrator,
+  getSchedulerRosterAsAdministrator,
+} from "@/features/scheduling/server/scheduler-service";
+import {
+  buildSchedulerDashboardView,
+  buildSchedulerDetailView,
+} from "@/features/scheduling/view-models/scheduler-view";
 
 function todayInCostaRica(now = new Date()) {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -22,4 +28,24 @@ export async function getSchedulerDashboardPageData(requestedDate?: string) {
   const roster = await getSchedulerRosterAsAdministrator(selectedDate);
 
   return buildSchedulerDashboardView(roster, selectedDate);
+}
+
+export async function getSchedulerDetailPageData(
+  employeeId: string,
+  requestedDate?: string,
+) {
+  const parsedDate = scheduleDateSchema.safeParse(requestedDate);
+  const selectedDate = parsedDate.success ? parsedDate.data : todayInCostaRica();
+  const roster = await getSchedulerRosterAsAdministrator(selectedDate);
+  const employee = roster.find((item) => item.id === employeeId);
+  if (!employee) return null;
+  const history = await getEmployeeScheduleHistoryAsAdministrator(employeeId);
+
+  return buildSchedulerDetailView({
+    currentSchedule: employee.schedule,
+    displayName: employee.displayName,
+    employeeId,
+    history,
+    selectedDate,
+  });
 }

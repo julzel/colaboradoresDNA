@@ -8,12 +8,27 @@ validation, effective-dated persistence, schedule resolution, and neutral work
 range calculations. A temporary v1 compatibility path remains for the existing
 employee setup UI and is isolated below.
 
-The first administrator UI consumer is available at `/admin/horarios`. It
-provides a date-aware, searchable roster with weekly and alternating schedule
-previews. The remaining interface work is:
+The administrator scheduler is available at `/admin/horarios`. It provides a
+date-aware, searchable roster with weekly and alternating schedule previews.
+`/admin/horarios/[employeeId]` provides the v2 schedule detail/editor, effective
+date management, exact shift inputs, alternating-week setup, and history. The
+remaining interface work is:
 
-- the administrator detail/editor for managing one collaborator's schedule;
 - read-only schedule presentation for a collaborator viewing their own schedule.
+
+The editor presents each week as a horizontally scrollable grid of 30-minute
+blocks from `07:00` through `17:00`, with a sticky weekday column.
+Administrators can enable or disable a day directly. A first click or tap
+toggles a single block. Regular clicks on an adjacent block extend the
+consecutive interval, while clicks on a selected edge remove that block.
+Shift-clicking another block fills the whole interval from the previous
+selection at once. Week A and Week B use independent grids, and Week A can be
+copied into Week B before making exceptions.
+
+Grid edits produce one consecutive start/end interval per working day, matching
+the domain invariant. Existing v2 times that do not fall on a half-hour remain
+unchanged unless the administrator selects a new range in that row; the day
+label continues to display the exact stored interval.
 
 Pages and components consume Scheduling services through feature-owned query
 and view-model contracts. A UI redesign therefore does not require changes to
@@ -144,10 +159,11 @@ employee cannot use it through self-service or PTO, and canonical writes require
 an active employee. A future rehire workflow must define whether such planned
 records are reactivated or explicitly voided.
 
-The current employee onboarding and legacy schedule-edit screens still write
-the v1 shape through their compatibility repository. The `/admin/horarios`
-dashboard is read-only and already consumes the v2-aware roster service. The
-planned scheduler editor will replace the legacy write path.
+Employee onboarding still writes the v1 shape through its compatibility
+repository. The `/admin/horarios` dashboard reads both versions, while the
+detail/editor writes canonical v2 records and asks administrators for exact
+hours before migrating a legacy schedule. The old employee schedule-edit URL
+redirects to the canonical scheduler editor.
 
 ## Authorized service boundaries
 
@@ -284,10 +300,11 @@ The repository uses an explicit dual reader:
 - `version: 1` continues to resolve working and non-working dates;
 - `version: 2` uses exact shifts and one- or two-week cycle resolution;
 - writes through the new Scheduling administrator service use v2;
-- the existing employee setup editor remains on its isolated v1 compatibility
-  path until the v2 scheduler editor is implemented;
+- employee onboarding remains on its isolated v1 compatibility path;
 - `/admin/horarios` safely reads both legacy and v2 schedules through the
-  canonical roster boundary.
+  canonical roster boundary;
+- `/admin/horarios/[employeeId]` replaces or creates an effective v2 record and
+  preserves earlier schedule periods.
 
 A legacy full day retains its historical nominal eight hours and a half day its
 nominal four hours for compatibility calculations. Its clock time remains

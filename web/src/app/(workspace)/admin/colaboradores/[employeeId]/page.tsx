@@ -279,7 +279,7 @@ export default async function EmployeeDetailPage({
             action={
               detail.employee.employmentStatus === "active" ? (
                 <ButtonLink
-                  href={`/admin/colaboradores/${employeeId}/editar/horario`}
+                  href={`/admin/horarios/${employeeId}`}
                   size="small"
                   variant="quiet"
                 >

@@ -38,7 +38,7 @@ function matchesFilter(item: SchedulerRosterItemView, filter: RosterFilter) {
   return item.status === filter;
 }
 
-function SchedulePreview({ item }: { item: SchedulerRosterItemView }) {
+export function SchedulePreview({ item }: { item: SchedulerRosterItemView }) {
   if (item.status === "missing") {
     return (
       <div className={styles.missingSchedule}>
@@ -220,9 +220,9 @@ export function SchedulerDashboard({
                 <SchedulePreview item={item} />
                 <Link
                   className={styles.profileLink}
-                  href={`/admin/colaboradores/${item.id}`}
+                  href={`/admin/horarios/${item.id}?fecha=${selectedDate}`}
                 >
-                  Ver perfil
+                  Administrar
                 </Link>
               </li>
             ))}
