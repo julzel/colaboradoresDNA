@@ -4,12 +4,13 @@ import {
   ChevronRight,
   ClipboardClock,
   Clock3,
-  Umbrella,
+  TreePalm,
 } from "lucide-react";
 import Link from "next/link";
 
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { PtoCategoryIcon } from "@/features/pto/components/pto-category-badge";
 import { PtoRequestModal } from "@/features/pto/components/pto-request-modal";
@@ -105,23 +106,17 @@ export default async function PtoDashboardPage({
     <Container>
       <div className={styles.page}>
         <header className={styles.header}>
-          <div className={styles.headerContent}>
-            <div className={styles.moduleTitle}>
-              <span className={styles.moduleIcon}>
-                <ClipboardClock aria-hidden="true" size={24} strokeWidth={1.8} />
-              </span>
-              <h1>Ausencias</h1>
-              <div className={styles.moduleActions}>
-                <PtoRequestModal />
-              </div>
-            </div>
-          </div>
+          <PageSectionHeader
+            action={<PtoRequestModal />}
+            icon={ClipboardClock}
+            title="Ausencias"
+          />
         </header>
 
         <section aria-label="Resumen de ausencias" className={styles.summaryCards}>
           <ElevatedSurface as="div" className={styles.summaryCard}>
             <span className={styles.summaryCardIcon} data-tone="vacation">
-              <Umbrella aria-hidden="true" size={29} strokeWidth={1.8} />
+              <TreePalm aria-hidden="true" size={29} strokeWidth={1.8} />
             </span>
             <div className={styles.summaryCardContent}>
               <h2>Saldo de vacaciones</h2>

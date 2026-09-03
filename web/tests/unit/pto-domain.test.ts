@@ -10,6 +10,7 @@ import {
   ptoCategories,
   ptoCategoryConsumesBalance,
   ptoCategoryLabels,
+  ptoDraftCommandSchema,
   ptoDraftInputSchema,
   ptoDurationDaysSchema,
   ptoOpeningBalanceDaysSchema,
@@ -74,6 +75,7 @@ describe("PTO domain", () => {
         collaboratorNote: "",
         durationUnits: 3,
         endDate: "2026-08-02",
+        requestedPortion: "full",
         startDate: "2026-08-01",
       }).success,
     ).toBe(true);
@@ -82,6 +84,27 @@ describe("PTO domain", () => {
         category: "vacation",
         collaboratorNote: "",
         durationUnits: 3,
+        endDate: "2026-08-01",
+        requestedPortion: "full",
+        startDate: "2026-08-02",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("keeps server-owned duration metadata out of draft commands", () => {
+    const command = ptoDraftCommandSchema.parse({
+      category: "vacation",
+      collaboratorNote: null,
+      durationCalculation: { forged: true },
+      endDate: "2026-08-01",
+      requestedPortion: "full",
+      startDate: "2026-08-01",
+    });
+
+    expect(command).not.toHaveProperty("durationCalculation");
+    expect(
+      ptoDraftCommandSchema.safeParse({
+        ...command,
         endDate: "2026-08-01",
         startDate: "2026-08-02",
       }).success,
@@ -93,6 +116,7 @@ describe("PTO domain", () => {
       category: "vacation",
       durationUnits: 2,
       endDate: "2026-08-02",
+      requestedPortion: "full" as const,
       startDate: "2026-08-01",
     };
 

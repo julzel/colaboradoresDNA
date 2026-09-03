@@ -94,6 +94,8 @@ function domainState(error: unknown): EmployeeActionState {
       manager_ineligible:
         "La jefatura debe ser una persona activa con rol de supervisión o administración.",
       platform_user_missing: "No encontramos la cuenta de acceso asociada.",
+      schedule_managed_by_scheduler:
+        "Este horario usa el nuevo formato y debe administrarse desde el módulo de horarios.",
       schedule_overlap:
         "La fecha se traslapa con otro horario. Elegí una vigencia posterior.",
     };

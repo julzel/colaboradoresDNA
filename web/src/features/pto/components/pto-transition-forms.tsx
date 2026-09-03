@@ -50,7 +50,7 @@ export function PtoSubmitForm({ requestId }: { requestId: string }) {
 export function PtoCancelForm({ requestId }: { requestId: string }) {
   const [state, action] = useActionState(cancelPtoRequestAction, initialPtoActionState);
   return (
-    <form action={action} className={styles.actions}>
+    <form action={action} className={`${styles.actions} ${styles.cancelPtoForm}`}>
       <input name="requestId" type="hidden" value={requestId} />
       <Feedback message={state.message} />
       <SubmitButton pendingLabel="Cancelando…" variant="danger">

@@ -24,8 +24,12 @@ import {
   previousIsoCalendarDate,
 } from "@/features/employees/domain/shared";
 import { recordEmployeeAudit } from "@/features/employees/server/employee-audit-repository";
-import { ensureEmployeeDomainIndexes } from "@/features/employees/server/employee-indexes";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
+
+// Transitional v1 compatibility repository for the existing employee setup
+// screens. New schedule management and all cross-feature calculations belong
+// to the Scheduling slice. Remove this adapter when those screens move to the
+// v2 Scheduling service contract.
 
 type TimelineLockDocument = {
   _id: string;
@@ -157,7 +161,6 @@ export async function createEmployeeSchedule(
   input: EmployeeScheduleInput,
 ): Promise<EmployeeSchedule> {
   const schedule = employeeScheduleInputSchema.parse(input);
-  await ensureEmployeeDomainIndexes();
   await ensureScheduleLockExists(schedule.employeeId);
   const client = await getMongoClient();
 
@@ -183,7 +186,6 @@ export async function replaceEmployeeSchedule(
     ...input,
     effectiveTo: null,
   });
-  await ensureEmployeeDomainIndexes();
   await ensureScheduleLockExists(schedule.employeeId);
   const client = await getMongoClient();
   const { locks, schedules } = await getScheduleCollections();
@@ -197,6 +199,18 @@ export async function replaceEmployeeSchedule(
         locks,
         session,
       });
+      const canonicalSchedule = await schedules.findOne(
+        {
+          employeeId: new ObjectId(schedule.employeeId),
+          version: 2,
+        } as Filter<EmployeeScheduleDocument>,
+        { projection: { _id: 1 }, session },
+      );
+
+      if (canonicalSchedule) {
+        throw new EmployeeDomainError("schedule_managed_by_scheduler");
+      }
+
       const openSchedule = await schedules.findOne(
         { employeeId: new ObjectId(schedule.employeeId), effectiveTo: null },
         { session },
@@ -249,14 +263,14 @@ export async function findEffectiveEmployeeSchedule({
 }) {
   objectIdStringSchema.parse(employeeId);
   isoCalendarDateSchema.parse(onDate);
-  await ensureEmployeeDomainIndexes();
   const { schedules } = await getScheduleCollections();
   const document = await schedules.findOne(
     {
       employeeId: new ObjectId(employeeId),
       effectiveFrom: { $lte: onDate },
+      version: { $ne: 2 },
       $or: [{ effectiveTo: null }, { effectiveTo: { $gte: onDate } }],
-    },
+    } as Filter<EmployeeScheduleDocument>,
     { sort: { effectiveFrom: -1 } },
   );
 
@@ -265,10 +279,12 @@ export async function findEffectiveEmployeeSchedule({
 
 export async function listEmployeeScheduleHistory(employeeId: string) {
   objectIdStringSchema.parse(employeeId);
-  await ensureEmployeeDomainIndexes();
   const { schedules } = await getScheduleCollections();
   const documents = await schedules
-    .find({ employeeId: new ObjectId(employeeId) })
+    .find({
+      employeeId: new ObjectId(employeeId),
+      version: { $ne: 2 },
+    } as Filter<EmployeeScheduleDocument>)
     .sort({ effectiveFrom: -1 })
     .toArray();
 

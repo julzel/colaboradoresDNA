@@ -1,7 +1,9 @@
 # Employee model implementation
 
 The approved employee-domain decisions and implementation status are maintained
-in [`tasks/employee-model.md`](../tasks/employee-model.md).
+in [`tasks/done/employee-model.md`](../tasks/done/employee-model.md). Its original
+fixed-fraction schedule proposal is retained as historical context and is
+superseded by the implemented [Scheduling slice](./scheduling.md).
 
 ## Runtime boundary
 
@@ -9,6 +11,12 @@ Application routes and Server Actions use
 `web/src/features/employees/server/employee-service.ts`. That service
 authenticates and authorizes each operation before calling the server-only
 repositories.
+
+Canonical schedule reads, writes, and calculations use the dedicated
+`web/src/features/scheduling/` service boundary. Employment termination reaches
+that boundary through an explicit integration port. Existing employee setup
+screens retain a temporary v1 compatibility repository until the deferred
+scheduler UI moves them to the v2 service contract.
 
 Do not import repositories directly into Client Components or treat hidden
 controls as authorization. Identification, phone, birthday, and personal email
@@ -21,7 +29,7 @@ visibility must be enforced by server projections.
 | `employees`               | Personal profile and employment lifecycle           |
 | `departments`             | Editable departments                                |
 | `employee_assignments`    | Effective department, position, and manager history |
-| `employee_schedules`      | Effective weekly schedule history                   |
+| `employee_schedules`      | Scheduling-owned effective work-pattern history     |
 | `employee_audit`          | Safe employee-domain audit events                   |
 | `employee_timeline_locks` | Transaction serialization for temporal rules        |
 
@@ -35,6 +43,19 @@ audit views use the same name. Clerk is the canonical profile-image store;
 `/perfil` is the only application UI that writes it, and all application avatar
 surfaces read the same Clerk image.
 
+## Scheduling boundary
+
+The employee model links a schedule to the stable employee ID, but it does not
+define the work-pattern format. Scheduling v2 stores exact same-day `HH:mm`
+shifts and an anchored one- or two-week cycle. It preserves effective-dated
+history and provides the neutral range calculation used by PTO.
+
+Existing unversioned fraction-based schedules remain readable as v1. Their
+working days and nominal four- or eight-hour duration remain available, but
+their actual start and end times are unknown. No bootstrap or service may invent
+clock times for those records. See [Collaborator scheduling](./scheduling.md)
+for the complete model and migration policy.
+
 ## Initial database setup
 
 Run against a non-production Atlas database:
@@ -42,11 +63,16 @@ Run against a non-production Atlas database:
 ```bash
 cd web
 pnpm bootstrap:employee-model
+pnpm bootstrap:scheduling-model
 ```
 
-This repeatable command creates the required indexes and initial department
-records. Production execution should be part of a reviewed deployment or
-migration procedure.
+The employee bootstrap creates employee-domain indexes and initial department
+records. The scheduling bootstrap creates the reviewed schedule timeline
+indexes and dual-read validator without rewriting legacy schedule data. Both
+commands are repeatable.
+
+Production execution should be part of a reviewed deployment or migration
+procedure and use migration-capable credentials.
 
 ## Safety rules
 
@@ -54,7 +80,8 @@ migration procedure.
 - Birthday stores day and month only.
 - Identification values never belong in URLs, logs, analytics, feedback, or
   audit metadata.
-- Normal CRUD never hard-deletes employees, assignments, or schedules.
+- Normal CRUD never hard-deletes employees, assignments, or schedules. Schedule
+  changes close effective periods and preserve history.
 - Role, department, and position never imply one another.
 - Employment deactivation must use the existing fail-closed access lifecycle
   when the CRUD workflow is implemented.

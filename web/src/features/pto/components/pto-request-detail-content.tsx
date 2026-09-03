@@ -69,9 +69,9 @@ function DetailFact({
   return (
     <div>
       <dt>
-        <span className={styles.requestDetailFactIcon}>
+        {/* <span className={styles.requestDetailFactIcon}>
           <Icon aria-hidden="true" size={16} />
-        </span>
+        </span> */}
         {label}
       </dt>
       <dd>{value}</dd>
@@ -144,7 +144,9 @@ export function PtoRequestDetailContent({
           <div className={styles.requestDetailCategory}>
             <PtoCategoryIcon category={request.category} />
             <div>
-              <span>Tipo de solicitud</span>
+              <span className={styles.requestDetailCategoryLabel}>
+                Tipo de solicitud
+              </span>
               <strong
                 className={styles.requestDetailCategoryValue}
                 data-category={request.category}
@@ -154,8 +156,11 @@ export function PtoRequestDetailContent({
             </div>
           </div>
           <div className={styles.requestDetailStatus}>
-            <span>Estado</span>
-            <StatusBadge tone={statusTones[request.status]}>
+            <span className={styles.requestDetailStatusLabel}>Estado</span>
+            <StatusBadge
+              className={styles.requestDetailStatusBadge}
+              tone={statusTones[request.status]}
+            >
               {ptoStatusLabels[request.status]}
             </StatusBadge>
           </div>

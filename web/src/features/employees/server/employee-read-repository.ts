@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ObjectId } from "mongodb";
+import { ObjectId, type Filter } from "mongodb";
 
 import type {
   PlatformRole,
@@ -84,8 +84,9 @@ export async function getEmployeeSelfServiceProfileDetail(
       {
         effectiveFrom: { $lte: today },
         employeeId: employee._id,
+        version: { $ne: 2 },
         $or: [{ effectiveTo: null }, { effectiveTo: { $gte: today } }],
-      },
+      } as Filter<EmployeeScheduleDocument>,
       { sort: { effectiveFrom: -1 } },
     ),
   ]);

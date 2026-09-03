@@ -38,6 +38,10 @@
     box-shadow 150ms ease;
 }
 
+.control:not(.textarea) {
+  height: var(--control-height-md);
+}
+
 .control::placeholder {
   color: var(--color-text-subtle);
 }

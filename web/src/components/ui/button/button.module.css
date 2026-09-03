@@ -44,7 +44,7 @@
 
 .primary {
   background: var(--background-primary-action);
-  color: var(--neutral-0);
+  color: var(--color-primary-action-text);
 }
 
 .primary:hover:not(:disabled) {
@@ -75,12 +75,15 @@
 }
 
 .danger {
-  background: var(--color-danger);
-  color: var(--color-danger-contrast);
+  border-color: var(--color-danger-action);
+  background: transparent;
+  color: var(--color-danger-action);
 }
 
 .danger:hover:not(:disabled) {
-  background: var(--color-danger-hover);
+  border-color: var(--color-danger-action-hover);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-action-hover);
 }
 
 .fullWidth {

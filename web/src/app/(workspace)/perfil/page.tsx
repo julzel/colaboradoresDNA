@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   BriefcaseBusiness,
+  CalendarClock,
   CalendarDays,
   ContactRound,
   KeyRound,
@@ -12,6 +13,7 @@ import {
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { ProfileImageForm } from "@/features/employees/components/profile-image-form";
 import { ScheduleSummary } from "@/features/employees/components/schedule-summary";
@@ -77,8 +79,7 @@ export default async function ProfilePage() {
     <Container>
       <div className={styles.page}>
         <header className={styles.pageHeader}>
-          <p className="eyebrow">Cuenta personal</p>
-          <h1>Mi perfil</h1>
+          <PageSectionHeader icon={UserRound} title="Mi perfil" />
         </header>
 
         <ElevatedSurface as="section" className={styles.hero}>
@@ -189,6 +190,15 @@ export default async function ProfilePage() {
               <h2>Horario actual</h2>
             </header>
             <ScheduleSummary schedule={profile.currentSchedule} />
+            <ButtonLink
+              className={styles.scheduleLink}
+              href="/perfil/horario"
+              size="small"
+              variant="secondary"
+            >
+              <CalendarClock aria-hidden="true" size={17} />
+              Ver mi horario
+            </ButtonLink>
           </ElevatedSurface>
 
           <ElevatedSurface as="section" className={`${styles.card} ${styles.wideCard}`}>

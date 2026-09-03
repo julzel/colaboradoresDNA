@@ -82,6 +82,23 @@ Gerencia, Nutrición, Producción, and Servicio al cliente only when they do not
 already exist, and backfills a missing employee `preferredName` to `null`. It
 does not create employees, platform accounts, credentials, or invitations.
 
+### Scheduling model bootstrap
+
+After the employee model is initialized, apply the Scheduling-owned indexes with
+migration-capable credentials:
+
+```bash
+cd web
+pnpm bootstrap:scheduling-model
+```
+
+The command is idempotent. It reconciles the effective-timeline and
+one-open-period indexes for `employee_schedules` and installs moderate dual-read
+validation for v1 and v2. It does not create schedules or rewrite unversioned
+legacy v1 records, because those records do not contain clock times that can be
+safely inferred. Scheduling runtime paths do not need index management
+privileges. See [Collaborator scheduling](./scheduling.md).
+
 ### Collaborator development
 
 The Desarrollo module is restricted to synthetic data until its governance and
@@ -133,5 +150,7 @@ they require a browser runtime.
 2. Add its values to `web/.env.local`.
 3. Validate input with a feature-owned Zod schema.
 4. Access the database through `src/lib/server/mongodb.ts`.
-5. Define any required indexes and document data migrations in `web/scripts/`.
+5. Define any required indexes and add a repeatable bootstrap or migration in
+   `web/scripts/`; do not make runtime schema-administration privileges a feature
+   dependency.
 6. Test the feature against the non-production database only.

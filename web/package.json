@@ -13,6 +13,7 @@
     "bootstrap:employee-model": "node --env-file=.env.local scripts/bootstrap-employee-model.mjs",
     "bootstrap:development-model": "node --env-file=.env.local scripts/bootstrap-development-model.mjs",
     "bootstrap:pto-model": "node --env-file=.env.local scripts/bootstrap-pto-model.mjs",
+    "bootstrap:scheduling-model": "node --env-file=.env.local scripts/bootstrap-scheduling-model.mjs",
     "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
     "start": "next start",
     "lint": "eslint .",

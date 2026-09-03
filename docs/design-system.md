@@ -145,6 +145,13 @@ and `-0.035em`, and no more than two lines. Page headers contain the title,
 optional eyebrow, and actions only; do not add descriptive subtitles below a
 page title. Supporting context belongs in the relevant card or form section.
 
+Top-level module and self-service page headers use the shared
+`PageSectionHeader` primitive. Its calendar-derived treatment is canonical: a
+44px brand-soft icon container, a 24px icon at `1.8` stroke width, a
+`--text-2xl` title, and a 12px icon-to-title gap. Loading states render the same
+primitive so icon and title geometry cannot shift when content resolves. New
+feature styles must not recreate these values locally.
+
 Do not use title case, full-uppercase headings, or multiple display-sized
 headings on one screen. Eyebrows may be uppercase with `0.08em` tracking, but
 are optional and should not repeat the page title.
