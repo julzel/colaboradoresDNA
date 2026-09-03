@@ -38,7 +38,6 @@ export function WorkspaceHeader({
 }: WorkspaceHeaderProps) {
   const pathname = usePathname();
   const breadcrumbs = getWorkspaceBreadcrumbs(pathname);
-  const pageTitle = breadcrumbs.at(-1)?.label ?? "Inicio";
   const parentDestination = [...breadcrumbs]
     .reverse()
     .flatMap((item) => ("href" in item ? [{ href: item.href, label: item.label }] : []))
@@ -71,10 +70,6 @@ export function WorkspaceHeader({
             <ArrowLeft aria-hidden="true" size={22} />
           </Link>
         )}
-        <div className={styles.mobileContext}>
-          <span>{pathname === "/" ? "Colaboradores" : "Estás en"}</span>
-          <strong>{pageTitle}</strong>
-        </div>
       </div>
       <div className={styles.breadcrumbs}>
         <Breadcrumbs items={breadcrumbs} />

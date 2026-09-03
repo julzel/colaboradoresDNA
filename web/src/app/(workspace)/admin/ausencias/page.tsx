@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { PtoCategoryBadge } from "@/features/pto/components/pto-category-badge";
 import styles from "@/features/pto/components/pto.module.css";
@@ -55,15 +56,11 @@ export default async function PtoAdministrationPage({
     <Container>
       <div className={styles.page}>
         <header className={styles.header}>
-          <div>
-            <p className="eyebrow">Administración</p>
-            <div className={styles.moduleTitle}>
-              <span className={styles.moduleIcon}>
-                <ClipboardClock aria-hidden="true" size={24} strokeWidth={1.8} />
-              </span>
-              <h1>Ausencias</h1>
-            </div>
-          </div>
+          <PageSectionHeader
+            eyebrow="Administración"
+            icon={ClipboardClock}
+            title="Ausencias"
+          />
         </header>
 
         <div className={styles.summaryGrid}>

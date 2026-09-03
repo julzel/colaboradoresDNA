@@ -10,16 +10,10 @@
   gap: var(--space-4);
 }
 
-.heading h1,
 .directoryHeading h2,
 .empty h3 {
   margin: 0;
   line-height: var(--line-tight);
-}
-
-.heading h1 {
-  font-size: var(--text-2xl);
-  letter-spacing: -0.04em;
 }
 
 .directoryCount,
@@ -27,17 +21,6 @@
   margin: var(--space-1) 0 0;
   color: var(--color-text-muted);
   line-height: var(--line-body);
-}
-
-.moduleIcon {
-  display: grid;
-  width: 3.5rem;
-  height: 3.5rem;
-  flex: 0 0 auto;
-  border-radius: var(--radius-lg);
-  background: var(--color-module-development-soft);
-  color: var(--color-module-development);
-  place-items: center;
 }
 
 .metrics {
@@ -398,11 +381,6 @@
 
   .heading {
     align-items: flex-start;
-  }
-
-  .moduleIcon {
-    width: 3rem;
-    height: 3rem;
   }
 
   .metrics {

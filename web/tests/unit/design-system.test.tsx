@@ -1,11 +1,12 @@
 import { render, screen } from "@testing-library/react";
-import { House } from "lucide-react";
+import { CalendarDays, House } from "lucide-react";
 import { describe, expect, it } from "vitest";
 
 import { Button } from "@/components/ui/button/button";
 import { TextField } from "@/components/ui/form-field/form-field";
 import { BackLink } from "@/components/ui/navigation/back-link";
 import { SideNavigation } from "@/components/ui/navigation/side-navigation";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 
 describe("design-system foundations", () => {
   it("renders a button with native button semantics", () => {
@@ -51,5 +52,18 @@ describe("design-system foundations", () => {
     expect(
       screen.getByRole("link", { name: "Volver a colaboradores" }),
     ).toHaveAttribute("href", "/colaboradores");
+  });
+
+  it("renders the shared page section heading and its optional action", () => {
+    render(
+      <PageSectionHeader
+        action={<Button>Nueva solicitud</Button>}
+        icon={CalendarDays}
+        title="Calendario"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { level: 1, name: "Calendario" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Nueva solicitud" })).toBeVisible();
   });
 });

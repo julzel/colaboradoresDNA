@@ -1,6 +1,7 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { CalendarCreateEventTrigger } from "@/features/calendar/components/calendar-create-event-trigger";
 import {
   createCalendarUrl,
@@ -30,7 +31,7 @@ export function CalendarControls({
 
   return (
     <header className={styles.pageHeader}>
-      <h1 className="sr-only">Calendario</h1>
+      <PageSectionHeader icon={CalendarDays} title="Calendario" />
 
       <section aria-label="Controles del calendario" className={styles.controls}>
         <div className={styles.calendarToolbarStart}>

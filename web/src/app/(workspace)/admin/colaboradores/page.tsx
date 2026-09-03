@@ -4,6 +4,7 @@ import { UserRoundPlus, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { EmployeeDirectory } from "@/features/employees/components/employee-directory";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeeDirectoryPageData } from "@/features/employees/server/employee-query-service";
@@ -17,13 +18,8 @@ export default async function EmployeeDirectoryPage() {
     <Container>
       <div className={styles.page}>
         <header className={styles.header}>
-          <div className={styles.headerContent}>
-            <p className="eyebrow">Administración</p>
-            <div className={styles.moduleTitle}>
-              <span className={styles.moduleIcon}>
-                <Users aria-hidden="true" size={24} strokeWidth={1.8} />
-              </span>
-              <h1>Colaboradores</h1>
+          <PageSectionHeader
+            action={
               <ButtonLink
                 aria-label="Nuevo colaborador"
                 className={styles.newEmployeeButton}
@@ -33,8 +29,11 @@ export default async function EmployeeDirectoryPage() {
               >
                 <UserRoundPlus aria-hidden="true" size={18} />
               </ButtonLink>
-            </div>
-          </div>
+            }
+            eyebrow="Administración"
+            icon={Users}
+            title="Colaboradores"
+          />
         </header>
 
         {directory.total === 0 ? (

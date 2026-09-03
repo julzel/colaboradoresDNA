@@ -3,10 +3,13 @@
   width: min(100%, var(--content-max));
   gap: var(--space-6);
   margin-inline: auto;
+  padding-block: var(--space-6) var(--space-12);
 }
 
 .pageHeader {
+  display: grid;
   min-width: 0;
+  gap: var(--space-5);
 }
 
 .controls {
@@ -821,12 +824,26 @@
   width: min(100%, var(--content-max));
   gap: var(--space-6);
   margin-inline: auto;
+  padding-block: var(--space-6) var(--space-12);
 }
 
-.loadingHeading,
-.loadingList {
+.loadingControls,
+.loadingList,
+.loadingToolbar {
   display: grid;
   gap: var(--space-3);
+}
+
+.loadingToolbar {
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+}
+
+@media (width >= 40rem) {
+  .loadingControls {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
 }
 
 .eventForm {
