@@ -4,7 +4,6 @@
   padding-block: clamp(var(--space-6), 5vw, var(--space-12));
 }
 
-.pageHeader h1,
 .missingState h1 {
   margin: 0;
   font-size: var(--text-2xl);
@@ -225,6 +224,11 @@
 
 .securityLink:hover {
   text-decoration: underline;
+}
+
+.scheduleLink {
+  justify-self: start;
+  margin-top: var(--space-5);
 }
 
 .missingState {

@@ -21,6 +21,7 @@ import {
   getTodayInCostaRica,
   isLeapYear,
 } from "@/features/calendar/domain/calendar-utils";
+import { calendarHolidayIntegration } from "@/features/calendar/integrations/nager-date-calendar-adapter";
 import type { CalendarPtoEntry } from "@/features/calendar/integrations/calendar-pto-port";
 import { calendarDevelopmentIntegration } from "@/features/development/integrations/calendar-development-adapter";
 import {
@@ -168,26 +169,49 @@ function ptoToEntry(pto: CalendarPtoEntry): CalendarEntry {
   };
 }
 
+function holidayToEntry({ date, name }: { date: string; name: string }): CalendarEntry {
+  return {
+    allDay: true,
+    canManage: false,
+    description: null,
+    detailHref: null,
+    endAt: calendarDateToUtc(addCalendarDays(date, 1)).toISOString(),
+    endDate: date,
+    id: `holiday:${date}:${name}`,
+    kind: "holiday",
+    label: "Feriado nacional",
+    location: null,
+    meetingUrl: null,
+    note: null,
+    startAt: calendarDateToUtc(date).toISOString(),
+    startDate: date,
+    title: name,
+  };
+}
+
 export async function getCalendarEntries(month: string) {
   const actor = await requireCalendarActor();
   const range = getCalendarMonthRange(month);
-  const canCreateEvents = actor.role === "administrator" || actor.role === "supervisor";
-  const [events, birthdays, ptoEntries, eventFormOptions] = await Promise.all([
-    listVisibleCalendarEvents({
-      actor,
-      endsAt: range.endAt,
-      startsAt: range.startAt,
-    }),
-    listBirthdayCalendarEntries({ viewerRole: actor.role }),
-    calendarPtoIntegration.listVisibleApprovedAbsences({
-      endDate: addCalendarDays(range.endDate, -1),
-      platformUserId: actor.platformUserId,
-      role: actor.role,
-      startDate: range.startDate,
-    }),
-    canCreateEvents ? listCalendarEventTargetOptions(actor) : Promise.resolve(null),
-  ]);
   const [year = 0, monthNumber = 0] = month.split("-").map(Number);
+  const canCreateEvents = actor.role === "administrator" || actor.role === "supervisor";
+  const [events, birthdays, holidays, ptoEntries, eventFormOptions] = await Promise.all(
+    [
+      listVisibleCalendarEvents({
+        actor,
+        endsAt: range.endAt,
+        startsAt: range.startAt,
+      }),
+      listBirthdayCalendarEntries({ viewerRole: actor.role }),
+      calendarHolidayIntegration.listPublicHolidays(year),
+      calendarPtoIntegration.listVisibleApprovedAbsences({
+        endDate: addCalendarDays(range.endDate, -1),
+        platformUserId: actor.platformUserId,
+        role: actor.role,
+        startDate: range.startDate,
+      }),
+      canCreateEvents ? listCalendarEventTargetOptions(actor) : Promise.resolve(null),
+    ],
+  );
   const birthdayEntries = birthdays
     .filter((entry) => Number(entry.birthday.slice(3, 5)) === monthNumber)
     .map((entry) => birthdayToEntry({ ...entry, year }));
@@ -197,9 +221,13 @@ export async function getCalendarEntries(month: string) {
     entries: [
       ...events.map((event) => eventToEntry(actor, event)),
       ...birthdayEntries,
+      ...holidays
+        .filter((holiday) => holiday.date.startsWith(`${month}-`))
+        .map(holidayToEntry),
       ...ptoEntries.map(ptoToEntry),
     ],
     eventFormOptions,
+    holidays,
   };
 }
 

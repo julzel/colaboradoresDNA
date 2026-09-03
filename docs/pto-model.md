@@ -38,6 +38,56 @@ warning projections and approval transactions use that mapping. Non-vacation
 requests can be submitted and approved without an initialized vacation balance;
 their request balance snapshots remain `null` and no ledger entry is created.
 
+## Schedule-derived duration
+
+Requested duration is calculated on the server from the collaborator's
+effective schedule. PTO owns the narrow contract in
+`src/features/pto/integrations/pto-scheduling-port.ts`; the Scheduling slice
+provides its adapter. PTO does not import a Scheduling repository or MongoDB
+document type.
+
+The current full-day policy is:
+
+- every scheduled working date in the inclusive request range counts as one
+  full leave day;
+- one full leave day equals two PTO balance units, even when the scheduled shift
+  is shorter or longer than eight hours;
+- the calculation retains total scheduled minutes and source schedule IDs, but
+  does not divide minutes by eight to produce fractional days;
+- national holidays are not implicitly removed from the range;
+- missing or overlapping effective schedule coverage fails closed instead of
+  silently producing a smaller request.
+
+Scheduling returns neutral work facts. PTO owns this day/unit conversion and any
+future rules for exact hour-based partial leave, category-specific calendar
+days, balance rounding, or holiday exclusion. The existing explicit half-day
+choice remains supported for a request containing one scheduled work date. In
+particular, the national-holiday feed used by Calendar is not an implicit PTO
+policy dependency.
+
+The external draft command cannot supply calculation metadata or a duration
+total. It carries only an explicit `requestedPortion` (`full` or `half`) beside
+the dates and category. A half-day intent is valid only when resolution finds
+one scheduled work date. PTO derives `durationUnits`, stamps the policy version,
+and builds the persistence snapshot, so a client or Scheduling adapter cannot
+change the total or version independently of PTO's conversion rule.
+
+Existing PTO documents without `requestedPortion` remain readable. A legacy
+single-date, one-unit request normalizes to `half`; every other legacy request
+normalizes to `full`. The next draft edit persists the explicit value.
+
+An editable draft can be recalculated from current effective schedule data. At
+submission, the server freezes the calculated duration and policy/source
+snapshot. A later schedule edit or historical correction does not retroactively
+change a pending, approved, denied, or cancelled request; approval and vacation
+balance accounting use the frozen request duration.
+
+Legacy v1 schedules still identify working dates, so they can support the
+full-day count. Their exact start and end times remain unknown. Any nominal
+four- or eight-hour compatibility total must not be presented as a recovered
+clock interval. See [Collaborator scheduling](./scheduling.md) for the v1/v2
+reader and migration policy.
+
 ## New request UI
 
 Collaborators create leave requests from `/ausencias` with the **Nueva

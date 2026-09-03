@@ -133,7 +133,6 @@
 
 .removeAction {
   justify-self: start;
-  color: var(--color-danger);
 }
 
 .inlineEmpty {

@@ -1,6 +1,6 @@
 import type { CalendarEventType } from "@/features/calendar/domain/calendar-event";
 
-export type CalendarEntryKind = "birthday" | "event" | "pto";
+export type CalendarEntryKind = "birthday" | "event" | "holiday" | "pto";
 
 export type CalendarEntry = {
   allDay: boolean;

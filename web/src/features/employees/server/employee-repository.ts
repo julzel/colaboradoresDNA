@@ -23,6 +23,7 @@ import {
 } from "@/features/employees/domain/employee";
 import { EmployeeDomainError } from "@/features/employees/domain/errors";
 import { objectIdStringSchema } from "@/features/employees/domain/shared";
+import { employeeSchedulingIntegration } from "@/features/scheduling/integrations/employee-scheduling-adapter";
 import { recordEmployeeAudit } from "@/features/employees/server/employee-audit-repository";
 import { ensureEmployeeDomainIndexes } from "@/features/employees/server/employee-indexes";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
@@ -254,38 +255,33 @@ export async function endEmployeeEmployment({
         },
         { session },
       );
-      await Promise.all([
-        database.collection("employee_assignments").updateMany(
-          {
-            effectiveFrom: { $lte: endedOn },
-            effectiveTo: null,
-            employeeId: employee._id,
+      await database.collection("employee_assignments").updateMany(
+        {
+          effectiveFrom: { $lte: endedOn },
+          effectiveTo: null,
+          employeeId: employee._id,
+        },
+        { $set: { effectiveTo: endedOn } },
+        { session },
+      );
+      await employeeSchedulingIntegration.truncateSchedulesForEmploymentEnd({
+        actorPlatformUserId,
+        employeeId,
+        employmentEndedOn: endedOn,
+        session,
+      });
+      await database.collection("platform_users").updateOne(
+        { _id: employee.platformUserId },
+        {
+          $set: {
+            clerkSyncStatus: "pending_deactivation",
+            deactivatedAt: new Date(),
+            status: "deactivated",
+            updatedAt: new Date(),
           },
-          { $set: { effectiveTo: endedOn } },
-          { session },
-        ),
-        database.collection("employee_schedules").updateMany(
-          {
-            effectiveFrom: { $lte: endedOn },
-            effectiveTo: null,
-            employeeId: employee._id,
-          },
-          { $set: { effectiveTo: endedOn } },
-          { session },
-        ),
-        database.collection("platform_users").updateOne(
-          { _id: employee.platformUserId },
-          {
-            $set: {
-              clerkSyncStatus: "pending_deactivation",
-              deactivatedAt: new Date(),
-              status: "deactivated",
-              updatedAt: new Date(),
-            },
-          },
-          { session },
-        ),
-      ]);
+        },
+        { session },
+      );
       await recordEmployeeAudit({
         action: "employment_status_updated",
         actorPlatformUserId,

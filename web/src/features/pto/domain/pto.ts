@@ -68,6 +68,16 @@ export const ptoCategoryConsumesBalance: Record<PtoCategory, boolean> = {
 
 export const ptoUnitsSchema = z.number().int();
 export const ptoDurationUnitsSchema = ptoUnitsSchema.min(1);
+export const ptoRequestedPortionSchema = z.enum(["full", "half"]);
+export const PTO_SCHEDULE_DURATION_POLICY_VERSION = 1;
+
+export const ptoDurationCalculationSchema = z.object({
+  calculatedAt: z.date(),
+  calculationPolicyVersion: z.number().int().positive(),
+  sourceScheduleIds: z.array(objectIdStringSchema),
+  totalScheduledMinutes: z.number().int().nonnegative(),
+  workingDates: z.array(isoCalendarDateSchema),
+});
 
 const halfDayValueSchema = z.preprocess(
   (value) =>
@@ -88,39 +98,44 @@ export const ptoDurationDaysSchema = halfDayValueSchema
   .refine((value) => value >= 0.5, "La duración mínima es medio día.")
   .transform(daysToUnits);
 
+const ptoDraftCommandFields = {
+  category: ptoCategorySchema,
+  collaboratorNote: z
+    .string()
+    .nullish()
+    .transform((value) => (value?.trim() ? normalizeHumanText(value) : null))
+    .pipe(z.string().max(1000).nullable()),
+  endDate: isoCalendarDateSchema,
+  requestedPortion: ptoRequestedPortionSchema,
+  startDate: isoCalendarDateSchema,
+};
+
+function validatePtoDraftRange(
+  request: { endDate: string; startDate: string },
+  context: z.RefinementCtx,
+) {
+  if (request.endDate < request.startDate) {
+    context.addIssue({
+      code: "custom",
+      message: "La fecha final no puede ser anterior a la fecha inicial.",
+      path: ["endDate"],
+    });
+  }
+}
+
+/** External draft command. Calculation metadata is owned by the server. */
+export const ptoDraftCommandSchema = z
+  .object(ptoDraftCommandFields)
+  .superRefine(validatePtoDraftRange);
+
+/** Persistence input after the server has derived the duration snapshot. */
 export const ptoDraftInputSchema = z
   .object({
-    category: ptoCategorySchema,
-    collaboratorNote: z
-      .string()
-      .nullish()
-      .transform((value) => (value?.trim() ? normalizeHumanText(value) : null))
-      .pipe(z.string().max(1000).nullable()),
+    ...ptoDraftCommandFields,
+    durationCalculation: ptoDurationCalculationSchema.nullish(),
     durationUnits: ptoDurationUnitsSchema,
-    endDate: isoCalendarDateSchema,
-    startDate: isoCalendarDateSchema,
   })
-  .superRefine((request, context) => {
-    if (request.endDate < request.startDate) {
-      context.addIssue({
-        code: "custom",
-        message: "La fecha final no puede ser anterior a la fecha inicial.",
-        path: ["endDate"],
-      });
-      return;
-    }
-
-    if (
-      request.durationUnits >
-      inclusiveCalendarDays(request.startDate, request.endDate) * 2
-    ) {
-      context.addIssue({
-        code: "custom",
-        message: "La duración supera el rango de fechas seleccionado.",
-        path: ["durationUnits"],
-      });
-    }
-  });
+  .superRefine(validatePtoDraftRange);
 
 export const ptoDecisionInputSchema = z.object({
   decision: z.enum(["approved", "denied"]),
@@ -137,7 +152,9 @@ export const ptoBalanceAdjustmentInputSchema = z.object({
   reason: z.string().transform(normalizeHumanText).pipe(z.string().min(3).max(500)),
 });
 
+export type PtoDraftCommand = z.output<typeof ptoDraftCommandSchema>;
 export type PtoDraftInput = z.output<typeof ptoDraftInputSchema>;
+export type PtoDurationCalculation = z.output<typeof ptoDurationCalculationSchema>;
 
 export type PtoStatusHistoryEntry = {
   actorPlatformUserId: ObjectId;
@@ -159,8 +176,10 @@ export type PtoRequestDocument = {
   createdByPlatformUserId?: ObjectId;
   decidedAt: Date | null;
   decisionNote: string | null;
+  durationCalculation?: PtoDurationCalculation | null;
   durationUnits: number;
   endDate: string;
+  requestedPortion?: z.infer<typeof ptoRequestedPortionSchema>;
   requesterEmployeeId: ObjectId;
   requesterPlatformUserId: ObjectId;
   startDate: string;
@@ -175,15 +194,19 @@ export type PtoRequest = Omit<
   | "_id"
   | "assignedApproverPlatformUserId"
   | "createdByPlatformUserId"
+  | "durationCalculation"
+  | "requestedPortion"
   | "requesterEmployeeId"
   | "requesterPlatformUserId"
   | "statusHistory"
 > & {
   assignedApproverPlatformUserId: string | null;
   createdByPlatformUserId: string;
+  durationCalculation: PtoDurationCalculation | null;
   id: string;
   requesterEmployeeId: string;
   requesterPlatformUserId: string;
+  requestedPortion: z.infer<typeof ptoRequestedPortionSchema>;
   statusHistory: Array<{
     actorPlatformUserId: string;
     from: PtoStatus | null;
@@ -225,7 +248,10 @@ export class PtoDomainError extends Error {
       | "balance_missing"
       | "employee_missing"
       | "forbidden"
+      | "no_scheduled_workdays"
+      | "partial_day_range"
       | "request_missing"
+      | "schedule_incomplete"
       | "self_approval"
       | "stale_status",
   ) {

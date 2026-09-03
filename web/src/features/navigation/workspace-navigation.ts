@@ -1,5 +1,6 @@
 import {
   CalendarDays,
+  CalendarClock,
   ChartNoAxesColumnIncreasing,
   ClipboardCheck,
   ClipboardClock,
@@ -29,6 +30,11 @@ const administratorWorkspaceItems: readonly NavigationItem[] = [
     href: "/admin/colaboradores",
     icon: UsersRound,
     label: "Colaboradores",
+  },
+  {
+    href: "/admin/horarios",
+    icon: CalendarClock,
+    label: "Horarios",
   },
   {
     href: "/admin/ausencias",
@@ -125,6 +131,14 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
     ] as const;
   }
 
+  if (pathname.startsWith("/perfil/horario")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/perfil", label: "Mi perfil" },
+      { label: "Mi horario" },
+    ] as const;
+  }
+
   if (pathname.startsWith("/perfil")) {
     return [{ href: "/", label: "Inicio" }, { label: "Mi perfil" }] as const;
   }
@@ -146,6 +160,23 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
       { href: "/", label: "Inicio" },
       { href: "/admin", label: "Administración" },
       { label: "Solicitudes de ausencia" },
+    ] as const;
+  }
+
+  if (/^\/admin\/horarios\/[^/]+/.test(pathname)) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/horarios", label: "Horarios" },
+      { label: "Colaborador" },
+    ] as const;
+  }
+
+  if (pathname.startsWith("/admin/horarios")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Horarios" },
     ] as const;
   }
 

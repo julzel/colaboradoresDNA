@@ -12,6 +12,7 @@ import {
 
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import {
   getDevelopmentDirectoryStatus,
@@ -180,13 +181,12 @@ export function DevelopmentDashboardShell({
   return (
     <section aria-labelledby="development-title" className={styles.page}>
       <header className={styles.heading}>
-        <span className={styles.moduleIcon}>
-          <Sprout aria-hidden="true" size={25} strokeWidth={1.8} />
-        </span>
-        <div>
-          <p className="eyebrow">Administración</p>
-          <h1 id="development-title">Desarrollo</h1>
-        </div>
+        <PageSectionHeader
+          eyebrow="Administración"
+          icon={Sprout}
+          title="Desarrollo"
+          titleId="development-title"
+        />
       </header>
 
       {hasEmployees ? (

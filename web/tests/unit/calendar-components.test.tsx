@@ -7,6 +7,7 @@ import { CalendarCreateEventTrigger } from "@/features/calendar/components/calen
 import { CalendarEventDetailContent } from "@/features/calendar/components/calendar-event-detail-content";
 import { CalendarEventForm } from "@/features/calendar/components/calendar-event-form";
 import { CalendarMonth } from "@/features/calendar/components/calendar-month";
+import { CalendarYearHolidays } from "@/features/calendar/components/calendar-year-holidays";
 import {
   CalendarBirthdayQuickDetailContent,
   CalendarPtoQuickDetailContent,
@@ -153,6 +154,23 @@ describe("calendar views", () => {
             startDate: "2026-07-13",
             title: "Luis Vargas",
           },
+          {
+            allDay: true,
+            canManage: false,
+            description: null,
+            detailHref: null,
+            endAt: "2026-07-26T06:00:00.000Z",
+            endDate: "2026-07-25",
+            id: "holiday:2026-07-25:Anexión del Partido de Nicoya",
+            kind: "holiday",
+            label: "Feriado nacional",
+            location: null,
+            meetingUrl: null,
+            note: null,
+            startAt: "2026-07-25T06:00:00.000Z",
+            startDate: "2026-07-25",
+            title: "Anexión del Partido de Nicoya",
+          },
         ]}
         eventFormOptions={{ departments: [], people: [] }}
         query={{ day: "2026-07-13", month: "2026-07", view: "month" }}
@@ -165,10 +183,57 @@ describe("calendar views", () => {
     expect(
       screen.getByRole("region", { name: "Leyenda del calendario" }),
     ).toHaveTextContent("Ausencias");
+    expect(
+      screen.getByRole("region", { name: "Leyenda del calendario" }),
+    ).toHaveTextContent("Feriados nacionales");
     expect(screen.getByText("2 eventos")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Nuevo evento" })).toHaveTextContent(
       "Nuevo evento",
     );
+  });
+
+  it("shows the yearly holidays in a collapsible chronological list", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarYearHolidays
+        holidays={[
+          { date: "2026-01-01", name: "Año Nuevo" },
+          { date: "2026-07-25", name: "Anexión del Partido de Nicoya" },
+          { date: "2026-09-15", name: "Día de la Independencia" },
+        ]}
+        year={2026}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", {
+      name: /Feriados nacionales de 2026 3 feriados/i,
+    });
+    const disclosure = trigger.closest("section");
+
+    expect(disclosure).toHaveAttribute("data-open", "false");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(trigger);
+
+    expect(disclosure).toHaveAttribute("data-open", "true");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("heading", { name: "ENERO" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "JULIO" })).toBeVisible();
+    expect(screen.getByText("01")).toBeVisible();
+    expect(screen.getByText("JUE")).toBeVisible();
+    expect(screen.getByText("Año Nuevo")).toBeVisible();
+    expect(screen.getByText("Jueves, 1 de enero")).toBeVisible();
+    expect(screen.getByText("Anexión del Partido de Nicoya")).toBeVisible();
+    expect(screen.getByText("Día de la Independencia")).toBeVisible();
+
+    await user.click(trigger);
+    expect(disclosure).toHaveAttribute("data-open", "false");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(trigger);
+    expect(disclosure).toHaveAttribute("data-open", "true");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Año Nuevo")).toBeVisible();
   });
 });
 

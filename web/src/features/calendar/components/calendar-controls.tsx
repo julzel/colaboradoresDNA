@@ -1,6 +1,7 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button/button";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { CalendarCreateEventTrigger } from "@/features/calendar/components/calendar-create-event-trigger";
 import {
   createCalendarUrl,
@@ -30,7 +31,7 @@ export function CalendarControls({
 
   return (
     <header className={styles.pageHeader}>
-      <h1 className="sr-only">Calendario</h1>
+      <PageSectionHeader icon={CalendarDays} title="Calendario" />
 
       <section aria-label="Controles del calendario" className={styles.controls}>
         <div className={styles.calendarToolbarStart}>
@@ -68,7 +69,11 @@ export function CalendarControls({
         </div>
 
         <div className={styles.controlActions}>
-          <nav aria-label="Vista del calendario" className={styles.viewSelector}>
+          <nav
+            aria-label="Vista del calendario"
+            className={styles.viewSelector}
+            data-view={query.view}
+          >
             <ButtonLink
               aria-current={query.view === "agenda" ? "page" : undefined}
               href={createCalendarUrl({
@@ -96,6 +101,7 @@ export function CalendarControls({
           {query.view !== "month" && canCreateEvents && eventFormOptions && (
             <CalendarCreateEventTrigger
               className={styles.createEventButton}
+              label="Nuevo evento"
               options={eventFormOptions}
             />
           )}

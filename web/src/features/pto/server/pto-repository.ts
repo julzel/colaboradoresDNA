@@ -12,10 +12,13 @@ import {
   ptoCategoryConsumesBalance,
   ptoDecisionInputSchema,
   ptoDraftInputSchema,
+  ptoDurationCalculationSchema,
+  ptoDurationUnitsSchema,
   ptoUnitsSchema,
   type PtoBalanceDocument,
   type PtoBalanceLedgerDocument,
   type PtoDraftInput,
+  type PtoDurationCalculation,
   type PtoRequest,
   type PtoRequestDocument,
 } from "@/features/pto/domain/pto";
@@ -52,9 +55,15 @@ function toPtoRequest(document: PtoRequestDocument): PtoRequest {
     createdByPlatformUserId: (
       createdByPlatformUserId ?? requesterPlatformUserId
     ).toHexString(),
+    durationCalculation: request.durationCalculation ?? null,
     id: _id.toHexString(),
     requesterEmployeeId: requesterEmployeeId.toHexString(),
     requesterPlatformUserId: requesterPlatformUserId.toHexString(),
+    requestedPortion:
+      request.requestedPortion ??
+      (request.durationUnits === 1 && request.startDate === request.endDate
+        ? "half"
+        : "full"),
     statusHistory: statusHistory.map((entry) => ({
       ...entry,
       actorPlatformUserId: entry.actorPlatformUserId.toHexString(),
@@ -221,8 +230,10 @@ export async function createPtoDraft(input: {
         createdByPlatformUserId: new ObjectId(input.actorPlatformUserId),
         decidedAt: null,
         decisionNote: null,
+        durationCalculation: request.durationCalculation ?? null,
         durationUnits: request.durationUnits,
         endDate: request.endDate,
+        requestedPortion: request.requestedPortion,
         requesterEmployeeId: new ObjectId(input.employeeId),
         requesterPlatformUserId: new ObjectId(
           input.requesterPlatformUserId ?? input.actorPlatformUserId,
@@ -244,7 +255,14 @@ export async function createPtoDraft(input: {
       await recordPtoAudit({
         action: "request_created",
         actorPlatformUserId: input.actorPlatformUserId,
-        changedFields: ["startDate", "endDate", "durationUnits", "category"],
+        changedFields: [
+          "startDate",
+          "endDate",
+          "durationUnits",
+          "durationCalculation",
+          "requestedPortion",
+          "category",
+        ],
         session,
         targetEmployeeId: input.employeeId,
         targetRequestId: created._id.toHexString(),
@@ -279,7 +297,13 @@ export async function updatePtoDraft(input: {
         },
         {
           $set: {
-            ...request,
+            category: request.category,
+            collaboratorNote: request.collaboratorNote,
+            durationCalculation: request.durationCalculation ?? null,
+            durationUnits: request.durationUnits,
+            endDate: request.endDate,
+            requestedPortion: request.requestedPortion,
+            startDate: request.startDate,
             updatedAt: new Date(),
           },
         },
@@ -293,6 +317,8 @@ export async function updatePtoDraft(input: {
           "startDate",
           "endDate",
           "durationUnits",
+          "durationCalculation",
+          "requestedPortion",
           "category",
           "collaboratorNote",
         ],
@@ -309,9 +335,26 @@ export async function submitPtoDraft(input: {
   actorPlatformUserId: string;
   administratorOverride?: boolean;
   approverPlatformUserId: string | null;
+  duration?: {
+    calculation: PtoDurationCalculation;
+    units: number;
+  };
+  expectedUpdatedAt: Date;
   requestId: string;
 }) {
   objectIdStringSchema.parse(input.requestId);
+  if (
+    !(input.expectedUpdatedAt instanceof Date) ||
+    Number.isNaN(input.expectedUpdatedAt.getTime())
+  ) {
+    throw new PtoDomainError("stale_status");
+  }
+  const duration = input.duration
+    ? {
+        calculation: ptoDurationCalculationSchema.parse(input.duration.calculation),
+        units: ptoDurationUnitsSchema.parse(input.duration.units),
+      }
+    : null;
   await ensurePtoIndexes();
   const client = await getMongoClient();
   const { requests } = await getPtoCollections();
@@ -325,6 +368,7 @@ export async function submitPtoDraft(input: {
             requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
           }),
           status: "draft",
+          updatedAt: input.expectedUpdatedAt,
         },
         { session },
       );
@@ -337,12 +381,18 @@ export async function submitPtoDraft(input: {
       }
       const now = new Date();
       updated = await requests.findOneAndUpdate(
-        { _id: existing._id, status: "draft" },
+        { _id: existing._id, status: "draft", updatedAt: input.expectedUpdatedAt },
         {
           $set: {
             assignedApproverPlatformUserId: input.approverPlatformUserId
               ? new ObjectId(input.approverPlatformUserId)
               : null,
+            ...(duration
+              ? {
+                  durationCalculation: duration.calculation,
+                  durationUnits: duration.units,
+                }
+              : {}),
             status: "pending",
             submittedAt: now,
             updatedAt: now,
@@ -363,7 +413,12 @@ export async function submitPtoDraft(input: {
       await recordPtoAudit({
         action: "request_submitted",
         actorPlatformUserId: input.actorPlatformUserId,
-        changedFields: ["status", "assignedApproverPlatformUserId", "submittedAt"],
+        changedFields: [
+          "status",
+          "assignedApproverPlatformUserId",
+          "submittedAt",
+          ...(duration ? ["durationUnits", "durationCalculation"] : []),
+        ],
         session,
         targetEmployeeId: existing.requesterEmployeeId.toHexString(),
         targetRequestId: input.requestId,

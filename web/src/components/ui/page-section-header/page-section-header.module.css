@@ -1,0 +1,46 @@
+.header {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+  place-items: center;
+}
+
+.copy {
+  min-width: 0;
+}
+
+.header .copy h1,
+.header .copy p {
+  margin: 0;
+}
+
+.header .copy h1 {
+  color: var(--color-text);
+  font-size: var(--text-2xl);
+  letter-spacing: -0.04em;
+  line-height: var(--line-tight);
+}
+
+.header .copy .eyebrow {
+  margin-bottom: var(--space-1);
+}
+
+.action {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}

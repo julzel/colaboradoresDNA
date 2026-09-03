@@ -54,20 +54,6 @@ const collectionIndexes = {
       options: { name: "employee_audit_actor_timeline" },
     },
   ],
-  employee_schedules: [
-    {
-      key: { employeeId: 1, effectiveFrom: -1, effectiveTo: 1 },
-      options: { name: "employee_schedules_employee_timeline" },
-    },
-    {
-      key: { employeeId: 1 },
-      options: {
-        name: "employee_schedules_one_open_period",
-        partialFilterExpression: { effectiveTo: null },
-        unique: true,
-      },
-    },
-  ],
   employees: [
     {
       key: { platformUserId: 1 },
