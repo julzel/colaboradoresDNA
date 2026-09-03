@@ -54,6 +54,18 @@ describe("scheduler dashboard", () => {
     expect(screen.getByRole("button", { name: /Alternantes 1/ })).toBeInTheDocument();
     expect(screen.getAllByText("08:00–17:00")).toHaveLength(2);
     expect(screen.getByText("Sin horario configurado")).toBeInTheDocument();
+    const configuredTrigger = screen.getByRole("button", {
+      name: "Información de horario configurado",
+    });
+    const configuredTooltip = document.getElementById(
+      configuredTrigger.getAttribute("aria-describedby") ?? "",
+    );
+    expect(configuredTooltip).toBeInTheDocument();
+    expect(configuredTooltip).toHaveTextContent("5 días · 45 h por semana");
+    expect(configuredTooltip).toHaveTextContent("Desde 31 ago 2026");
+    expect(configuredTrigger).toHaveAccessibleDescription(
+      "5 días · 45 h por semana Desde 31 ago 2026",
+    );
     expect(screen.getAllByRole("link", { name: "Administrar" })[0]).toHaveAttribute(
       "href",
       "/admin/horarios/employee-1?fecha=2026-09-02",

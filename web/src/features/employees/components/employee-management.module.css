@@ -23,6 +23,21 @@
   padding-inline: 0;
 }
 
+.newEmployeeButtonLabel {
+  display: none;
+}
+
+@media (width >= 40rem) {
+  .newEmployeeButton {
+    width: auto;
+    padding-inline: var(--space-3);
+  }
+
+  .newEmployeeButtonLabel {
+    display: inline;
+  }
+}
+
 .header p,
 .muted {
   margin: var(--space-2) 0 0;

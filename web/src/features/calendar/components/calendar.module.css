@@ -77,16 +77,52 @@
   padding: 0;
 }
 
+.createEventButton > span {
+  display: none;
+}
+
 .viewSelector {
-  gap: var(--space-1);
+  position: relative;
+  display: grid;
+  min-width: 9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
   padding: var(--space-1);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-muted);
 }
 
-.viewSelector [aria-current="page"] {
+.viewSelector::before {
+  position: absolute;
+  z-index: 0;
+  inset: var(--space-1) 50% var(--space-1) var(--space-1);
+  border-radius: calc(var(--radius-md) - var(--space-1));
   background: var(--background-primary-action);
-  color: var(--color-brand-contrast);
+  content: "";
+  pointer-events: none;
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.viewSelector[data-view="month"]::before {
+  transform: translateX(100%);
+}
+
+.viewSelector a {
+  z-index: 1;
+  width: 100%;
+  background: transparent;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.viewSelector [aria-current="page"] {
+  background: transparent;
+  color: var(--color-primary-action-text);
+}
+
+.viewSelector a[aria-current="page"]:hover {
+  background: transparent;
+  color: var(--color-primary-action-text);
 }
 
 .agenda {
@@ -768,6 +804,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .viewSelector::before,
+  .viewSelector a,
   .yearHolidaysBody,
   .yearHolidaysBodyContent,
   .yearHolidaysChevron {
@@ -1159,6 +1197,15 @@
 }
 
 @media (width >= 40rem) {
+  .createEventButton {
+    width: auto;
+    padding-inline: var(--space-3);
+  }
+
+  .createEventButton > span {
+    display: inline;
+  }
+
   .controls {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;

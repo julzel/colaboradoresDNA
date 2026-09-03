@@ -11,37 +11,11 @@
   gap: var(--space-5);
 }
 
-.title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.titleIcon {
-  display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
-  flex: 0 0 auto;
-  border-radius: var(--radius-md);
-  background: var(--color-brand-soft);
-  color: var(--color-brand-text);
-  place-items: center;
-}
-
-.title h1,
-.title p,
 .sectionHeader h2,
 .sectionHeader p {
   margin: 0;
 }
 
-.title h1 {
-  font-size: var(--text-2xl);
-  letter-spacing: -0.04em;
-  line-height: var(--line-tight);
-}
-
-.title p,
 .sectionHeader p {
   margin-top: var(--space-1);
   color: var(--color-text-muted);

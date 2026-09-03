@@ -1,7 +1,7 @@
 import {
-  ArrowRight,
   CalendarClock,
   ChartNoAxesColumnIncreasing,
+  ChevronRight,
   ClipboardCheck,
   ShieldCheck,
   UsersRound,
@@ -12,39 +12,29 @@ import styles from "./administrator-module-links.module.css";
 
 const administratorModules = [
   {
-    description: "Consultá, agregá y actualizá la información del equipo.",
     href: "/admin/colaboradores",
     icon: UsersRound,
     label: "Colaboradores",
-    tone: "brand",
   },
   {
-    description: "Consultá y organizá las jornadas de trabajo del equipo.",
     href: "/admin/horarios",
     icon: CalendarClock,
     label: "Horarios",
-    tone: "schedule",
   },
   {
-    description: "Revisá y gestioná las solicitudes de ausencia pendientes.",
     href: "/admin/ausencias",
     icon: ClipboardCheck,
     label: "Aprobar ausencias",
-    tone: "accent",
   },
   {
-    description: "Priorizá seguimientos, documentá 1:1 y cerrá acciones acordadas.",
     href: "/admin/desarrollo",
     icon: ChartNoAxesColumnIncreasing,
     label: "Desarrollo",
-    tone: "development",
   },
   {
-    description: "Administrá invitaciones, acceso, roles y seguridad.",
     href: "/admin/accounts",
     icon: ShieldCheck,
     label: "Cuentas y acceso",
-    tone: "security",
   },
 ] as const;
 
@@ -69,14 +59,13 @@ export function AdministratorModuleLinks({
           return (
             <li key={module.href}>
               <Link className={styles.moduleCard} href={module.href}>
-                <span className={styles.moduleIcon} data-tone={module.tone}>
+                <span className={styles.moduleIcon}>
                   <Icon aria-hidden="true" size={24} strokeWidth={1.8} />
                 </span>
                 <span className={styles.moduleContent}>
                   <strong>{module.label}</strong>
-                  <span>{module.description}</span>
                 </span>
-                <ArrowRight aria-hidden="true" className={styles.arrow} size={20} />
+                <ChevronRight aria-hidden="true" className={styles.arrow} size={20} />
               </Link>
             </li>
           );

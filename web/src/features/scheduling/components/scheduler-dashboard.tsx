@@ -7,7 +7,9 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { TextField } from "@/components/ui/form-field/form-field";
+import { MetricCard } from "@/components/ui/metric-card/metric-card";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import type {
   SchedulerDashboardView,
   SchedulerRosterItemView,
@@ -38,7 +40,13 @@ function matchesFilter(item: SchedulerRosterItemView, filter: RosterFilter) {
   return item.status === filter;
 }
 
-export function SchedulePreview({ item }: { item: SchedulerRosterItemView }) {
+export function SchedulePreview({
+  item,
+  showMeta = true,
+}: {
+  item: SchedulerRosterItemView;
+  showMeta?: boolean;
+}) {
   if (item.status === "missing") {
     return (
       <div className={styles.missingSchedule}>
@@ -52,10 +60,12 @@ export function SchedulePreview({ item }: { item: SchedulerRosterItemView }) {
 
   return (
     <div className={styles.schedulePreview}>
-      <div className={styles.scheduleMeta}>
-        <span>{item.scheduleSummary}</span>
-        <span>{item.effectiveLabel}</span>
-      </div>
+      {showMeta && (
+        <div className={styles.scheduleMeta}>
+          <span>{item.scheduleSummary}</span>
+          <span>{item.effectiveLabel}</span>
+        </div>
+      )}
       {item.weeks.map((week) => (
         <div className={styles.week} key={week.label}>
           <span className={styles.weekLabel}>{week.label}</span>
@@ -74,6 +84,29 @@ export function SchedulePreview({ item }: { item: SchedulerRosterItemView }) {
         </div>
       ))}
     </div>
+  );
+}
+
+function ScheduleStatus({ item }: { item: SchedulerRosterItemView }) {
+  if (item.status === "missing") {
+    return <StatusBadge tone="warning">Sin horario</StatusBadge>;
+  }
+
+  const label =
+    item.status === "alternating" ? "Horario alternante" : "Horario configurado";
+
+  return (
+    <Tooltip
+      content={
+        <span className={styles.scheduleTooltip}>
+          <strong>{item.scheduleSummary}</strong>
+          <span>{item.effectiveLabel}</span>
+        </span>
+      }
+      label={`Información de ${label.toLocaleLowerCase("es")}`}
+    >
+      <StatusBadge tone="success">{label}</StatusBadge>
+    </Tooltip>
   );
 }
 
@@ -105,29 +138,20 @@ export function SchedulerDashboard({
   return (
     <div className={styles.dashboard}>
       <div className={styles.metrics} aria-label="Resumen de horarios">
-        <ElevatedSurface className={styles.metric}>
-          <span className={styles.metricLabel}>Total del equipo</span>
-          <strong className={styles.metricValue}>{counts.total}</strong>
-        </ElevatedSurface>
-        <ElevatedSurface className={styles.metric}>
-          <span className={styles.metricLabel}>Con horario</span>
-          <strong className={styles.metricValue}>{counts.configured}</strong>
-        </ElevatedSurface>
-        <ElevatedSurface className={styles.metric}>
-          <span className={styles.metricLabel}>Alternantes</span>
-          <strong className={styles.metricValue}>{counts.alternating}</strong>
-        </ElevatedSurface>
-        <ElevatedSurface className={styles.metric} data-warning={counts.missing > 0}>
-          <span className={styles.metricLabel}>Sin horario</span>
-          <strong className={styles.metricValue}>{counts.missing}</strong>
-        </ElevatedSurface>
+        <MetricCard label="Total del equipo" value={counts.total} />
+        <MetricCard label="Con horario" value={counts.configured} />
+        <MetricCard label="Alternantes" value={counts.alternating} />
+        <MetricCard
+          label="Sin horario"
+          tone={counts.missing > 0 ? "warning" : "brand"}
+          value={counts.missing}
+        />
       </div>
 
       <ElevatedSurface as="section" className={styles.roster}>
         <div className={styles.rosterHeader}>
           <div>
             <h2>Horarios del equipo</h2>
-            <p>Consultá la jornada vigente de cada colaborador.</p>
           </div>
           <form className={styles.dateForm} method="get">
             <TextField
@@ -206,18 +230,10 @@ export function SchedulerDashboard({
                     <Link href={`/admin/colaboradores/${item.id}`}>
                       {item.displayName}
                     </Link>
-                    <StatusBadge
-                      tone={item.status === "missing" ? "warning" : "success"}
-                    >
-                      {item.status === "missing"
-                        ? "Sin horario"
-                        : item.status === "alternating"
-                          ? "Horario alternante"
-                          : "Horario configurado"}
-                    </StatusBadge>
+                    <ScheduleStatus item={item} />
                   </div>
                 </div>
-                <SchedulePreview item={item} />
+                <SchedulePreview item={item} showMeta={false} />
                 <Link
                   className={styles.profileLink}
                   href={`/admin/horarios/${item.id}?fecha=${selectedDate}`}

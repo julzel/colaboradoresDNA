@@ -28,9 +28,9 @@ export default async function EmployeeDirectoryPage() {
                 title="Nuevo colaborador"
               >
                 <UserRoundPlus aria-hidden="true" size={18} />
+                <span className={styles.newEmployeeButtonLabel}>Nuevo colaborador</span>
               </ButtonLink>
             }
-            eyebrow="Administración"
             icon={Users}
             title="Colaboradores"
           />

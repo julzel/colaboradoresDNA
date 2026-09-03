@@ -69,7 +69,11 @@ export function CalendarControls({
         </div>
 
         <div className={styles.controlActions}>
-          <nav aria-label="Vista del calendario" className={styles.viewSelector}>
+          <nav
+            aria-label="Vista del calendario"
+            className={styles.viewSelector}
+            data-view={query.view}
+          >
             <ButtonLink
               aria-current={query.view === "agenda" ? "page" : undefined}
               href={createCalendarUrl({
@@ -97,6 +101,7 @@ export function CalendarControls({
           {query.view !== "month" && canCreateEvents && eventFormOptions && (
             <CalendarCreateEventTrigger
               className={styles.createEventButton}
+              label="Nuevo evento"
               options={eventFormOptions}
             />
           )}

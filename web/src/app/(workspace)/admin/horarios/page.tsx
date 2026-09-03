@@ -21,11 +21,7 @@ export default async function SchedulerPage({
     <Container>
       <div className={styles.page}>
         <header className={styles.header}>
-          <PageSectionHeader
-            eyebrow="Administración"
-            icon={CalendarClock}
-            title="Horarios"
-          />
+          <PageSectionHeader icon={CalendarClock} title="Horarios" />
         </header>
 
         <SchedulerDashboard {...dashboard} />

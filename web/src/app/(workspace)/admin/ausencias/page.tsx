@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { ClipboardClock } from "lucide-react";
+import { ChevronRight, ClipboardClock } from "lucide-react";
 import Link from "next/link";
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { MetricCard } from "@/components/ui/metric-card/metric-card";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
-import { PtoCategoryBadge } from "@/features/pto/components/pto-category-badge";
+import { PtoCategoryIcon } from "@/features/pto/components/pto-category-badge";
 import styles from "@/features/pto/components/pto.module.css";
 import {
+  formatPtoDateRange,
   formatPtoDays,
+  ptoCategoryLabels,
   ptoStatusLabels,
   ptoStatusSchema,
   type PtoStatus,
@@ -56,30 +59,20 @@ export default async function PtoAdministrationPage({
     <Container>
       <div className={styles.page}>
         <header className={styles.header}>
-          <PageSectionHeader
-            eyebrow="Administración"
-            icon={ClipboardClock}
-            title="Ausencias"
-          />
+          <PageSectionHeader icon={ClipboardClock} title="Ausencias" />
         </header>
 
         <div className={styles.summaryGrid}>
-          <ElevatedSurface className={styles.card}>
-            <p className="eyebrow">Pendientes</p>
-            <p className={styles.metric}>{dashboard.counts.pending}</p>
-          </ElevatedSurface>
-          <ElevatedSurface className={styles.card}>
-            <p className="eyebrow">Aprobadas</p>
-            <p className={styles.metric}>{dashboard.counts.approved}</p>
-          </ElevatedSurface>
-          <ElevatedSurface className={styles.card}>
-            <p className="eyebrow">Total gestionadas</p>
-            <p className={styles.metric}>
-              {dashboard.counts.approved +
-                dashboard.counts.denied +
-                dashboard.counts.cancelled}
-            </p>
-          </ElevatedSurface>
+          <MetricCard label="Pendientes" value={dashboard.counts.pending} />
+          <MetricCard label="Aprobadas" value={dashboard.counts.approved} />
+          <MetricCard
+            label="Total gestionadas"
+            value={
+              dashboard.counts.approved +
+              dashboard.counts.denied +
+              dashboard.counts.cancelled
+            }
+          />
         </div>
 
         <nav aria-label="Filtrar solicitudes" className={styles.actions}>
@@ -106,35 +99,50 @@ export default async function PtoAdministrationPage({
             <span className={styles.muted}>{requests.length} solicitudes</span>
           </div>
           {requests.length ? (
-            <ul className={styles.list}>
+            <ul className={styles.adminRequestList}>
               {requests.map((request) => (
-                <li className={styles.requestItem} key={request.id}>
-                  <div>
-                    <Link
-                      className={styles.requestLink}
-                      href={`/ausencias/${request.id}`}
-                    >
-                      {request.requesterName} ·{" "}
-                      <PtoCategoryBadge category={request.category} />
-                    </Link>
-                    <p className={styles.muted}>
-                      {request.startDate} a {request.endDate} ·{" "}
-                      {formatPtoDays(request.durationUnits)} días
-                      {request.approverName ? ` · ${request.approverName}` : ""}
-                    </p>
-                  </div>
-                  <div className={styles.actions}>
-                    <StatusBadge tone={statusTones[request.status]}>
-                      {ptoStatusLabels[request.status]}
-                    </StatusBadge>
-                    <ButtonLink
-                      href={`/ausencias/${request.id}`}
-                      size="small"
-                      variant={request.status === "pending" ? "primary" : "quiet"}
-                    >
-                      {request.status === "pending" ? "Revisar" : "Ver detalle"}
-                    </ButtonLink>
-                  </div>
+                <li className={styles.adminRequestItem} key={request.id}>
+                  <Link
+                    aria-label={`Ver solicitud de ${request.requesterName}: ${ptoCategoryLabels[request.category]}`}
+                    className={styles.adminRequestRow}
+                    href={`/ausencias/${request.id}`}
+                  >
+                    <PtoCategoryIcon category={request.category} />
+
+                    <div className={styles.adminRequestCopy}>
+                      <div className={styles.adminRequestTitle}>
+                        <strong>{request.requesterName}</strong>
+                        <span>{ptoCategoryLabels[request.category]}</span>
+                      </div>
+                      <p className={styles.adminRequestMeta}>
+                        <span>
+                          {formatPtoDateRange(request.startDate, request.endDate)}
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span>
+                          {formatPtoDays(request.durationUnits)}{" "}
+                          {request.durationUnits === 2 ? "día" : "días"}
+                        </span>
+                        {request.approverName ? (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <span>{request.approverName}</span>
+                          </>
+                        ) : null}
+                      </p>
+                    </div>
+
+                    <div className={styles.adminRequestAside}>
+                      <StatusBadge tone={statusTones[request.status]}>
+                        {ptoStatusLabels[request.status]}
+                      </StatusBadge>
+                      <ChevronRight
+                        aria-hidden="true"
+                        className={styles.adminRequestChevron}
+                        size={18}
+                      />
+                    </div>
+                  </Link>
                 </li>
               ))}
             </ul>

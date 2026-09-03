@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
-import { BackLink } from "@/components/ui/navigation/back-link";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { ScheduleEditor } from "@/features/scheduling/components/schedule-editor";
 import { SchedulePreview } from "@/features/scheduling/components/scheduler-dashboard";
 import styles from "@/features/scheduling/components/schedule-detail.module.css";
@@ -26,25 +26,18 @@ export default async function EmployeeSchedulePage({
   return (
     <Container>
       <div className={styles.page}>
-        <BackLink href="/admin/horarios">Volver a horarios</BackLink>
         <header className={styles.header}>
-          <div>
-            <p className="eyebrow">Horario del colaborador</p>
-            <div className={styles.title}>
-              <span className={styles.titleIcon}>
-                <CalendarClock aria-hidden="true" size={24} strokeWidth={1.8} />
-              </span>
-              <div>
-                <h1>{detail.employee.displayName}</h1>
-                <p>Configurá sus días y horas de trabajo.</p>
-              </div>
-            </div>
-          </div>
-          {query.guardado === "1" && (
-            <div className={styles.savedNotice} role="status">
-              Horario guardado correctamente.
-            </div>
-          )}
+          <PageSectionHeader
+            action={
+              query.guardado === "1" ? (
+                <div className={styles.savedNotice} role="status">
+                  Horario guardado correctamente.
+                </div>
+              ) : undefined
+            }
+            icon={CalendarClock}
+            title={detail.employee.displayName}
+          />
         </header>
 
         <ElevatedSurface as="section" className={styles.currentCard}>
