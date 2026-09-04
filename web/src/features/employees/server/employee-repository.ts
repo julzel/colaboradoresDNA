@@ -10,6 +10,7 @@ import {
 import {
   employeeSelfServiceProfileInputSchema,
   employeeInputSchema,
+  formatEmployeeCode,
   formatEmployeeBirthday,
   formatEmployeeDisplayName,
   formatEmployeePreferredDisplayName,
@@ -50,6 +51,7 @@ async function getEmployeesCollection(): Promise<Collection<EmployeeDocument>> {
 
 function createEmployeeDocument(
   employee: NormalizedEmployeeInput,
+  employeeCode: string,
   now = new Date(),
 ): EmployeeDocument {
   return {
@@ -60,6 +62,7 @@ function createEmployeeDocument(
     employmentEndedOn: employee.employmentEndedOn ?? null,
     employmentStartedOn: employee.employmentStartedOn,
     employmentStatus: employee.employmentStatus,
+    employeeCode,
     firstSurname: employee.firstSurname,
     givenNames: employee.givenNames,
     identification: employee.identification,
@@ -94,7 +97,32 @@ export async function createEmployee(
   }
 
   const collection = database.collection<EmployeeDocument>("employees");
-  const document = createEmployeeDocument(employee);
+  const sequence = await database
+    .collection<{
+      _id: string;
+      createdAt: Date;
+      updatedAt: Date;
+      value: number;
+    }>("employee_sequences")
+    .findOneAndUpdate(
+      { _id: "employee_code" },
+      {
+        $inc: { value: 1 },
+        $set: { updatedAt: new Date() },
+        $setOnInsert: { createdAt: new Date() },
+      },
+      {
+        returnDocument: "after",
+        upsert: true,
+        ...(session ? { session } : {}),
+      },
+    );
+
+  if (!sequence) {
+    throw new Error("Employee code sequence did not return a value.");
+  }
+
+  const document = createEmployeeDocument(employee, formatEmployeeCode(sequence.value));
 
   try {
     await collection.insertOne(document, session ? { session } : undefined);
@@ -303,6 +331,7 @@ export async function listEmployeeDirectory(): Promise<EmployeeDirectoryEntry[]>
       {},
       {
         projection: {
+          employeeCode: 1,
           employmentStatus: 1,
           firstSurname: 1,
           givenNames: 1,

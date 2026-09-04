@@ -14,9 +14,7 @@ export default async function PtoRequestDetailModal({
   if (!detail) notFound();
 
   return (
-    <Modal
-      title="Detalle de solicitud"
-    >
+    <Modal title="Detalle de solicitud">
       <PtoRequestDetailContent detail={detail} presentation="modal" />
     </Modal>
   );

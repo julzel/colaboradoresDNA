@@ -9,6 +9,7 @@ export type AuthAuditAction =
   | "account_reactivated"
   | "email_updated"
   | "invitation_created"
+  | "invitation_deferred"
   | "invitation_failed"
   | "invitation_resent"
   | "role_updated"

@@ -34,8 +34,8 @@ web/
 ├── scripts/                Controlled bootstrap and maintenance operations
 ├── src/app/                 Routes, layouts, error states, and Route Handlers
 ├── src/components/ui/       Reusable, domain-neutral UI primitives
-├── src/features/<feature>/  Feature-owned actions, components, domain,
-│                            integrations, server, and UI-facing view models
+├── src/features/<feature>/  Feature-owned application contracts, domain,
+│                            integrations, infrastructure, and presentation
 ├── src/lib/server/          Server-only shared infrastructure
 ├── src/styles/              Global CSS tokens and base styles
 ├── tests/unit/              Unit tests
@@ -46,10 +46,11 @@ web/
 Route files compose feature modules. Feature modules own their domain logic;
 avoid creating broad `utils` or `helpers` folders.
 
-UI-facing DTOs live in `view-models/` (or `domain/` when they are true domain
-types), never in repository modules. Components depend on these stable contracts;
-query services and repositories produce them without exposing persistence-module
-ownership to the UI.
+Application DTOs are transport-neutral and contain no localized display labels,
+React types, framework navigation, or persistence values. UI-facing DTOs live in
+`view-models/` (or `domain/` when they are true domain types), never in repository
+modules. A presentation adapter maps application results into those view models;
+repositories and use cases do not depend on the presenter.
 
 Cross-feature behavior uses explicit interfaces under `integrations/`. The
 consuming feature owns the port and its narrow DTOs; the providing feature owns
@@ -146,6 +147,25 @@ authorization, and leave-duration contracts.
 Scheduling index creation runs through the repeatable migration bootstrap, not
 the runtime repository. This keeps schema-administration privileges out of the
 Scheduling runtime path.
+
+## Production tasks domain
+
+`src/features/production-tasks/` owns weekly production plan revisions, tasks,
+completion activity, assignment-change indications, canonical areas, reusable
+patterns, and the secure XLSX import/export boundary. Published plans are visible
+to every active authenticated user; drafts, imports, and management operations
+require supervisor or administrator authorization.
+
+The slice stores internal employee IDs and integrates through redacted Employee,
+Scheduling, and PTO ports. Its application layer exposes transport-neutral result
+DTOs through one public server entry point. The original Tasks UI has been
+removed; there are currently no Tasks routes, navigation entries, components,
+Server Actions, or view models. A future presentation adapter will own localized
+labels, formatted dates, board grouping, transport handling, and navigation. The
+application core cannot import presentation code. Workbook commits, audits, and
+preview consumption are transactional. See
+[Production tasks](./production-tasks.md) for lifecycle, security limits, setup,
+and recovery procedures.
 
 ## Styling and accessibility
 

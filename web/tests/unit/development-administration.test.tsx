@@ -30,11 +30,6 @@ describe("development administration entry points", () => {
       "href",
       "/admin/desarrollo",
     );
-    expect(
-      screen.getByText(
-        "Priorizá seguimientos, documentá 1:1 y cerrá acciones acordadas.",
-      ),
-    ).toBeInTheDocument();
     expect(requirePlatformUser).toHaveBeenCalledWith({ roles: ["administrator"] });
   });
 

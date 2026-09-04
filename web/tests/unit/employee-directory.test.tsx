@@ -10,53 +10,74 @@ const items: EmployeeDirectoryItem[] = [
     accessStatus: "active",
     departmentName: "Operaciones",
     displayName: "Ana Solano",
+    employeeCode: "DNA-0001",
     employmentStartedOn: "2024-01-10",
     employmentStatus: "active",
     id: "employee-ana",
     managerName: "María Mora",
     platformRole: "collaborator",
     positionTitle: "Analista",
+    profileImageUrl: "https://img.example.com/ana.webp",
   },
   {
     accessStatus: "invited",
     departmentName: "Finanzas",
     displayName: "Carla Jiménez",
+    employeeCode: "DNA-0002",
     employmentStartedOn: "2025-02-12",
     employmentStatus: "active",
     id: "employee-carla",
     managerName: "Pablo Ruiz",
     platformRole: "supervisor",
     positionTitle: "Jefatura",
+    profileImageUrl: null,
   },
   {
     accessStatus: "deactivated",
     departmentName: "Operaciones",
     displayName: "Beto Álvarez",
+    employeeCode: "DNA-0003",
     employmentStartedOn: "2022-07-04",
     employmentStatus: "inactive",
     id: "employee-beto",
     managerName: null,
     platformRole: "administrator",
     positionTitle: "Director",
+    profileImageUrl: null,
   },
 ];
 
 function tableNames() {
   const rows = within(screen.getByRole("table")).getAllByRole("row").slice(1);
-  return rows.map((row) => within(row).getAllByRole("cell")[0]?.textContent);
+  return rows.map(
+    (row) => within(row).getAllByRole("cell")[0]?.querySelector("a")?.textContent,
+  );
 }
 
 describe("employee directory", () => {
+  it("shows profile images with initials as the fallback avatar", () => {
+    const { container } = render(<EmployeeDirectory items={items} />);
+
+    expect(
+      container.querySelector('img[src="https://img.example.com/ana.webp"]'),
+    ).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("CJ")).toBeVisible();
+  });
+
   it("searches locally across the displayed collaborator fields", async () => {
     const user = userEvent.setup();
     render(<EmployeeDirectory items={items} />);
+
+    expect(
+      screen.getByRole("heading", { name: "Colaboradores del equipo" }),
+    ).toBeVisible();
 
     await user.type(
       screen.getByRole("searchbox", { name: "Buscar colaboradores" }),
       "finanzas",
     );
 
-    expect(screen.getByText("1 colaborador encontrado")).toBeInTheDocument();
+    expect(screen.getByText("1 colaborador")).toBeInTheDocument();
     expect(tableNames()).toEqual(["Carla Jiménez"]);
     expect(window.location.search).toBe("");
   });
@@ -88,5 +109,17 @@ describe("employee directory", () => {
       "aria-sort",
       "descending",
     );
+  });
+
+  it("finds a collaborator by operational code", async () => {
+    const user = userEvent.setup();
+    render(<EmployeeDirectory items={items} />);
+
+    await user.type(
+      screen.getByRole("searchbox", { name: "Buscar colaboradores" }),
+      "DNA-0003",
+    );
+
+    expect(tableNames()).toEqual(["Beto Álvarez"]);
   });
 });

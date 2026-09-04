@@ -13,6 +13,7 @@ import {
   listEligibleManagerOptions,
   listEmployeeDirectoryForAdministration,
 } from "@/features/employees/server/employee-read-repository";
+import { employeeSchedulingIntegration } from "@/features/scheduling/integrations/employee-scheduling-adapter";
 
 async function requireEmployeeAdministrator() {
   return requirePlatformUser({ roles: ["administrator"] });
@@ -29,6 +30,29 @@ async function getProfileImageUrl(clerkUserId: string | null) {
     // The collaborator detail remains available with its initials fallback.
     return null;
   }
+}
+
+async function getProfileImageUrls(clerkUserIds: string[]) {
+  const uniqueIds = [...new Set(clerkUserIds)];
+  const imageUrls = new Map<string, string>();
+  if (uniqueIds.length === 0) return imageUrls;
+
+  try {
+    const client = await clerkClient();
+
+    for (let index = 0; index < uniqueIds.length; index += 100) {
+      const userIds = uniqueIds.slice(index, index + 100);
+      const response = await client.users.getUserList({ limit: 100, userId: userIds });
+
+      for (const user of response.data) {
+        if (user.hasImage) imageUrls.set(user.id, user.imageUrl);
+      }
+    }
+  } catch {
+    // The directory remains available with initials when Clerk cannot be reached.
+  }
+
+  return imageUrls;
 }
 
 async function getOptionalDevelopmentSummary(employeeId: string) {
@@ -54,9 +78,19 @@ export async function getEmployeeCreationPageData() {
 
 export async function getEmployeeDirectoryPageData() {
   await requireEmployeeAdministrator();
-  return listEmployeeDirectoryForAdministration(parseEmployeeDirectoryQuery({}), {
-    paginate: false,
-  });
+  const directory = await listEmployeeDirectoryForAdministration(
+    parseEmployeeDirectoryQuery({}),
+    { paginate: false },
+  );
+  const imageUrls = await getProfileImageUrls(
+    directory.items.flatMap(({ clerkUserId }) => (clerkUserId ? [clerkUserId] : [])),
+  );
+  const items = directory.items.map(({ clerkUserId, ...item }) => ({
+    ...item,
+    profileImageUrl: clerkUserId ? (imageUrls.get(clerkUserId) ?? null) : null,
+  }));
+
+  return { ...directory, items };
 }
 
 export async function getEmployeeDetailPageData(employeeId: string) {
@@ -64,12 +98,13 @@ export async function getEmployeeDetailPageData(employeeId: string) {
   const detail = await getEmployeeDetailForAdministration(employeeId);
   if (!detail) return null;
 
-  const [profileImageUrl, development] = await Promise.all([
+  const [profileImageUrl, development, hasSchedule] = await Promise.all([
     getProfileImageUrl(detail.access.clerkUserId),
     getOptionalDevelopmentSummary(employeeId),
+    employeeSchedulingIntegration.hasAnySchedule(employeeId),
   ]);
 
-  return { detail, development, profileImageUrl };
+  return { detail, development, hasSchedule, profileImageUrl };
 }
 
 export async function getEmployeeAccessPageData(employeeId: string) {

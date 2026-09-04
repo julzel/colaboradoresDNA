@@ -1,10 +1,10 @@
 "use client";
 
-import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
-import { TextField } from "@/components/ui/form-field/form-field";
+import { ListToolbar } from "@/components/ui/list-toolbar/list-toolbar";
+import { SearchField } from "@/components/ui/search-field/search-field";
 import type { EmployeeDirectoryItem } from "@/features/employees/view-models/employee-view";
 
 import { EmployeeDirectoryMobileList } from "./employee-directory-mobile-list";
@@ -63,6 +63,7 @@ function matchesSearch(item: EmployeeDirectoryItem, normalizedQuery: string) {
   return normalizeSearchText(
     [
       item.displayName,
+      item.employeeCode ?? "",
       displayValue(item.departmentName),
       displayValue(item.positionTitle),
       displayValue(item.managerName),
@@ -116,34 +117,37 @@ export function EmployeeDirectory({ items }: EmployeeDirectoryProps) {
   };
 
   return (
-    <section aria-label="Directorio de colaboradores" className={styles.directory}>
-      <div className={styles.searchBar} role="search">
-        <Search aria-hidden="true" className={styles.searchIcon} size={20} />
-        <TextField
+    <ElevatedSurface
+      aria-labelledby="employee-directory-title"
+      as="section"
+      className={styles.directory}
+    >
+      <div className={styles.directoryHeader}>
+        <h2 id="employee-directory-title">Colaboradores del equipo</h2>
+      </div>
+
+      <ListToolbar>
+        <SearchField
           autoComplete="off"
-          className={styles.searchInput}
+          className={styles.searchBar}
           id="employee-directory-search"
           label="Buscar colaboradores"
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Buscar por nombre, departamento, puesto…"
-          type="search"
+          placeholder="Buscar por nombre…"
           value={search}
-          visuallyHiddenLabel
         />
-      </div>
+      </ListToolbar>
 
-      <p aria-live="polite" className={styles.muted}>
+      <p aria-live="polite" className={styles.directoryResultCount}>
         {visibleItems.length}{" "}
-        {visibleItems.length === 1
-          ? "colaborador encontrado"
-          : "colaboradores encontrados"}
+        {visibleItems.length === 1 ? "colaborador" : "colaboradores"}
       </p>
 
       {visibleItems.length === 0 ? (
-        <ElevatedSurface className={styles.empty}>
-          <h2>No encontramos colaboradores</h2>
+        <div className={styles.directoryEmpty}>
+          <h3>No encontramos colaboradores</h3>
           <p className={styles.muted}>Probá con otro término de búsqueda.</p>
-        </ElevatedSurface>
+        </div>
       ) : (
         <>
           <EmployeeDirectoryTable
@@ -155,6 +159,6 @@ export function EmployeeDirectory({ items }: EmployeeDirectoryProps) {
           <EmployeeDirectoryMobileList items={visibleItems} />
         </>
       )}
-    </section>
+    </ElevatedSurface>
   );
 }

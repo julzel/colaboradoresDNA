@@ -332,6 +332,16 @@ export async function listScheduleHistory(employeeId: string) {
   return documents.map(toScheduleRecord);
 }
 
+export async function hasAnySchedule(employeeId: string) {
+  const { schedules } = await getSchedulingCollections();
+  const document = await schedules.findOne(
+    { employeeId: objectId(employeeId) },
+    { projection: { _id: 1 } },
+  );
+
+  return Boolean(document);
+}
+
 export async function listSchedulesEffectiveOn(onDate: string) {
   const parsedDate = scheduleDateSchema.parse(onDate);
   const { schedules } = await getSchedulingCollections();

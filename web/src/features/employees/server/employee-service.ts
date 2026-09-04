@@ -35,10 +35,7 @@ import {
   updateEmployeePersonalInformation,
 } from "@/features/employees/server/employee-repository";
 import { getEmployeeSelfServiceProfileDetail } from "@/features/employees/server/employee-read-repository";
-import {
-  createEmployeeScheduleInSession,
-  replaceEmployeeSchedule,
-} from "@/features/employees/server/schedule-repository";
+import { replaceEmployeeSchedule } from "@/features/employees/server/schedule-repository";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import { createOpeningPtoBalanceInSession } from "@/features/pto/server/pto-repository";
 import { ensurePtoIndexes } from "@/features/pto/server/pto-indexes";
@@ -47,7 +44,6 @@ import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
 export type CreateEmployeeModelInput = {
   assignment: Omit<EmployeeAssignmentInput, "createdByPlatformUserId" | "employeeId">;
   employee: EmployeeInput;
-  schedule: Omit<EmployeeScheduleInput, "createdByPlatformUserId" | "employeeId">;
 };
 
 export type CreateEmployeeWithAccessInput = Omit<
@@ -90,7 +86,6 @@ export async function createEmployeeModel(input: CreateEmployeeModelInput) {
       | {
           assignment: Awaited<ReturnType<typeof createEmployeeAssignmentInSession>>;
           employee: Awaited<ReturnType<typeof createEmployee>>;
-          schedule: Awaited<ReturnType<typeof createEmployeeScheduleInSession>>;
         }
       | undefined;
 
@@ -104,15 +99,6 @@ export async function createEmployeeModel(input: CreateEmployeeModelInput) {
         },
         session,
       );
-      const schedule = await createEmployeeScheduleInSession(
-        {
-          ...input.schedule,
-          createdByPlatformUserId: actor.id,
-          employeeId: employee.id,
-        },
-        session,
-      );
-
       await synchronizePlatformDisplayName({
         displayName: formatEmployeeDisplayName(employee),
         platformUserId: employee.platformUserId,
@@ -137,7 +123,7 @@ export async function createEmployeeModel(input: CreateEmployeeModelInput) {
         targetEmployeeId: employee.id,
       });
 
-      result = { assignment, employee, schedule };
+      result = { assignment, employee };
     });
 
     if (!result) {
@@ -184,14 +170,6 @@ export async function createEmployeeWithAccess(input: CreateEmployeeWithAccessIn
       await createEmployeeAssignmentInSession(
         {
           ...input.assignment,
-          createdByPlatformUserId: actor.id,
-          employeeId: employee.id,
-        },
-        session,
-      );
-      await createEmployeeScheduleInSession(
-        {
-          ...input.schedule,
           createdByPlatformUserId: actor.id,
           employeeId: employee.id,
         },

@@ -100,7 +100,7 @@ describe("employee creation PTO balance", () => {
     });
   });
 
-  it("opens the balance inside the employee creation transaction", async () => {
+  it("opens the balance without creating a schedule in the employee transaction", async () => {
     await createEmployeeWithAccess({
       access: { email: "ana@example.com", role: "collaborator" },
       assignment: {
@@ -124,12 +124,6 @@ describe("employee creation PTO balance", () => {
         shareBirthdayOnCalendar: false,
       },
       openingPtoBalanceUnits: 10,
-      schedule: {
-        days: [],
-        effectiveFrom: "2026-08-01",
-        effectiveTo: null,
-        timezone: "America/Costa_Rica",
-      },
     });
 
     expect(mocks.createOpeningPtoBalanceInSession).toHaveBeenCalledWith(
@@ -139,5 +133,6 @@ describe("employee creation PTO balance", () => {
         openingBalanceUnits: 10,
       }),
     );
+    expect(mocks.createEmployeeScheduleInSession).not.toHaveBeenCalled();
   });
 });

@@ -1,10 +1,10 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
-import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import type { EmployeeDirectoryItem } from "@/features/employees/view-models/employee-view";
 
+import { EmployeeDirectoryAvatar } from "./employee-directory-avatar";
 import styles from "./employee-management.module.css";
 
 const roleLabels = {
@@ -54,7 +54,7 @@ export function EmployeeDirectoryTable({
   sortKey,
 }: EmployeeDirectoryTableProps) {
   return (
-    <ElevatedSurface className={styles.tableWrap}>
+    <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -85,12 +85,21 @@ export function EmployeeDirectoryTable({
           {items.map((item) => (
             <tr key={item.id}>
               <td>
-                <Link
-                  className={styles.nameLink}
-                  href={`/admin/colaboradores/${item.id}`}
-                >
-                  {item.displayName}
-                </Link>
+                <div className={styles.employeeIdentityWithAvatar}>
+                  <EmployeeDirectoryAvatar
+                    displayName={item.displayName}
+                    profileImageUrl={item.profileImageUrl}
+                  />
+                  <span className={styles.employeeIdentity}>
+                    <Link
+                      className={styles.nameLink}
+                      href={`/admin/colaboradores/${item.id}`}
+                    >
+                      {item.displayName}
+                    </Link>
+                    <small>{item.employeeCode ?? "Código pendiente"}</small>
+                  </span>
+                </div>
               </td>
               <td>{item.departmentName ?? "Sin asignar"}</td>
               <td>{item.positionTitle ?? "Sin asignar"}</td>
@@ -120,6 +129,6 @@ export function EmployeeDirectoryTable({
           ))}
         </tbody>
       </table>
-    </ElevatedSurface>
+    </div>
   );
 }
