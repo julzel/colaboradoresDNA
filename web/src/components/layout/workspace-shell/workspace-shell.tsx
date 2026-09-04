@@ -10,7 +10,6 @@ import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-
 import { WorkspaceNavigation } from "@/components/layout/workspace-navigation/workspace-navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle/theme-toggle";
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
-import type { DashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 
 import styles from "./workspace-shell.module.css";
 
@@ -38,7 +37,6 @@ function getServerSidebarPreference() {
 type WorkspaceShellProps = {
   children: ReactNode;
   displayName: string;
-  greeting: DashboardGreeting;
   profileImageUrl: string | null;
   role: PlatformRole;
   unreadNotificationCount: number;
@@ -47,7 +45,6 @@ type WorkspaceShellProps = {
 export function WorkspaceShell({
   children,
   displayName,
-  greeting,
   profileImageUrl,
   role,
   unreadNotificationCount,
@@ -106,7 +103,6 @@ export function WorkspaceShell({
       <div className={styles.mainColumn}>
         <WorkspaceHeader
           displayName={displayName}
-          greeting={greeting}
           profileImageUrl={profileImageUrl}
           unreadNotificationCount={unreadNotificationCount}
         />

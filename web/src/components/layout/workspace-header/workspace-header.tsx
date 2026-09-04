@@ -2,15 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import {
-  ArrowLeft,
-  Bell,
-  Coffee,
-  MoonStar,
-  Sun,
-  Sunset,
-  UserRound,
-} from "lucide-react";
+import { ArrowLeft, Bell, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -18,21 +10,18 @@ import { AuthControls } from "@/components/auth/auth-controls";
 import { Logo } from "@/components/brand/logo/logo";
 import { PwaInstallButton } from "@/components/pwa/pwa-install-button";
 import { Breadcrumbs } from "@/components/ui/navigation/breadcrumbs";
-import type { DashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 import { getWorkspaceBreadcrumbs } from "@/features/navigation/workspace-navigation";
 
 import styles from "./workspace-header.module.css";
 
 type WorkspaceHeaderProps = {
   displayName: string;
-  greeting: DashboardGreeting;
   profileImageUrl: string | null;
   unreadNotificationCount: number;
 };
 
 export function WorkspaceHeader({
   displayName,
-  greeting,
   profileImageUrl,
   unreadNotificationCount,
 }: WorkspaceHeaderProps) {
@@ -42,14 +31,6 @@ export function WorkspaceHeader({
     .reverse()
     .flatMap((item) => ("href" in item ? [{ href: item.href, label: item.label }] : []))
     .at(0);
-  const firstName = displayName.trim().split(/\s+/)[0] || displayName;
-  const GreetingIcon = {
-    afternoon: Sunset,
-    "late-night": Coffee,
-    morning: Sun,
-    night: MoonStar,
-  }[greeting.period];
-
   return (
     <header className={styles.topbar}>
       <div className={styles.mobileLeading}>
@@ -75,14 +56,6 @@ export function WorkspaceHeader({
         <Breadcrumbs items={breadcrumbs} />
       </div>
       <div className={styles.tools}>
-        {pathname === "/" && (
-          <div className={styles.desktopGreeting}>
-            <GreetingIcon aria-hidden="true" data-period={greeting.period} size={20} />
-            <strong>
-              {greeting.label} {firstName}
-            </strong>
-          </div>
-        )}
         <Link
           aria-label={
             unreadNotificationCount > 0

@@ -14,6 +14,7 @@ import {
   readAllDashboardNotificationsAction,
 } from "@/features/dashboard/actions/dashboard-notification-actions";
 import styles from "@/features/dashboard/components/dashboard.module.css";
+import { getDashboardDate } from "@/features/dashboard/domain/dashboard-date";
 import { getDashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 
 function eventSchedule(notification: {
@@ -41,6 +42,7 @@ export default async function HomePage() {
   const greeting = getDashboardGreeting();
   const firstName =
     dashboard.displayName.trim().split(/\s+/)[0] || dashboard.displayName;
+  const dashboardDate = getDashboardDate();
   const GreetingIcon = {
     afternoon: Sunset,
     "late-night": Coffee,
@@ -50,17 +52,27 @@ export default async function HomePage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.greeting}>
-          <span className={styles.greetingIcon} data-period={greeting.period}>
-            <GreetingIcon aria-hidden="true" size={25} />
-          </span>
-          <h1>
-            <span className={styles.salutation}>{greeting.label}</span>{" "}
-            <span className={styles.salutation}>{firstName}</span>
-          </h1>
-        </div>
-      </header>
+      {dashboard.role === "administrator" ? (
+        <Container>
+          <header className={styles.adminWelcome}>
+            <time dateTime={dashboardDate.iso}>{dashboardDate.label}</time>
+            <h1>Hola, {firstName}</h1>
+            <p>Aquí tienes un resumen de lo más importante para hoy</p>
+          </header>
+        </Container>
+      ) : (
+        <header className={styles.header}>
+          <div className={styles.greeting}>
+            <span className={styles.greetingIcon} data-period={greeting.period}>
+              <GreetingIcon aria-hidden="true" size={25} />
+            </span>
+            <h1>
+              <span className={styles.salutation}>{greeting.label}</span>{" "}
+              <span className={styles.salutation}>{firstName}</span>
+            </h1>
+          </div>
+        </header>
+      )}
 
       {dashboard.role === "administrator" && (
         <Container>

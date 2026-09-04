@@ -22,7 +22,6 @@ vi.mock("@/components/layout/mobile-navigation/mobile-navigation", () => ({
 
 const shellProps = {
   displayName: "Ana Rodríguez",
-  greeting: { label: "Buenos días", period: "morning" } as const,
   profileImageUrl: null,
   role: "administrator" as const,
   unreadNotificationCount: 0,
