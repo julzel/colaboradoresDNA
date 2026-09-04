@@ -31,7 +31,19 @@ export function CalendarControls({
 
   return (
     <header className={styles.pageHeader}>
-      <PageSectionHeader icon={CalendarDays} title="Calendario" />
+      <PageSectionHeader
+        action={
+          canCreateEvents && eventFormOptions ? (
+            <CalendarCreateEventTrigger
+              className={styles.createEventButton}
+              label="Nuevo evento"
+              options={eventFormOptions}
+            />
+          ) : undefined
+        }
+        icon={CalendarDays}
+        title="Calendario"
+      />
 
       <section aria-label="Controles del calendario" className={styles.controls}>
         <div className={styles.calendarToolbarStart}>
@@ -98,13 +110,6 @@ export function CalendarControls({
               Mes
             </ButtonLink>
           </nav>
-          {query.view !== "month" && canCreateEvents && eventFormOptions && (
-            <CalendarCreateEventTrigger
-              className={styles.createEventButton}
-              label="Nuevo evento"
-              options={eventFormOptions}
-            />
-          )}
         </div>
       </section>
     </header>

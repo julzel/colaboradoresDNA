@@ -40,23 +40,36 @@ export class EmployeeAdministrationError extends Error {
 }
 
 export async function createEmployeeForAdministration(
-  input: CreateEmployeeWithAccessInput,
+  input: CreateEmployeeWithAccessInput & { sendInvitation: boolean },
 ) {
-  const result = await createEmployeeWithAccess(input);
-  const invitationSent = await safelySendPlatformInvitation({
-    email: result.platformUser.normalizedEmail,
-    platformUserId: result.platformUser.id,
-  });
+  const { sendInvitation, ...employeeInput } = input;
+  const result = await createEmployeeWithAccess(employeeInput);
+  const invitationSent = sendInvitation
+    ? await safelySendPlatformInvitation({
+        email: result.platformUser.normalizedEmail,
+        platformUserId: result.platformUser.id,
+      })
+    : false;
+  const invitationDisposition = !sendInvitation
+    ? "deferred"
+    : invitationSent
+      ? "sent"
+      : "failed";
 
   await recordAuthAudit({
-    action: invitationSent ? "invitation_created" : "invitation_failed",
+    action:
+      invitationDisposition === "sent"
+        ? "invitation_created"
+        : invitationDisposition === "deferred"
+          ? "invitation_deferred"
+          : "invitation_failed",
     actorClerkUserId: result.actor.clerkUserId ?? "system",
     actorPlatformUserId: result.actor.id,
     metadata: { role: result.platformUser.role },
     targetPlatformUserId: result.platformUser.id,
   });
 
-  return { employeeId: result.employee.id, invitationSent };
+  return { employeeId: result.employee.id, invitationDisposition };
 }
 
 export async function updateEmployeePersonalInformationForAdministration({

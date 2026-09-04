@@ -111,6 +111,23 @@ Before the first database-backed deployment:
 Avoid a broad Atlas IP allowlist in production when a fixed-egress or private
 networking option is available for the selected plans.
 
+### Production-task model bootstrap
+
+After the employee model assigns immutable `DNA-####` codes, inspect and create
+the production-task collections and indexes with migration-capable credentials:
+
+```bash
+cd web
+pnpm bootstrap:employee-model
+pnpm bootstrap:production-tasks-model -- --dry-run
+pnpm bootstrap:production-tasks-model
+```
+
+The dry run must report zero employees without codes and zero duplicate current
+plan slots. Complete the staging import, publish, completion, undo, correction,
+and rollback checks in [Production tasks](./production-tasks.md) before enabling
+the module as the production source of truth.
+
 ## Development deployment checklist
 
 - `pnpm verify` passes locally.

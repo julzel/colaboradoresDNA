@@ -496,13 +496,6 @@
   font-size: var(--text-xs);
 }
 
-.selectedDayCreateButton {
-  margin-top: var(--space-4);
-  border-color: var(--color-brand);
-  color: var(--color-brand-text);
-  box-shadow: none;
-}
-
 .miniCalendarSurface,
 .calendarLegend {
   display: none;

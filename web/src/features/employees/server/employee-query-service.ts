@@ -13,6 +13,7 @@ import {
   listEligibleManagerOptions,
   listEmployeeDirectoryForAdministration,
 } from "@/features/employees/server/employee-read-repository";
+import { employeeSchedulingIntegration } from "@/features/scheduling/integrations/employee-scheduling-adapter";
 
 async function requireEmployeeAdministrator() {
   return requirePlatformUser({ roles: ["administrator"] });
@@ -64,12 +65,13 @@ export async function getEmployeeDetailPageData(employeeId: string) {
   const detail = await getEmployeeDetailForAdministration(employeeId);
   if (!detail) return null;
 
-  const [profileImageUrl, development] = await Promise.all([
+  const [profileImageUrl, development, hasSchedule] = await Promise.all([
     getProfileImageUrl(detail.access.clerkUserId),
     getOptionalDevelopmentSummary(employeeId),
+    employeeSchedulingIntegration.hasAnySchedule(employeeId),
   ]);
 
-  return { detail, development, profileImageUrl };
+  return { detail, development, hasSchedule, profileImageUrl };
 }
 
 export async function getEmployeeAccessPageData(employeeId: string) {

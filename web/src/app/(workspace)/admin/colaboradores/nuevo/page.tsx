@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { UserRoundPlus } from "lucide-react";
 
 import { Container } from "@/components/ui/container/container";
-import { BackLink } from "@/components/ui/navigation/back-link";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { EmployeeCreationForm } from "@/features/employees/components/employee-creation-form";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeeCreationPageData } from "@/features/employees/server/employee-query-service";
@@ -14,11 +15,8 @@ export default async function NewEmployeePage() {
   return (
     <Container>
       <div className={styles.page}>
-        <BackLink href="/admin/colaboradores">Volver a colaboradores</BackLink>
         <header className={styles.header}>
-          <div>
-            <h1>Nuevo colaborador</h1>
-          </div>
+          <PageSectionHeader icon={UserRoundPlus} title="Nuevo colaborador" />
         </header>
         <EmployeeCreationForm departments={departments} managers={managers} />
       </div>

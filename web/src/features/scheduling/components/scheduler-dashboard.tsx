@@ -1,10 +1,11 @@
 "use client";
 
-import { CalendarDays, Search, UserRoundSearch } from "lucide-react";
+// import { CalendarDays, Search, UserRoundSearch } from "lucide-react";
+import { Search, UserRoundSearch } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button/button";
+// import { Button } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { TextField } from "@/components/ui/form-field/form-field";
 import { MetricCard } from "@/components/ui/metric-card/metric-card";
@@ -153,7 +154,7 @@ export function SchedulerDashboard({
           <div>
             <h2>Horarios del equipo</h2>
           </div>
-          <form className={styles.dateForm} method="get">
+          {/* <form className={styles.dateForm} method="get">
             <TextField
               className={styles.dateInput}
               defaultValue={selectedDate}
@@ -166,7 +167,7 @@ export function SchedulerDashboard({
               <CalendarDays aria-hidden="true" size={16} />
               Consultar
             </Button>
-          </form>
+          </form> */}
         </div>
 
         <div className={styles.toolbar}>

@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { CalendarAgenda } from "@/features/calendar/components/calendar-agenda";
+import { CalendarControls } from "@/features/calendar/components/calendar-controls";
 import { CalendarCreateEventTrigger } from "@/features/calendar/components/calendar-create-event-trigger";
 import { CalendarEventDetailContent } from "@/features/calendar/components/calendar-event-detail-content";
 import { CalendarEventForm } from "@/features/calendar/components/calendar-event-form";
@@ -30,6 +31,26 @@ vi.mock("@/features/calendar/actions/calendar-event-actions", () => ({
 }));
 
 describe("calendar views", () => {
+  it("places the new-event action in the shared page header", () => {
+    render(
+      <CalendarControls
+        canCreateEvents
+        eventFormOptions={{ departments: [], people: [] }}
+        query={{ day: "2026-07-13", month: "2026-07", view: "month" }}
+      />,
+    );
+
+    const heading = screen.getByRole("heading", { level: 1, name: "Calendario" });
+    const sharedHeader = heading.parentElement?.parentElement;
+
+    expect(sharedHeader).not.toBeNull();
+    expect(
+      within(sharedHeader as HTMLElement).getByRole("button", {
+        name: "Nuevo evento",
+      }),
+    ).toBeVisible();
+  });
+
   it("renders the agenda empty state in Spanish", () => {
     render(<CalendarAgenda entries={[]} month="2026-07" />);
     expect(
@@ -115,10 +136,9 @@ describe("calendar views", () => {
     expect(screen.getByText("No hay actividades para este día.")).toBeInTheDocument();
   });
 
-  it("builds the month legend and selected-day actions from visible entries", () => {
+  it("builds the month legend from visible entries", () => {
     render(
       <CalendarMonth
-        canCreateEvents
         entries={[
           {
             allDay: true,
@@ -172,7 +192,6 @@ describe("calendar views", () => {
             title: "Anexión del Partido de Nicoya",
           },
         ]}
-        eventFormOptions={{ departments: [], people: [] }}
         query={{ day: "2026-07-13", month: "2026-07", view: "month" }}
       />,
     );
@@ -187,9 +206,7 @@ describe("calendar views", () => {
       screen.getByRole("region", { name: "Leyenda del calendario" }),
     ).toHaveTextContent("Feriados nacionales");
     expect(screen.getByText("2 eventos")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Nuevo evento" })).toHaveTextContent(
-      "Nuevo evento",
-    );
+    expect(screen.queryByRole("button", { name: "Nuevo evento" })).toBeNull();
   });
 
   it("shows the yearly holidays in a collapsible chronological list", async () => {

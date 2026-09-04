@@ -52,6 +52,11 @@ export const feedbackMessages = {
     message: "El colaborador fue creado y la invitación fue enviada.",
     tone: "success",
   },
+  employee_created_invitation_deferred: {
+    message:
+      "El colaborador fue creado. Podés enviar la invitación de acceso y configurar su horario cuando estés listo.",
+    tone: "success",
+  },
   employee_created_invitation_pending: {
     message:
       "El colaborador fue creado, pero la invitación quedó pendiente para reenviar.",

@@ -1,7 +1,6 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
-import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import type { EmployeeDirectoryItem } from "@/features/employees/view-models/employee-view";
 
@@ -54,7 +53,7 @@ export function EmployeeDirectoryTable({
   sortKey,
 }: EmployeeDirectoryTableProps) {
   return (
-    <ElevatedSurface className={styles.tableWrap}>
+    <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -85,12 +84,15 @@ export function EmployeeDirectoryTable({
           {items.map((item) => (
             <tr key={item.id}>
               <td>
-                <Link
-                  className={styles.nameLink}
-                  href={`/admin/colaboradores/${item.id}`}
-                >
-                  {item.displayName}
-                </Link>
+                <span className={styles.employeeIdentity}>
+                  <Link
+                    className={styles.nameLink}
+                    href={`/admin/colaboradores/${item.id}`}
+                  >
+                    {item.displayName}
+                  </Link>
+                  <small>{item.employeeCode ?? "Código pendiente"}</small>
+                </span>
               </td>
               <td>{item.departmentName ?? "Sin asignar"}</td>
               <td>{item.positionTitle ?? "Sin asignar"}</td>
@@ -120,6 +122,6 @@ export function EmployeeDirectoryTable({
           ))}
         </tbody>
       </table>
-    </ElevatedSurface>
+    </div>
   );
 }

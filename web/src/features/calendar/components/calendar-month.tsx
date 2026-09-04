@@ -9,9 +9,6 @@ import {
   getCalendarMonthDays,
   getTodayInCostaRica,
 } from "@/features/calendar/domain/calendar-utils";
-import type { CalendarEventTargetOptions } from "@/features/calendar/view-models/calendar-event-view";
-
-import { CalendarCreateEventTrigger } from "./calendar-create-event-trigger";
 import { CalendarEntryItem } from "./calendar-entry-item";
 import { CalendarLegend } from "./calendar-legend";
 import { CalendarMiniMonth } from "./calendar-mini-month";
@@ -29,18 +26,11 @@ const weekdays = [
 ] as const;
 
 type CalendarMonthProps = {
-  canCreateEvents?: boolean;
   entries: CalendarEntry[];
-  eventFormOptions?: CalendarEventTargetOptions | null;
   query: CalendarQuery;
 };
 
-export function CalendarMonth({
-  canCreateEvents = false,
-  entries,
-  eventFormOptions = null,
-  query,
-}: CalendarMonthProps) {
+export function CalendarMonth({ entries, query }: CalendarMonthProps) {
   const today = getTodayInCostaRica();
   const selectedDate =
     query.day ??
@@ -108,15 +98,6 @@ export function CalendarMonth({
             </div>
           ) : (
             <p className={styles.muted}>No hay actividades para este día.</p>
-          )}
-          {canCreateEvents && eventFormOptions && (
-            <CalendarCreateEventTrigger
-              className={styles.selectedDayCreateButton}
-              fullWidth
-              label="Nuevo evento"
-              options={eventFormOptions}
-              variant="secondary"
-            />
           )}
         </ElevatedSurface>
         <ElevatedSurface as="div" className={styles.miniCalendarSurface}>

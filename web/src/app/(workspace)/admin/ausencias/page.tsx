@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { ChevronRight, ClipboardClock } from "lucide-react";
+import { ChevronRight, ClipboardClock, Search } from "lucide-react";
 import Link from "next/link";
 
-import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { TextField } from "@/components/ui/form-field/form-field";
 import { MetricCard } from "@/components/ui/metric-card/metric-card";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
@@ -30,7 +30,9 @@ const statusTones = {
   pending: "warning",
 } as const;
 
-const filters: Array<{ label: string; value: PtoStatus | "all" }> = [
+type AdminPtoFilter = Exclude<PtoStatus, "draft"> | "all";
+
+const filters: Array<{ label: string; value: AdminPtoFilter }> = [
   { label: "Todas", value: "all" },
   { label: "Pendientes", value: "pending" },
   { label: "Aprobadas", value: "approved" },
@@ -38,10 +40,17 @@ const filters: Array<{ label: string; value: PtoStatus | "all" }> = [
   { label: "Canceladas", value: "cancelled" },
 ];
 
+function normalizeSearchText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es");
+}
+
 export default async function PtoAdministrationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string }>;
+  searchParams: Promise<{ estado?: string; nombre?: string }>;
 }) {
   const [dashboard, query] = await Promise.all([
     getPtoAdministrationDashboard(),
@@ -50,10 +59,21 @@ export default async function PtoAdministrationPage({
   const parsedStatus = ptoStatusSchema.safeParse(query.estado);
   const selectedStatus =
     parsedStatus.success && parsedStatus.data !== "draft" ? parsedStatus.data : "all";
-  const requests =
-    selectedStatus === "all"
-      ? dashboard.requests
-      : dashboard.requests.filter((request) => request.status === selectedStatus);
+  const search = query.nombre?.trim() ?? "";
+  const normalizedSearch = normalizeSearchText(search);
+  const requests = dashboard.requests.filter(
+    (request) =>
+      (selectedStatus === "all" || request.status === selectedStatus) &&
+      (!normalizedSearch ||
+        normalizeSearchText(request.requesterName).includes(normalizedSearch)),
+  );
+  const filterCounts: Record<AdminPtoFilter, number> = {
+    all: dashboard.requests.length,
+    approved: dashboard.counts.approved,
+    cancelled: dashboard.counts.cancelled,
+    denied: dashboard.counts.denied,
+    pending: dashboard.counts.pending,
+  };
 
   return (
     <Container>
@@ -75,29 +95,70 @@ export default async function PtoAdministrationPage({
           />
         </div>
 
-        <nav aria-label="Filtrar solicitudes" className={styles.actions}>
-          {filters.map((filter) => (
-            <ButtonLink
-              aria-current={selectedStatus === filter.value ? "page" : undefined}
-              href={
-                filter.value === "all"
-                  ? "/admin/ausencias"
-                  : `/admin/ausencias?estado=${filter.value}`
-              }
-              key={filter.value}
-              size="small"
-              variant={selectedStatus === filter.value ? "primary" : "secondary"}
-            >
-              {filter.label}
-            </ButtonLink>
-          ))}
-        </nav>
-
-        <ElevatedSurface as="section" className={styles.card}>
-          <div className={styles.sectionHeader}>
-            <h2>{filters.find((filter) => filter.value === selectedStatus)?.label}</h2>
-            <span className={styles.muted}>{requests.length} solicitudes</span>
+        <ElevatedSurface as="section" className={styles.adminRequestPanel}>
+          <div className={styles.adminRequestHeader}>
+            <h2>Solicitudes del equipo</h2>
           </div>
+
+          <div className={styles.adminRequestToolbar}>
+            <form className={styles.adminRequestSearchBar} method="get" role="search">
+              {selectedStatus !== "all" ? (
+                <input name="estado" type="hidden" value={selectedStatus} />
+              ) : null}
+              <Search
+                aria-hidden="true"
+                className={styles.adminRequestSearchIcon}
+                size={19}
+              />
+              <TextField
+                autoComplete="off"
+                className={styles.adminRequestSearchInput}
+                defaultValue={search}
+                id="absence-request-search"
+                label="Buscar solicitudes por nombre"
+                name="nombre"
+                placeholder="Buscar por nombre…"
+                type="search"
+                visuallyHiddenLabel
+              />
+            </form>
+
+            <nav
+              aria-label="Filtrar solicitudes"
+              className={styles.adminRequestFilters}
+            >
+              {filters.map((filter) => {
+                const isActive = selectedStatus === filter.value;
+                const params = new URLSearchParams();
+
+                if (filter.value !== "all") params.set("estado", filter.value);
+                if (search) params.set("nombre", search);
+                const filterHref = params.size
+                  ? `/admin/ausencias?${params.toString()}`
+                  : "/admin/ausencias";
+
+                return (
+                  <Link
+                    aria-current={isActive ? "page" : undefined}
+                    className={styles.adminRequestFilter}
+                    data-active={isActive}
+                    href={filterHref}
+                    key={filter.value}
+                  >
+                    {filter.label}
+                    <span className={styles.adminRequestFilterCount}>
+                      {filterCounts[filter.value]}
+                    </span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          <p aria-live="polite" className={styles.adminRequestResultCount}>
+            {requests.length} solicitudes
+          </p>
+
           {requests.length ? (
             <ul className={styles.adminRequestList}>
               {requests.map((request) => (
@@ -147,7 +208,9 @@ export default async function PtoAdministrationPage({
               ))}
             </ul>
           ) : (
-            <p className={styles.muted}>No hay solicitudes con este estado.</p>
+            <p className={styles.adminRequestEmpty}>
+              No hay solicitudes con este estado.
+            </p>
           )}
         </ElevatedSurface>
       </div>

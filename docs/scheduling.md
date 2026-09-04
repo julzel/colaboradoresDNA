@@ -5,8 +5,8 @@
 The Scheduling slice is the canonical application boundary for collaborator
 work schedules. It lives under `web/src/features/scheduling/` and owns v2
 validation, effective-dated persistence, schedule resolution, and neutral work
-range calculations. A temporary v1 compatibility path remains for the existing
-employee setup UI and is isolated below.
+range calculations. Legacy v1 records remain readable, but new collaborator
+creation no longer creates or edits schedules outside this slice.
 
 The administrator scheduler is available at `/admin/horarios`. It provides a
 date-aware, searchable roster with weekly and alternating schedule previews.
@@ -17,7 +17,8 @@ derives the employee from the authenticated account, never accepts an arbitrary
 employee identifier, and identifies the active week in an alternating cycle.
 The collaborator administration detail does not duplicate schedule controls;
 administrative schedule viewing and changes live exclusively under
-`/admin/horarios`.
+`/admin/horarios`. When a collaborator has never had a schedule configured, the
+detail page shows a setup reminder that links to the canonical scheduler editor.
 
 The editor presents each week as a horizontally scrollable grid of 30-minute
 blocks from `07:00` through `17:00`, with a sticky weekday column.

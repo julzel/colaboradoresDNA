@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import type { EmployeeDirectoryItem } from "@/features/employees/view-models/employee-view";
 
@@ -16,10 +15,13 @@ export function EmployeeDirectoryMobileList({
   return (
     <ul className={styles.mobileList}>
       {items.map((item) => (
-        <ElevatedSurface as="li" className={styles.mobileItem} key={item.id}>
-          <Link className={styles.nameLink} href={`/admin/colaboradores/${item.id}`}>
-            {item.displayName}
-          </Link>
+        <li className={styles.mobileItem} key={item.id}>
+          <span className={styles.employeeIdentity}>
+            <Link className={styles.nameLink} href={`/admin/colaboradores/${item.id}`}>
+              {item.displayName}
+            </Link>
+            <small>{item.employeeCode ?? "Código pendiente"}</small>
+          </span>
           <span>{item.departmentName ?? "Sin asignar"}</span>
           <div className={styles.statusRow}>
             <StatusBadge
@@ -37,7 +39,7 @@ export function EmployeeDirectoryMobileList({
                   : "Acceso desactivado"}
             </StatusBadge>
           </div>
-        </ElevatedSurface>
+        </li>
       ))}
     </ul>
   );

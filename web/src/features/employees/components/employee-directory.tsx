@@ -63,6 +63,7 @@ function matchesSearch(item: EmployeeDirectoryItem, normalizedQuery: string) {
   return normalizeSearchText(
     [
       item.displayName,
+      item.employeeCode ?? "",
       displayValue(item.departmentName),
       displayValue(item.positionTitle),
       displayValue(item.managerName),
@@ -116,34 +117,42 @@ export function EmployeeDirectory({ items }: EmployeeDirectoryProps) {
   };
 
   return (
-    <section aria-label="Directorio de colaboradores" className={styles.directory}>
-      <div className={styles.searchBar} role="search">
-        <Search aria-hidden="true" className={styles.searchIcon} size={20} />
-        <TextField
-          autoComplete="off"
-          className={styles.searchInput}
-          id="employee-directory-search"
-          label="Buscar colaboradores"
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Buscar por nombre, departamento, puesto…"
-          type="search"
-          value={search}
-          visuallyHiddenLabel
-        />
+    <ElevatedSurface
+      aria-labelledby="employee-directory-title"
+      as="section"
+      className={styles.directory}
+    >
+      <div className={styles.directoryHeader}>
+        <h2 id="employee-directory-title">Colaboradores del equipo</h2>
       </div>
 
-      <p aria-live="polite" className={styles.muted}>
+      <div className={styles.directoryToolbar}>
+        <div className={styles.searchBar} role="search">
+          <Search aria-hidden="true" className={styles.searchIcon} size={20} />
+          <TextField
+            autoComplete="off"
+            className={styles.searchInput}
+            id="employee-directory-search"
+            label="Buscar colaboradores"
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar por nombre…"
+            type="search"
+            value={search}
+            visuallyHiddenLabel
+          />
+        </div>
+      </div>
+
+      <p aria-live="polite" className={styles.directoryResultCount}>
         {visibleItems.length}{" "}
-        {visibleItems.length === 1
-          ? "colaborador encontrado"
-          : "colaboradores encontrados"}
+        {visibleItems.length === 1 ? "colaborador" : "colaboradores"}
       </p>
 
       {visibleItems.length === 0 ? (
-        <ElevatedSurface className={styles.empty}>
-          <h2>No encontramos colaboradores</h2>
+        <div className={styles.directoryEmpty}>
+          <h3>No encontramos colaboradores</h3>
           <p className={styles.muted}>Probá con otro término de búsqueda.</p>
-        </ElevatedSurface>
+        </div>
       ) : (
         <>
           <EmployeeDirectoryTable
@@ -155,6 +164,6 @@ export function EmployeeDirectory({ items }: EmployeeDirectoryProps) {
           <EmployeeDirectoryMobileList items={visibleItems} />
         </>
       )}
-    </section>
+    </ElevatedSurface>
   );
 }

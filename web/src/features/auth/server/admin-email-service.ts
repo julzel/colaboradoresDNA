@@ -119,6 +119,9 @@ export async function updateEmployeeEmailAsAdministrator({
     Boolean(await updatePlatformUserEmail({ email: normalizedEmail, id: target.id }));
 
   let invitationSent = true;
+  const invitationWasSent =
+    target.status === "invited" &&
+    Boolean(target.invitation.lastSentAt || target.invitation.clerkInvitationId);
 
   if (target.status === "active") {
     if (!target.clerkUserId) {
@@ -144,17 +147,23 @@ export async function updateEmployeeEmailAsAdministrator({
       }
     }
 
-    invitationSent = await safelySendPlatformInvitation({
-      email: normalizedEmail,
-      platformUserId: target.id,
-    });
+    if (invitationWasSent) {
+      invitationSent = await safelySendPlatformInvitation({
+        email: normalizedEmail,
+        platformUserId: target.id,
+      });
+    }
   }
 
   await recordAuthAudit({
     action: "email_updated",
     actorClerkUserId: actor.clerkUserId,
     actorPlatformUserId: actor.platformUser.id,
-    metadata: { invitationSent, status: target.status },
+    metadata: {
+      invitationDeferred: target.status === "invited" && !invitationWasSent,
+      invitationSent,
+      status: target.status,
+    },
     targetPlatformUserId: target.id,
   });
 

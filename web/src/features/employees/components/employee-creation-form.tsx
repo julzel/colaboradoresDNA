@@ -14,30 +14,18 @@ import { createEmployeeAction } from "@/features/employees/actions/employee-acti
 import type { Department } from "@/features/employees/domain/department";
 import { birthdayMonthOptions } from "@/features/employees/domain/employee";
 import { initialEmployeeActionState } from "@/features/employees/domain/employee-action-state";
-import {
-  dayOfWeekOrder,
-  type ScheduledDay,
-} from "@/features/employees/domain/schedule";
 import type { EmployeeManagerOption } from "@/features/employees/view-models/employee-view";
 
 import styles from "./employee-management.module.css";
 import { FormErrorSummary } from "./form-error-summary";
-import { ScheduleFields } from "./schedule-fields";
 import { useGuardedForm } from "./use-guarded-form";
 
 const steps = [
   "Información personal",
   "Información laboral y acceso",
   "Asignación",
-  "Horario",
   "Revisar y crear",
 ] as const;
-
-const initialDays: ScheduledDay[] = dayOfWeekOrder.map((dayOfWeek, index) => ({
-  dayOfWeek,
-  halfDayPeriod: null,
-  workFraction: index < 5 ? 1 : 0,
-}));
 
 type EmployeeCreationFormProps = {
   departments: Department[];
@@ -74,7 +62,7 @@ export function EmployeeCreationForm({
         }
       }
     }
-    if (target === 4 && formRef.current) {
+    if (target === 3 && formRef.current) {
       const values: Record<string, string> = {};
       new FormData(formRef.current).forEach((value, key) => {
         if (typeof value === "string") values[key] = value;
@@ -188,6 +176,14 @@ export function EmployeeCreationForm({
             <option value="supervisor">Supervisor</option>
             <option value="administrator">Administrador</option>
           </SelectField>
+          <div className={styles.fullWidth}>
+            <CheckboxField
+              description="Si lo dejás pendiente, podrás enviar la invitación después desde el detalle del colaborador."
+              id="sendInvitation"
+              label="Enviar invitación de acceso ahora"
+              name="sendInvitation"
+            />
+          </div>
           <TextField
             id="employmentStartedOn"
             label="Fecha de ingreso"
@@ -241,11 +237,7 @@ export function EmployeeCreationForm({
         </div>
       </fieldset>
 
-      <fieldset data-step-section="3" hidden={step !== 3}>
-        <ScheduleFields initialDays={initialDays} />
-      </fieldset>
-
-      <section data-step-section="4" hidden={step !== 4}>
+      <section data-step-section="3" hidden={step !== 3}>
         <h2>Revisar y crear</h2>
         <dl className={styles.summary}>
           <div>
@@ -259,6 +251,14 @@ export function EmployeeCreationForm({
           <div>
             <dt>Correo personal</dt>
             <dd>{review.email}</dd>
+          </div>
+          <div>
+            <dt>Invitación de acceso</dt>
+            <dd>
+              {review.sendInvitation === "on"
+                ? "Se enviará al crear"
+                : "Pendiente para enviar después"}
+            </dd>
           </div>
           <div>
             <dt>Puesto</dt>
@@ -283,9 +283,6 @@ export function EmployeeCreationForm({
           <Button data-step="2" onClick={handleStepChange} variant="quiet">
             Cambiar asignación
           </Button>
-          <Button data-step="3" onClick={handleStepChange} variant="quiet">
-            Cambiar horario
-          </Button>
         </div>
       </section>
 
@@ -295,7 +292,7 @@ export function EmployeeCreationForm({
             Anterior
           </Button>
         )}
-        {step < 4 ? (
+        {step < 3 ? (
           <Button data-step={step + 1} onClick={handleStepChange}>
             Continuar
           </Button>
