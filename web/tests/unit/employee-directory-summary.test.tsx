@@ -15,6 +15,7 @@ const baseItem: EmployeeDirectoryItem = {
   managerName: null,
   platformRole: "collaborator",
   positionTitle: "Operaria",
+  profileImageUrl: null,
 };
 
 describe("employee directory summary", () => {

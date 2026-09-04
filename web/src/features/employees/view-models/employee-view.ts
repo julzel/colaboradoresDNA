@@ -23,6 +23,7 @@ export type EmployeeDirectoryItem = {
   managerName: string | null;
   platformRole: PlatformRole;
   positionTitle: string | null;
+  profileImageUrl: string | null;
 };
 
 export type EmployeeDirectoryResult = {

@@ -17,6 +17,7 @@ const items: EmployeeDirectoryItem[] = [
     managerName: "María Mora",
     platformRole: "collaborator",
     positionTitle: "Analista",
+    profileImageUrl: "https://img.example.com/ana.webp",
   },
   {
     accessStatus: "invited",
@@ -29,6 +30,7 @@ const items: EmployeeDirectoryItem[] = [
     managerName: "Pablo Ruiz",
     platformRole: "supervisor",
     positionTitle: "Jefatura",
+    profileImageUrl: null,
   },
   {
     accessStatus: "deactivated",
@@ -41,6 +43,7 @@ const items: EmployeeDirectoryItem[] = [
     managerName: null,
     platformRole: "administrator",
     positionTitle: "Director",
+    profileImageUrl: null,
   },
 ];
 
@@ -52,6 +55,15 @@ function tableNames() {
 }
 
 describe("employee directory", () => {
+  it("shows profile images with initials as the fallback avatar", () => {
+    const { container } = render(<EmployeeDirectory items={items} />);
+
+    expect(
+      container.querySelector('img[src="https://img.example.com/ana.webp"]'),
+    ).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("CJ")).toBeVisible();
+  });
+
   it("searches locally across the displayed collaborator fields", async () => {
     const user = userEvent.setup();
     render(<EmployeeDirectory items={items} />);

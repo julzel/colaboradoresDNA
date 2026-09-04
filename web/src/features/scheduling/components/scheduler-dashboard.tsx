@@ -1,14 +1,15 @@
 "use client";
 
-// import { CalendarDays, Search, UserRoundSearch } from "lucide-react";
-import { Search, UserRoundSearch } from "lucide-react";
+// import { CalendarDays, UserRoundSearch } from "lucide-react";
+import { UserRoundSearch } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
 // import { Button } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
-import { TextField } from "@/components/ui/form-field/form-field";
+import { ListToolbar } from "@/components/ui/list-toolbar/list-toolbar";
 import { MetricCard } from "@/components/ui/metric-card/metric-card";
+import { SearchField } from "@/components/ui/search-field/search-field";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import type {
@@ -170,21 +171,16 @@ export function SchedulerDashboard({
           </form> */}
         </div>
 
-        <div className={styles.toolbar}>
-          <div className={styles.searchBar} role="search">
-            <Search aria-hidden="true" className={styles.searchIcon} size={19} />
-            <TextField
-              autoComplete="off"
-              className={styles.searchInput}
-              id="scheduler-search"
-              label="Buscar colaboradores"
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por nombre…"
-              type="search"
-              value={search}
-              visuallyHiddenLabel
-            />
-          </div>
+        <ListToolbar className={styles.toolbar}>
+          <SearchField
+            autoComplete="off"
+            className={styles.searchBar}
+            id="scheduler-search"
+            label="Buscar colaboradores"
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar por nombre…"
+            value={search}
+          />
           <div aria-label="Filtrar horarios" className={styles.filters} role="group">
             {filters.map((item) => (
               <button
@@ -199,7 +195,7 @@ export function SchedulerDashboard({
               </button>
             ))}
           </div>
-        </div>
+        </ListToolbar>
 
         <p aria-live="polite" className={styles.resultCount}>
           {visibleItems.length}{" "}

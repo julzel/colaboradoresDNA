@@ -26,6 +26,7 @@ import { listEmployeeAssignmentHistory } from "@/features/employees/server/assig
 import { listEmployeeScheduleHistory } from "@/features/employees/server/schedule-repository";
 import type {
   EmployeeDetail,
+  EmployeeDirectoryItem,
   EmployeeDirectoryResult,
   EmployeeManagerOption,
   EmployeeSelfServiceProfileDetail,
@@ -37,6 +38,7 @@ const pageSize = 20;
 type DirectoryAggregationRow = {
   _id: ObjectId;
   accessStatus: PlatformUserStatus;
+  clerkUserId: string | null;
   departmentId: ObjectId | null;
   departmentName: string | null;
   displayName: string;
@@ -46,6 +48,17 @@ type DirectoryAggregationRow = {
   managerName: string | null;
   platformRole: PlatformRole;
   positionTitle: string | null;
+};
+
+export type EmployeeDirectoryRepositoryResult = Omit<
+  EmployeeDirectoryResult,
+  "items"
+> & {
+  items: Array<
+    Omit<EmployeeDirectoryItem, "profileImageUrl"> & {
+      clerkUserId: string | null;
+    }
+  >;
 };
 
 function todayInCostaRica() {
@@ -146,7 +159,7 @@ export async function getEmployeeSelfServiceProfileDetail(
 export async function listEmployeeDirectoryForAdministration(
   query: EmployeeDirectoryQuery,
   options: { paginate?: boolean } = {},
-): Promise<EmployeeDirectoryResult> {
+): Promise<EmployeeDirectoryRepositoryResult> {
   const database = await getDatabase();
   const today = todayInCostaRica();
   const match: Record<string, unknown> = {};
@@ -252,6 +265,7 @@ export async function listEmployeeDirectoryForAdministration(
       {
         $project: {
           accessStatus: "$access.status",
+          clerkUserId: "$access.clerkUserId",
           departmentId: "$assignment.departmentId",
           departmentName: { $arrayElemAt: ["$department.name", 0] },
           displayName: 1,
@@ -280,6 +294,7 @@ export async function listEmployeeDirectoryForAdministration(
   const total = rows.length;
   const items = rows.map((row) => ({
     accessStatus: row.accessStatus,
+    clerkUserId: row.clerkUserId ?? null,
     departmentName: row.departmentName || null,
     displayName: row.displayName,
     employeeCode: row.employeeCode ?? null,

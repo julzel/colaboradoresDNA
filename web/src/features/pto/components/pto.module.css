@@ -698,33 +698,8 @@
   line-height: var(--line-tight);
 }
 
-.adminRequestToolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-6);
-  background: var(--color-surface-subtle);
-}
-
 .adminRequestSearchBar {
-  position: relative;
   width: min(100%, 22rem);
-}
-
-.adminRequestSearchIcon {
-  position: absolute;
-  z-index: 1;
-  top: 50%;
-  left: var(--space-3);
-  color: var(--color-text-subtle);
-  pointer-events: none;
-  transform: translateY(-50%);
-}
-
-.adminRequestSearchInput {
-  padding-left: var(--space-10);
-  border-radius: var(--radius-full);
 }
 
 .adminRequestFilters {
@@ -1111,8 +1086,7 @@
     align-items: flex-start;
   }
 
-  .adminRequestHeader,
-  .adminRequestToolbar {
+  .adminRequestHeader {
     padding: var(--space-4);
   }
 

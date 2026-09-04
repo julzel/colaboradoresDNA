@@ -32,6 +32,29 @@ async function getProfileImageUrl(clerkUserId: string | null) {
   }
 }
 
+async function getProfileImageUrls(clerkUserIds: string[]) {
+  const uniqueIds = [...new Set(clerkUserIds)];
+  const imageUrls = new Map<string, string>();
+  if (uniqueIds.length === 0) return imageUrls;
+
+  try {
+    const client = await clerkClient();
+
+    for (let index = 0; index < uniqueIds.length; index += 100) {
+      const userIds = uniqueIds.slice(index, index + 100);
+      const response = await client.users.getUserList({ limit: 100, userId: userIds });
+
+      for (const user of response.data) {
+        if (user.hasImage) imageUrls.set(user.id, user.imageUrl);
+      }
+    }
+  } catch {
+    // The directory remains available with initials when Clerk cannot be reached.
+  }
+
+  return imageUrls;
+}
+
 async function getOptionalDevelopmentSummary(employeeId: string) {
   try {
     return await getDevelopmentSummaryForAdministration(employeeId);
@@ -55,9 +78,19 @@ export async function getEmployeeCreationPageData() {
 
 export async function getEmployeeDirectoryPageData() {
   await requireEmployeeAdministrator();
-  return listEmployeeDirectoryForAdministration(parseEmployeeDirectoryQuery({}), {
-    paginate: false,
-  });
+  const directory = await listEmployeeDirectoryForAdministration(
+    parseEmployeeDirectoryQuery({}),
+    { paginate: false },
+  );
+  const imageUrls = await getProfileImageUrls(
+    directory.items.flatMap(({ clerkUserId }) => (clerkUserId ? [clerkUserId] : [])),
+  );
+  const items = directory.items.map(({ clerkUserId, ...item }) => ({
+    ...item,
+    profileImageUrl: clerkUserId ? (imageUrls.get(clerkUserId) ?? null) : null,
+  }));
+
+  return { ...directory, items };
 }
 
 export async function getEmployeeDetailPageData(employeeId: string) {

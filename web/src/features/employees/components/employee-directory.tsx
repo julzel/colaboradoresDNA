@@ -1,10 +1,10 @@
 "use client";
 
-import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
-import { TextField } from "@/components/ui/form-field/form-field";
+import { ListToolbar } from "@/components/ui/list-toolbar/list-toolbar";
+import { SearchField } from "@/components/ui/search-field/search-field";
 import type { EmployeeDirectoryItem } from "@/features/employees/view-models/employee-view";
 
 import { EmployeeDirectoryMobileList } from "./employee-directory-mobile-list";
@@ -126,22 +126,17 @@ export function EmployeeDirectory({ items }: EmployeeDirectoryProps) {
         <h2 id="employee-directory-title">Colaboradores del equipo</h2>
       </div>
 
-      <div className={styles.directoryToolbar}>
-        <div className={styles.searchBar} role="search">
-          <Search aria-hidden="true" className={styles.searchIcon} size={20} />
-          <TextField
-            autoComplete="off"
-            className={styles.searchInput}
-            id="employee-directory-search"
-            label="Buscar colaboradores"
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por nombre…"
-            type="search"
-            value={search}
-            visuallyHiddenLabel
-          />
-        </div>
-      </div>
+      <ListToolbar>
+        <SearchField
+          autoComplete="off"
+          className={styles.searchBar}
+          id="employee-directory-search"
+          label="Buscar colaboradores"
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Buscar por nombre…"
+          value={search}
+        />
+      </ListToolbar>
 
       <p aria-live="polite" className={styles.directoryResultCount}>
         {visibleItems.length}{" "}
