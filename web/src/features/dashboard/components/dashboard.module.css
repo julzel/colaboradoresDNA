@@ -4,100 +4,38 @@
   padding-block: var(--space-8) var(--space-12);
 }
 
-.header,
 .sectionHeader {
+  display: flex;
   align-items: flex-start;
-  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-4);
   justify-content: space-between;
+  padding-bottom: var(--space-4);
 }
 
-.header {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(var(--space-5), 4vw, var(--space-8));
-  background:
-    radial-gradient(
-      circle at 8% 0%,
-      color-mix(in srgb, var(--color-brand) 18%, transparent),
-      transparent 44%
-    ),
-    var(--color-surface);
-}
-
-.header h1,
 .sectionHeader h2 {
   margin: 0;
 }
 
-.greeting {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-}
-
-.greetingIcon {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  color: #f59e0b;
-}
-
-.greetingIcon svg {
-  width: clamp(1.5rem, 4vw, 2rem);
-  height: clamp(1.5rem, 4vw, 2rem);
-}
-
-.greetingIcon[data-period="afternoon"] {
-  color: var(--color-brand-text);
-}
-
-.greetingIcon[data-period="night"] {
-  color: #6376d9;
-}
-
-.greetingIcon[data-period="late-night"] {
-  color: #8b5bb2;
-}
-
-.greeting h1 {
-  min-width: 0;
-  font-size: clamp(1.75rem, 5vw, 3rem);
-  letter-spacing: -0.045em;
-  line-height: 1.05;
-  text-align: center;
-}
-
-.salutation {
-  color: var(--color-brand-text);
-  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-.adminWelcome {
+.welcome {
   display: grid;
   gap: var(--space-2);
 }
 
-.adminWelcome time,
-.adminWelcome h1,
-.adminWelcome p {
+.welcome time,
+.welcome h1,
+.welcome p {
   margin: 0;
 }
 
-.adminWelcome time,
-.adminWelcome p {
+.welcome time,
+.welcome p {
   color: var(--color-text-muted);
   font-size: var(--text-sm);
   line-height: var(--line-body);
 }
 
-.adminWelcome h1 {
+.welcome h1 {
   font-size: clamp(2.5rem, 12vw, 4.5rem);
   letter-spacing: -0.06em;
   line-height: 1;
@@ -107,12 +45,6 @@
   display: grid;
   gap: var(--space-5);
   padding: var(--space-6);
-}
-
-.sectionHeader {
-  border-bottom: 1px solid var(--color-border);
-  gap: var(--space-4);
-  padding-bottom: var(--space-4);
 }
 
 .notificationHeaderActions {
@@ -201,16 +133,12 @@
 }
 
 @media (width >= 64rem) {
-  .adminWelcome {
+  .welcome {
     gap: var(--space-3);
   }
 
-  .adminWelcome h1 {
+  .welcome h1 {
     font-size: clamp(3.5rem, 7vw, 5rem);
-  }
-
-  .header {
-    display: none;
   }
 }
 
@@ -218,13 +146,6 @@
   .page {
     gap: var(--space-6);
     padding-block: 0 var(--space-8);
-  }
-
-  .header {
-    width: calc(100% + 2 * var(--workspace-content-inset-inline));
-    margin-top: calc(-1 * var(--workspace-content-inset-top));
-    margin-inline: calc(-1 * var(--workspace-content-inset-inline));
-    padding: 0.75rem;
   }
 
   .notifications {

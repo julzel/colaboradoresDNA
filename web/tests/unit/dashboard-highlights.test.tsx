@@ -58,4 +58,29 @@ describe("dashboard highlights", () => {
     expect(screen.getByText("Hoy")).toBeVisible();
     expect(screen.queryByText("Ver todos")).not.toBeInTheDocument();
   });
+
+  it("can show upcoming birthdays without the agenda for collaborators", () => {
+    render(
+      <DashboardHighlights
+        showAgenda={false}
+        today="2026-09-04"
+        todayAgenda={[entry({})]}
+        upcomingBirthdays={[
+          entry({
+            allDay: true,
+            detailHref: "/calendario/cumpleanos/persona/2026",
+            id: "birthday:persona:2026",
+            kind: "birthday",
+            startDate: "2026-09-08",
+            title: "María Fernández",
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.queryByRole("heading", { name: "Agenda de hoy" })).toBeNull();
+    expect(screen.queryByText("Reunión de equipo")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Cumpleaños próximos" })).toBeVisible();
+    expect(screen.getByRole("link", { name: /María Fernández/ })).toBeVisible();
+  });
 });

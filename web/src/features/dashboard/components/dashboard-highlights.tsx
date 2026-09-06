@@ -9,6 +9,7 @@ import { getDisplayNameInitials } from "@/features/employees/domain/employee";
 import styles from "./dashboard-highlights.module.css";
 
 type DashboardHighlightsProps = {
+  showAgenda?: boolean;
   today: string;
   todayAgenda: CalendarEntry[];
   upcomingBirthdays: CalendarEntry[];
@@ -49,56 +50,63 @@ function formatBirthdayDate(date: string, today: string) {
 }
 
 export function DashboardHighlights({
+  showAgenda = true,
   today,
   todayAgenda,
   upcomingBirthdays,
 }: DashboardHighlightsProps) {
   return (
-    <section aria-label="Resumen del día" className={styles.grid}>
-      <ElevatedSurface as="section" className={styles.panel}>
-        <header className={styles.panelHeader}>
-          <div className={styles.panelTitle}>
-            <CalendarDays aria-hidden="true" size={24} strokeWidth={1.8} />
-            <h2>Agenda de hoy</h2>
-          </div>
-          <Link className={styles.headerLink} href="/calendario?vista=agenda">
-            Ver calendario
-            <ArrowRight aria-hidden="true" size={17} />
-          </Link>
-        </header>
+    <section
+      aria-label="Resumen del día"
+      className={styles.grid}
+      data-show-agenda={showAgenda}
+    >
+      {showAgenda && (
+        <ElevatedSurface as="section" className={styles.panel}>
+          <header className={styles.panelHeader}>
+            <div className={styles.panelTitle}>
+              <CalendarDays aria-hidden="true" size={24} strokeWidth={1.8} />
+              <h2>Agenda de hoy</h2>
+            </div>
+            <Link className={styles.headerLink} href="/calendario?vista=agenda">
+              Ver calendario
+              <ArrowRight aria-hidden="true" size={17} />
+            </Link>
+          </header>
 
-        {todayAgenda.length === 0 ? (
-          <p className={styles.empty}>No hay eventos programados para hoy.</p>
-        ) : (
-          <ol className={styles.agendaList}>
-            {todayAgenda.map((entry) => (
-              <li className={styles.agendaItem} key={entry.id}>
-                <time dateTime={entry.startAt}>
-                  {entry.allDay ? "Todo el día" : formatCalendarTime(entry.startAt)}
-                </time>
-                <span aria-hidden="true" className={styles.timelineMarker} />
-                <Link
-                  className={styles.agendaCard}
-                  href={entry.detailHref ?? "/calendario"}
-                >
-                  <span className={styles.agendaDetails}>
-                    <strong>{entry.title}</strong>
-                    {entry.location && (
-                      <span className={styles.meta}>
-                        <MapPin aria-hidden="true" size={14} />
-                        {entry.location}
-                      </span>
+          {todayAgenda.length === 0 ? (
+            <p className={styles.empty}>No hay eventos programados para hoy.</p>
+          ) : (
+            <ol className={styles.agendaList}>
+              {todayAgenda.map((entry) => (
+                <li className={styles.agendaItem} key={entry.id}>
+                  <time dateTime={entry.startAt}>
+                    {entry.allDay ? "Todo el día" : formatCalendarTime(entry.startAt)}
+                  </time>
+                  <span aria-hidden="true" className={styles.timelineMarker} />
+                  <Link
+                    className={styles.agendaCard}
+                    href={entry.detailHref ?? "/calendario"}
+                  >
+                    <span className={styles.agendaDetails}>
+                      <strong>{entry.title}</strong>
+                      {entry.location && (
+                        <span className={styles.meta}>
+                          <MapPin aria-hidden="true" size={14} />
+                          {entry.location}
+                        </span>
+                      )}
+                    </span>
+                    {!entry.allDay && (
+                      <span className={styles.duration}>{formatDuration(entry)}</span>
                     )}
-                  </span>
-                  {!entry.allDay && (
-                    <span className={styles.duration}>{formatDuration(entry)}</span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ol>
-        )}
-      </ElevatedSurface>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          )}
+        </ElevatedSurface>
+      )}
 
       <ElevatedSurface as="section" className={styles.panel}>
         <header className={styles.panelHeader}>

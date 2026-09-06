@@ -194,9 +194,9 @@ describe("calendar service authorization and aggregation", () => {
       },
     ]);
 
-    const overview = await getCalendarDashboardOverview(
-      new Date("2026-09-04T15:00:00.000Z"),
-    );
+    const overview = await getCalendarDashboardOverview({
+      now: new Date("2026-09-04T15:00:00.000Z"),
+    });
 
     expect(mocks.listVisibleCalendarEvents).toHaveBeenCalledWith({
       actor: {
@@ -217,6 +217,19 @@ describe("calendar service authorization and aggregation", () => {
     expect(overview.upcomingBirthdays.map((entry) => entry.startDate)).toEqual([
       "2026-09-04",
     ]);
+  });
+
+  it("can load birthdays without querying the agenda", async () => {
+    const overview = await getCalendarDashboardOverview({
+      includeAgenda: false,
+      now: new Date("2026-09-04T15:00:00.000Z"),
+    });
+
+    expect(mocks.listVisibleCalendarEvents).not.toHaveBeenCalled();
+    expect(mocks.listBirthdayCalendarEntries).toHaveBeenCalledWith({
+      viewerRole: "supervisor",
+    });
+    expect(overview.todayAgenda).toEqual([]);
   });
 
   it("adds Costa Rican public holidays as read-only all-day entries", async () => {
