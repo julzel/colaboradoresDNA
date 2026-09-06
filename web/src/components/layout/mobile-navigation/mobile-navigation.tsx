@@ -28,7 +28,6 @@ type MobileNavigationProps = {
   displayName: string;
   profileImageUrl?: string | null;
   role: PlatformRole;
-  unreadNotificationCount?: number;
 };
 
 const visibleTabCount = 3;
@@ -37,13 +36,12 @@ export function MobileNavigation({
   displayName,
   profileImageUrl = null,
   role,
-  unreadNotificationCount = 0,
 }: MobileNavigationProps) {
   const pathname = usePathname();
   const sheetId = useId();
   const sheetRef = useRef<HTMLDialogElement>(null);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const items = getWorkspaceNavigation(role, unreadNotificationCount);
+  const items = getWorkspaceNavigation(role);
   const currentHref = getActiveNavigationHref(pathname, items);
   const visibleItems = items.slice(0, visibleTabCount);
   const overflowItems = items.slice(visibleTabCount);

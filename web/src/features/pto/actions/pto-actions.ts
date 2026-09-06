@@ -17,7 +17,7 @@ import type { PtoActionState } from "@/features/pto/domain/pto-action-state";
 import {
   adjustEmployeePtoBalance,
   cancelOwnPtoRequest,
-  createEmployeePtoDraftAsAdministrator,
+  createAndApproveEmployeePtoRequestAsAdministrator,
   createOwnPtoDraft,
   decidePtoRequestWithConfirmation,
   openEmployeePtoBalance,
@@ -111,14 +111,25 @@ export async function saveEmployeePtoDraftAction(
   try {
     const input = parseDraft(formData);
     const requestId = getText(formData, "requestId");
+    if (!requestId && getText(formData, "confirmImmediateApproval") !== "true") {
+      return {
+        message: "Confirmá que querés crear y aprobar esta ausencia.",
+        status: "warning",
+      };
+    }
     request = requestId
       ? await updateEmployeePtoDraftAsAdministrator(employeeId.data, requestId, input)
-      : await createEmployeePtoDraftAsAdministrator(employeeId.data, input);
+      : await createAndApproveEmployeePtoRequestAsAdministrator(employeeId.data, input);
   } catch (error) {
     return ptoErrorState(error);
   }
   revalidatePath("/ausencias");
+  revalidatePath("/admin/ausencias");
   revalidatePath(`/admin/colaboradores/${employeeId.data}/ausencias`);
+  if (!getText(formData, "requestId")) {
+    revalidatePath("/calendario");
+    revalidatePath("/", "layout");
+  }
   redirect(`/ausencias/${request.id}`);
 }
 

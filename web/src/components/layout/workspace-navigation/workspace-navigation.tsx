@@ -15,17 +15,15 @@ type WorkspaceNavigationProps = {
   expanded?: boolean;
   label?: string;
   role: PlatformRole;
-  unreadNotificationCount?: number;
 };
 
 export function WorkspaceNavigation({
   expanded = false,
   label = "Navegación principal",
   role,
-  unreadNotificationCount = 0,
 }: WorkspaceNavigationProps) {
   const pathname = usePathname();
-  const sections = getDesktopWorkspaceNavigationSections(role, unreadNotificationCount);
+  const sections = getDesktopWorkspaceNavigationSections(role);
   const items = sections.flatMap((section) => section.items);
   const currentHref = getActiveNavigationHref(pathname, items);
 

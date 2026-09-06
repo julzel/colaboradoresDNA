@@ -43,6 +43,7 @@
 }
 
 .notificationButton {
+  position: relative;
   display: grid;
   width: auto;
   height: auto;

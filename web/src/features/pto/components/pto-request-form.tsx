@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState, type FormEvent } from "react";
 
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
@@ -32,19 +32,31 @@ type EditablePtoRequest = {
   startDate: string;
 };
 
+export type PtoCollaboratorOption = {
+  displayName: string;
+  id: string;
+};
+
 export function PtoRequestForm({
+  collaborators,
   employeeId,
   onCancel,
   presentation = "page",
   request,
 }: {
+  collaborators?: PtoCollaboratorOption[];
   employeeId?: string;
   onCancel?: () => void;
   presentation?: "modal" | "page";
   request?: EditablePtoRequest;
 }) {
-  const saveAction = employeeId ? saveEmployeePtoDraftAction : savePtoDraftAction;
+  const isAdministratorRequest = Boolean(employeeId || collaborators);
+  const isAdministratorCreation = isAdministratorRequest && !request;
+  const saveAction = isAdministratorRequest
+    ? saveEmployeePtoDraftAction
+    : savePtoDraftAction;
   const [state, action] = useActionState(saveAction, initialPtoActionState);
+  const confirmationInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategory, setSelectedCategory] = useState<PtoCategory>(
     request?.category ?? "vacation",
   );
@@ -55,14 +67,42 @@ export function PtoRequestForm({
     : request
       ? `/ausencias/${request.id}`
       : "/ausencias";
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (!isAdministratorCreation) return;
+
+    const selectedEmployeeId = new FormData(event.currentTarget).get("employeeId");
+    const collaboratorName = collaborators?.find(
+      (collaborator) => collaborator.id === selectedEmployeeId,
+    )?.displayName;
+    const confirmed = window.confirm(
+      `La ausencia${collaboratorName ? ` de ${collaboratorName}` : ""} se aprobará inmediatamente y actualizará su saldo cuando corresponda. ¿Querés continuar?`,
+    );
+
+    if (!confirmed) {
+      event.preventDefault();
+      return;
+    }
+    if (confirmationInputRef.current) confirmationInputRef.current.value = "true";
+  }
+
   return (
     <ElevatedSurface
       action={action}
       as="form"
       className={styles.formCard}
       data-presentation={presentation}
+      onSubmit={handleSubmit}
     >
       {employeeId && <input name="employeeId" type="hidden" value={employeeId} />}
+      {isAdministratorCreation && (
+        <input
+          name="confirmImmediateApproval"
+          ref={confirmationInputRef}
+          type="hidden"
+          value="false"
+        />
+      )}
       {request && <input name="requestId" type="hidden" value={request.id} />}
       {state.message && (
         <p className={styles.error} role="alert">
@@ -70,6 +110,27 @@ export function PtoRequestForm({
         </p>
       )}
       <div className={styles.formGrid}>
+        {collaborators && (
+          <div className={styles.fullWidth}>
+            <SelectField
+              defaultValue=""
+              error={state.errors?.employeeId}
+              id="employeeId"
+              label="Colaborador"
+              name="employeeId"
+              required
+            >
+              <option disabled value="">
+                Seleccioná un colaborador
+              </option>
+              {collaborators.map((collaborator) => (
+                <option key={collaborator.id} value={collaborator.id}>
+                  {collaborator.displayName}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+        )}
         <TextField
           defaultValue={request?.startDate}
           error={state.errors?.startDate}
@@ -135,7 +196,7 @@ export function PtoRequestForm({
       </div>
       <div className={styles.actions}>
         <SubmitButton pendingLabel="Guardando…">
-          {employeeId && !request ? "Crear solicitud" : "Guardar borrador"}
+          {isAdministratorCreation ? "Crear y aprobar" : "Guardar borrador"}
         </SubmitButton>
         {onCancel ? (
           <Button onClick={onCancel} variant="quiet">
