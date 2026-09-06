@@ -97,6 +97,26 @@ there is no standalone `/ausencias/nueva` route. Saving a draft still redirects
 to the created request detail, while **Cancelar**, the close button, Escape, and
 the backdrop dismiss the modal without navigation.
 
+Administrators create an absence for another active employee from the
+**Nueva ausencia** action in `/admin/ausencias`, or from that employee's absence
+area. The administrator selects the employee and completes the same
+schedule-backed request fields. Before submission, the UI confirms that the
+absence will be approved immediately and that vacation balance will be updated
+when the selected category consumes it.
+
+Administrator-created requests do not remain as drafts or enter an approval
+queue. One repository transaction creates the approved request, freezes the
+schedule-derived duration, applies any vacation-balance change, appends its
+ledger entry, and records the creation, submission, and approval audit events.
+The employee remains the requester, while the administrator is recorded as both
+creator and decision actor. Self-approval remains prohibited.
+
+An approved proxy request is exposed through the existing dashboard
+notification projection. The employee sees an unread badge in workspace
+navigation and on the notification control until they open the notification or
+mark current notifications as read. The notification is in-app and becomes
+visible on the employee's next navigation or refresh; it is not a push message.
+
 ## Database bootstrap and migration
 
 Run `pnpm bootstrap:pto-model` from `web` with the deployment environment

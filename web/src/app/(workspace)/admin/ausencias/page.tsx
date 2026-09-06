@@ -4,6 +4,7 @@ import { ClipboardClock } from "lucide-react";
 import { Container } from "@/components/ui/container/container";
 import { MetricCard } from "@/components/ui/metric-card/metric-card";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
+import { PtoAdminRequestModal } from "@/features/pto/components/pto-admin-request-modal";
 import { PtoAdminRequestDirectory } from "@/features/pto/components/pto-admin-request-directory";
 import styles from "@/features/pto/components/pto.module.css";
 import { ptoStatusSchema } from "@/features/pto/domain/pto";
@@ -28,7 +29,11 @@ export default async function PtoAdministrationPage({
     <Container>
       <div className={styles.page}>
         <header className={styles.header}>
-          <PageSectionHeader icon={ClipboardClock} title="Ausencias" />
+          <PageSectionHeader
+            action={<PtoAdminRequestModal collaborators={dashboard.collaborators} />}
+            icon={ClipboardClock}
+            title="Ausencias"
+          />
         </header>
 
         <div className={styles.summaryGrid}>

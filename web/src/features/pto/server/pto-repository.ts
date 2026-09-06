@@ -273,6 +273,161 @@ export async function createPtoDraft(input: {
   });
 }
 
+export async function createApprovedPtoRequestAsAdministrator(input: {
+  actorPlatformUserId: string;
+  employeeId: string;
+  request: PtoDraftInput;
+  requesterPlatformUserId: string;
+}) {
+  const request = ptoDraftInputSchema.parse(input.request);
+  objectIdStringSchema.parse(input.actorPlatformUserId);
+  objectIdStringSchema.parse(input.employeeId);
+  objectIdStringSchema.parse(input.requesterPlatformUserId);
+  if (input.actorPlatformUserId === input.requesterPlatformUserId) {
+    throw new PtoDomainError("self_approval");
+  }
+
+  await ensurePtoIndexes();
+  const client = await getMongoClient();
+  const { balances, ledger, requests } = await getPtoCollections();
+
+  return client.withSession(async (session) => {
+    let created: PtoRequestDocument | null = null;
+
+    await session.withTransaction(async () => {
+      const now = new Date();
+      const requestId = new ObjectId();
+      const actorPlatformUserId = new ObjectId(input.actorPlatformUserId);
+      const employeeId = new ObjectId(input.employeeId);
+      const requesterPlatformUserId = new ObjectId(input.requesterPlatformUserId);
+      let balanceBeforeUnits: number | null = null;
+      let balanceAfterUnits: number | null = null;
+      let balanceDeltaUnits: number | null = null;
+
+      if (ptoCategoryConsumesBalance[request.category]) {
+        const balance = await balances.findOne({ employeeId }, { session });
+        if (!balance) throw new PtoDomainError("balance_missing");
+
+        balanceBeforeUnits = balance.currentBalanceUnits;
+        balanceDeltaUnits = -request.durationUnits;
+        balanceAfterUnits = balanceBeforeUnits + balanceDeltaUnits;
+        const balanceUpdate = await balances.updateOne(
+          { _id: balance._id, version: balance.version },
+          {
+            $inc: { version: 1 },
+            $set: { currentBalanceUnits: balanceAfterUnits, updatedAt: now },
+          },
+          { session },
+        );
+        if (balanceUpdate.modifiedCount !== 1) {
+          throw new PtoDomainError("stale_status");
+        }
+
+        await ledger.insertOne(
+          {
+            _id: new ObjectId(),
+            actorPlatformUserId,
+            balanceAfterUnits,
+            balanceBeforeUnits,
+            createdAt: now,
+            deltaUnits: balanceDeltaUnits,
+            employeeId,
+            kind: "approved_request",
+            reason: null,
+            requestId,
+          },
+          { session },
+        );
+      }
+
+      created = {
+        _id: requestId,
+        assignedApproverPlatformUserId: actorPlatformUserId,
+        balanceAfterUnits,
+        balanceBeforeUnits,
+        balanceDeltaUnits,
+        cancelledAt: null,
+        category: request.category,
+        collaboratorNote: request.collaboratorNote,
+        createdAt: now,
+        createdByPlatformUserId: actorPlatformUserId,
+        decidedAt: now,
+        decisionNote: null,
+        durationCalculation: request.durationCalculation ?? null,
+        durationUnits: request.durationUnits,
+        endDate: request.endDate,
+        requestedPortion: request.requestedPortion,
+        requesterEmployeeId: employeeId,
+        requesterPlatformUserId,
+        startDate: request.startDate,
+        status: "approved",
+        statusHistory: [
+          {
+            actorPlatformUserId,
+            from: null,
+            occurredAt: now,
+            to: "draft",
+          },
+          {
+            actorPlatformUserId,
+            from: "draft",
+            occurredAt: now,
+            to: "pending",
+          },
+          {
+            actorPlatformUserId,
+            from: "pending",
+            occurredAt: now,
+            to: "approved",
+          },
+        ],
+        submittedAt: now,
+        updatedAt: now,
+      };
+
+      await requests.insertOne(created, { session });
+      await recordPtoAudit({
+        action: "request_created",
+        actorPlatformUserId: input.actorPlatformUserId,
+        changedFields: [
+          "startDate",
+          "endDate",
+          "durationUnits",
+          "durationCalculation",
+          "requestedPortion",
+          "category",
+        ],
+        session,
+        targetEmployeeId: input.employeeId,
+        targetRequestId: requestId.toHexString(),
+      });
+      await recordPtoAudit({
+        action: "request_submitted",
+        actorPlatformUserId: input.actorPlatformUserId,
+        changedFields: ["status", "assignedApproverPlatformUserId", "submittedAt"],
+        session,
+        targetEmployeeId: input.employeeId,
+        targetRequestId: requestId.toHexString(),
+      });
+      await recordPtoAudit({
+        action: "request_approved",
+        actorPlatformUserId: input.actorPlatformUserId,
+        changedFields: [
+          "status",
+          "decidedAt",
+          ...(balanceDeltaUnits === null ? [] : ["balanceDeltaUnits"]),
+        ],
+        session,
+        targetEmployeeId: input.employeeId,
+        targetRequestId: requestId.toHexString(),
+      });
+    });
+
+    if (!created) throw new PtoDomainError("request_missing");
+    return toPtoRequest(created);
+  });
+}
+
 export async function updatePtoDraft(input: {
   actorPlatformUserId: string;
   administratorOverride?: boolean;

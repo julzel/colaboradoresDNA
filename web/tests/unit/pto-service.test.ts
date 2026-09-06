@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  createEmployeePtoDraftAsAdministrator,
+  createAndApproveEmployeePtoRequestAsAdministrator,
   createOwnPtoDraft,
   decideAssignedPtoRequest,
   getPtoAdministrationDashboard,
@@ -21,9 +21,11 @@ const mocks = vi.hoisted(() => ({
   findPtoBalance: vi.fn(),
   findPtoRequestById: vi.fn(),
   getPtoRequestWarnings: vi.fn(),
+  createApprovedPtoRequestAsAdministrator: vi.fn(),
   createPtoDraft: vi.fn(),
   decidePtoRequest: vi.fn(),
   listPendingPtoApprovals: vi.fn(),
+  listEmployeeDirectory: vi.fn(),
   listPtoRequestsForAdministration: vi.fn(),
   listUpcomingApprovedProxyPtoRequests: vi.fn(),
   requirePlatformUser: vi.fn(),
@@ -48,6 +50,7 @@ vi.mock("@/features/employees/server/assignment-repository", () => ({
 vi.mock("@/features/employees/server/employee-repository", () => ({
   findEmployeeById: mocks.findEmployeeById,
   findEmployeeByPlatformUserId: mocks.findEmployeeByPlatformUserId,
+  listEmployeeDirectory: mocks.listEmployeeDirectory,
 }));
 
 vi.mock("@/features/scheduling/integrations/pto-scheduling-adapter", () => ({
@@ -59,6 +62,8 @@ vi.mock("@/features/scheduling/integrations/pto-scheduling-adapter", () => ({
 vi.mock("@/features/pto/server/pto-repository", () => ({
   adjustPtoBalance: vi.fn(),
   cancelPtoRequest: vi.fn(),
+  createApprovedPtoRequestAsAdministrator:
+    mocks.createApprovedPtoRequestAsAdministrator,
   createOpeningPtoBalance: vi.fn(),
   createPtoDraft: mocks.createPtoDraft,
   decidePtoRequest: mocks.decidePtoRequest,
@@ -136,6 +141,7 @@ describe("PTO submission routing", () => {
     });
     mocks.submitPtoDraft.mockResolvedValue({ id: requestId });
     mocks.listPendingPtoApprovals.mockResolvedValue([]);
+    mocks.listEmployeeDirectory.mockResolvedValue([]);
     mocks.listPtoRequestsForAdministration.mockResolvedValue([]);
   });
 
@@ -305,11 +311,11 @@ describe("PTO submission routing", () => {
     });
   });
 
-  it("creates a request for an invited employee while recording the administrator as creator", async () => {
+  it("creates and immediately approves an administrator-authored employee request", async () => {
     const adminId = "507f1f77bcf86cd799439016";
     const input = {
       category: "vacation" as const,
-      collaboratorNote: null,
+      collaboratorNote: "Vacaciones registradas por administración",
       endDate: "2026-08-10",
       requestedPortion: "full" as const,
       startDate: "2026-08-10",
@@ -322,15 +328,12 @@ describe("PTO submission routing", () => {
       id: employeeId,
       platformUserId: actorId,
     });
-    mocks.findPlatformUserById.mockResolvedValue({
-      id: actorId,
-      status: "invited",
-    });
-    mocks.createPtoDraft.mockResolvedValue({ id: requestId });
+    mocks.findPlatformUserById.mockResolvedValue({ id: actorId, status: "invited" });
+    mocks.createApprovedPtoRequestAsAdministrator.mockResolvedValue({ id: requestId });
 
-    await createEmployeePtoDraftAsAdministrator(employeeId, input);
+    await createAndApproveEmployeePtoRequestAsAdministrator(employeeId, input);
 
-    expect(mocks.createPtoDraft).toHaveBeenCalledWith({
+    expect(mocks.createApprovedPtoRequestAsAdministrator).toHaveBeenCalledWith({
       actorPlatformUserId: adminId,
       employeeId,
       request: {
@@ -344,6 +347,30 @@ describe("PTO submission routing", () => {
       },
       requesterPlatformUserId: actorId,
     });
+  });
+
+  it("keeps self-approval prohibited for an administrator employee", async () => {
+    const input = {
+      category: "other" as const,
+      collaboratorNote: null,
+      endDate: "2026-08-10",
+      requestedPortion: "full" as const,
+      startDate: "2026-08-10",
+    };
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "administrator" },
+    });
+    mocks.findEmployeeById.mockResolvedValue({
+      employmentStatus: "active",
+      id: employeeId,
+      platformUserId: actorId,
+    });
+    mocks.findPlatformUserById.mockResolvedValue({ id: actorId, status: "active" });
+
+    await expect(
+      createAndApproveEmployeePtoRequestAsAdministrator(employeeId, input),
+    ).rejects.toMatchObject({ code: "self_approval" });
+    expect(mocks.createApprovedPtoRequestAsAdministrator).not.toHaveBeenCalled();
   });
 
   it("derives one full leave unit pair per scheduled work date", async () => {
@@ -735,6 +762,7 @@ describe("PTO submission routing", () => {
     mocks.requirePlatformUser.mockResolvedValue({
       platformUser: { id: actorId, role: "administrator" },
     });
+    mocks.findEmployeeByPlatformUserId.mockResolvedValue(null);
     mocks.findEmployeeById.mockResolvedValue({
       firstSurname: "Mora",
       givenNames: "Ana",
@@ -757,6 +785,18 @@ describe("PTO submission routing", () => {
         updatedAt: older,
       },
     ]);
+    mocks.listEmployeeDirectory.mockResolvedValue([
+      {
+        displayName: "Ana Mora",
+        employmentStatus: "active",
+        id: employeeId,
+      },
+      {
+        displayName: "Persona inactiva",
+        employmentStatus: "inactive",
+        id: "507f1f77bcf86cd799439099",
+      },
+    ]);
 
     const dashboard = await getPtoAdministrationDashboard();
 
@@ -771,6 +811,9 @@ describe("PTO submission routing", () => {
     expect(dashboard.requests.map((request) => request.status)).toEqual([
       "pending",
       "approved",
+    ]);
+    expect(dashboard.collaborators).toEqual([
+      { displayName: "Ana Mora", id: employeeId },
     ]);
   });
 });

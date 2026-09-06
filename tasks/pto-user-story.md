@@ -55,6 +55,11 @@ As an administrator, I want to create and manage a request on behalf of an
 employee so that an absence can be recorded through the same audited workflow
 when the employee cannot create it themselves.
 
+An administrator-created absence is confirmed in the UI and approved
+immediately. Creation, approval, balance accounting, ledger insertion, and audit
+history are committed atomically, and the employee receives an unread in-app
+notification badge.
+
 ## Product outcome
 
 The application provides a Spanish, mobile-first `Solicitudes de ausencia`
@@ -72,6 +77,8 @@ area in which:
 - An administrator can create a request for an active employee while preserving
   that employee as the requester for balance, routing, calendar, and
   self-approval rules.
+- An administrator-created request for another employee is approved immediately
+  after confirmation and never waits in the approval queue.
 - Upcoming approved requests created by an administrator notify the employee in
   Inicio; the employee can mark those notifications as read.
 - Clerk remains responsible only for identity; MongoDB remains authoritative

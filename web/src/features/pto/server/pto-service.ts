@@ -11,6 +11,7 @@ import { findEffectiveEmployeeAssignment } from "@/features/employees/server/ass
 import {
   findEmployeeById,
   findEmployeeByPlatformUserId,
+  listEmployeeDirectory,
 } from "@/features/employees/server/employee-repository";
 import {
   PTO_SCHEDULE_DURATION_POLICY_VERSION,
@@ -26,6 +27,7 @@ import { PtoScheduleCalculationError } from "@/features/pto/integrations/pto-sch
 import {
   adjustPtoBalance,
   cancelPtoRequest,
+  createApprovedPtoRequestAsAdministrator,
   createOpeningPtoBalance,
   createPtoDraft,
   decidePtoRequest,
@@ -180,8 +182,12 @@ export async function getPtoDashboard() {
 }
 
 export async function getPtoAdministrationDashboard() {
-  await requirePlatformUser({ roles: ["administrator"] });
-  const requests = await listPtoRequestsForAdministration();
+  const { platformUser } = await requirePlatformUser({ roles: ["administrator"] });
+  const [requests, employees, administratorEmployee] = await Promise.all([
+    listPtoRequestsForAdministration(),
+    listEmployeeDirectory(),
+    findEmployeeByPlatformUserId(platformUser.id),
+  ]);
   const views = await Promise.all(requests.map(toRequestView));
   views.sort(
     (first, second) =>
@@ -196,6 +202,16 @@ export async function getPtoAdministrationDashboard() {
       denied: views.filter((request) => request.status === "denied").length,
       pending: views.filter((request) => request.status === "pending").length,
     },
+    collaborators: employees
+      .filter(
+        (employee) =>
+          employee.employmentStatus === "active" &&
+          employee.id !== administratorEmployee?.id,
+      )
+      .map((employee) => ({
+        displayName: employee.displayName,
+        id: employee.id,
+      })),
     requests: views,
   };
 }
@@ -287,7 +303,7 @@ export async function createOwnPtoDraft(request: PtoDraftCommand) {
   });
 }
 
-export async function createEmployeePtoDraftAsAdministrator(
+export async function createAndApproveEmployeePtoRequestAsAdministrator(
   employeeId: string,
   request: PtoDraftCommand,
 ) {
@@ -297,10 +313,10 @@ export async function createEmployeePtoDraftAsAdministrator(
     throw new PtoDomainError("employee_missing");
   }
   const requester = await findPlatformUserById(employee.platformUserId);
-  if (!requester) {
-    throw new PtoDomainError("employee_missing");
-  }
-  return createPtoDraft({
+  if (!requester) throw new PtoDomainError("employee_missing");
+  if (requester.id === platformUser.id) throw new PtoDomainError("self_approval");
+
+  return createApprovedPtoRequestAsAdministrator({
     actorPlatformUserId: platformUser.id,
     employeeId: employee.id,
     request: await calculateDraftDuration(
