@@ -266,6 +266,10 @@
   .grid {
     grid-template-columns: minmax(0, 3fr) minmax(20rem, 2fr);
   }
+
+  .grid[data-show-agenda="false"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (width <= 24rem) {

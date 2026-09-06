@@ -234,17 +234,25 @@ export async function getCalendarEntries(month: string) {
   };
 }
 
-export async function getCalendarDashboardOverview(now = new Date()) {
+export async function getCalendarDashboardOverview({
+  includeAgenda = true,
+  now = new Date(),
+}: {
+  includeAgenda?: boolean;
+  now?: Date;
+} = {}) {
   const actor = await requireCalendarActor();
   const today = getTodayInCostaRica(now);
   const tomorrow = addCalendarDays(today, 1);
   const year = Number(today.slice(0, 4));
   const [events, birthdays] = await Promise.all([
-    listVisibleCalendarEvents({
-      actor,
-      endsAt: calendarDateToUtc(tomorrow),
-      startsAt: calendarDateToUtc(today),
-    }),
+    includeAgenda
+      ? listVisibleCalendarEvents({
+          actor,
+          endsAt: calendarDateToUtc(tomorrow),
+          startsAt: calendarDateToUtc(today),
+        })
+      : Promise.resolve([]),
     listBirthdayCalendarEntries({ viewerRole: actor.role }),
   ]);
 

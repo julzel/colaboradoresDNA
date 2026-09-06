@@ -1,4 +1,4 @@
-import { Bell, Clock3, Coffee, MoonStar, Sun, Sunset } from "lucide-react";
+import { Bell, Clock3 } from "lucide-react";
 
 import { AdministratorModuleLinks } from "@/components/admin/administrator-module-links/administrator-module-links";
 import { Button } from "@/components/ui/button/button";
@@ -18,8 +18,8 @@ import {
 } from "@/features/dashboard/actions/dashboard-notification-actions";
 import styles from "@/features/dashboard/components/dashboard.module.css";
 import { DashboardHighlights } from "@/features/dashboard/components/dashboard-highlights";
+import { DashboardWelcome } from "@/features/dashboard/components/dashboard-welcome";
 import { getDashboardDate } from "@/features/dashboard/domain/dashboard-date";
-import { getDashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 
 function eventSchedule(notification: {
   allDay: boolean;
@@ -43,48 +43,19 @@ function eventSchedule(notification: {
 
 export default async function HomePage() {
   const dashboard = await getCalendarDashboardNotifications();
-  const overview =
-    dashboard.role === "administrator" ? await getCalendarDashboardOverview() : null;
-  const greeting = getDashboardGreeting();
-  const firstName =
-    dashboard.displayName.trim().split(/\s+/)[0] || dashboard.displayName;
+  const showAgenda = dashboard.role !== "collaborator";
+  const overview = await getCalendarDashboardOverview({ includeAgenda: showAgenda });
   const dashboardDate = getDashboardDate();
-  const GreetingIcon = {
-    afternoon: Sunset,
-    "late-night": Coffee,
-    morning: Sun,
-    night: MoonStar,
-  }[greeting.period];
 
   return (
     <div className={styles.page}>
-      {dashboard.role === "administrator" ? (
-        <Container>
-          <header className={styles.adminWelcome}>
-            <time dateTime={dashboardDate.iso}>{dashboardDate.label}</time>
-            <h1>Hola, {firstName}</h1>
-            <p>Aquí tienes un resumen de lo más importante para hoy</p>
-          </header>
-        </Container>
-      ) : (
-        <header className={styles.header}>
-          <div className={styles.greeting}>
-            <span className={styles.greetingIcon} data-period={greeting.period}>
-              <GreetingIcon aria-hidden="true" size={25} />
-            </span>
-            <h1>
-              <span className={styles.salutation}>{greeting.label}</span>{" "}
-              <span className={styles.salutation}>{firstName}</span>
-            </h1>
-          </div>
-        </header>
-      )}
+      <Container>
+        <DashboardWelcome date={dashboardDate} displayName={dashboard.displayName} />
+      </Container>
 
-      {overview && (
-        <Container>
-          <DashboardHighlights {...overview} />
-        </Container>
-      )}
+      <Container>
+        <DashboardHighlights {...overview} showAgenda={showAgenda} />
+      </Container>
 
       {dashboard.role === "administrator" && (
         <Container>
