@@ -113,9 +113,10 @@ creator and decision actor. Self-approval remains prohibited.
 
 An approved proxy request is exposed through the existing dashboard
 notification projection. The employee sees an unread badge in workspace
-navigation and on the notification control until they open the notification or
-mark current notifications as read. The notification is in-app and becomes
-visible on the employee's next navigation or refresh; it is not a push message.
+header's bell control until they open the notification or mark current
+notifications as read. Navigation items do not duplicate this count. The
+notification is in-app and becomes visible on the employee's next navigation or
+refresh; it is not a push message.
 
 ## Database bootstrap and migration
 

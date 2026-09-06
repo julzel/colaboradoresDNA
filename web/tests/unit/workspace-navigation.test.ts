@@ -8,21 +8,15 @@ import {
 } from "@/features/navigation/workspace-navigation";
 
 describe("workspace notification badge", () => {
-  it("adds the unread count to Inicio for desktop and mobile navigation consumers", () => {
-    const items = getWorkspaceNavigation("collaborator", 3);
-
-    expect(items.find((item) => item.href === "/")?.badge).toBe("3");
-  });
-
-  it("caps a large unread count and hides a zero count", () => {
+  it("keeps notification counts out of navigation items", () => {
+    expect(getWorkspaceNavigation("collaborator").every((item) => !item.badge)).toBe(
+      true,
+    );
     expect(
-      getWorkspaceNavigation("administrator", 100).find((item) => item.href === "/")
-        ?.badge,
-    ).toBe("99+");
-    expect(
-      getWorkspaceNavigation("administrator", 0).find((item) => item.href === "/")
-        ?.badge,
-    ).toBeUndefined();
+      getDesktopWorkspaceNavigationSections("administrator")
+        .flatMap((section) => section.items)
+        .every((item) => !item.badge),
+    ).toBe(true);
   });
 });
 
@@ -51,7 +45,7 @@ describe("administrator navigation", () => {
   });
 
   it("expands administration destinations in the desktop shell", () => {
-    const sections = getDesktopWorkspaceNavigationSections("administrator", 2);
+    const sections = getDesktopWorkspaceNavigationSections("administrator");
 
     expect(sections.map((section) => section.label)).toEqual([
       "Espacio de trabajo",
@@ -64,7 +58,7 @@ describe("administrator navigation", () => {
       "/admin/desarrollo",
       "/admin/accounts",
     ]);
-    expect(sections[0]?.items[0]).toMatchObject({ badge: "2", href: "/" });
+    expect(sections[0]?.items[0]).toMatchObject({ href: "/" });
     expect(sections[0]?.items[1]).toMatchObject({
       href: "/calendario?vista=mes",
       label: "Calendario",

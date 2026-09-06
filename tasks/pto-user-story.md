@@ -213,7 +213,7 @@ administrator created on behalf of an employee:
   notifications; Inicio shows the five nearest items.
 - Read state is per platform user and notification key in
   `dashboard_notification_reads`. Unread items receive a `Nueva` treatment and
-  Inicio's navigation item shows an unread count (capped visually at `99+`).
+  the workspace header's bell shows an unread count (capped visually at `99+`).
 - Opening the notification marks it read. The user can also mark all current
   notifications as read.
 - Read state is a presentation concern only: it does not alter PTO status,
@@ -893,7 +893,7 @@ consumer without creating an unused schedule UI in this delivery.
 2. Transaction failures leave no partial balance, ledger, request, or audit
    writes.
 3. Revalidation updates request lists, approver queues, employee detail,
-   profile balance, calendar pages, and the workspace notification badge after
+   profile balance, calendar pages, and the workspace bell badge after
    relevant mutations.
 4. Formatting, linting, CSS validation, TypeScript, tests, and production build
    pass.

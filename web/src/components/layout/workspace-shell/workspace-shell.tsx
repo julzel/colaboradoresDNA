@@ -73,11 +73,7 @@ export function WorkspaceShell({
           <Logo priority tone="light" />
         </Link>
 
-        <WorkspaceNavigation
-          expanded={isSidebarExpanded}
-          role={role}
-          unreadNotificationCount={unreadNotificationCount}
-        />
+        <WorkspaceNavigation expanded={isSidebarExpanded} role={role} />
         <button
           aria-controls="workspace-sidebar"
           aria-expanded={isSidebarExpanded}
@@ -114,7 +110,6 @@ export function WorkspaceShell({
         displayName={displayName}
         profileImageUrl={profileImageUrl}
         role={role}
-        unreadNotificationCount={unreadNotificationCount}
       />
     </div>
   );

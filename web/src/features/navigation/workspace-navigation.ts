@@ -54,44 +54,22 @@ export type WorkspaceNavigationSection = {
   label: string;
 };
 
-export function getWorkspaceNavigation(
-  role: PlatformRole,
-  unreadNotificationCount = 0,
-): readonly NavigationItem[] {
-  const navigationItems = baseNavigationItems.map((item) =>
-    item.href === "/" && unreadNotificationCount > 0
-      ? {
-          ...item,
-          badge: unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount),
-        }
-      : item,
-  );
+export function getWorkspaceNavigation(role: PlatformRole): readonly NavigationItem[] {
   if (role !== "administrator") {
-    return navigationItems;
+    return baseNavigationItems;
   }
 
   return [
-    navigationItems[0]!,
+    baseNavigationItems[0]!,
     administratorNavigationItem,
-    ...navigationItems.slice(1),
+    ...baseNavigationItems.slice(1),
   ];
 }
 
 export function getDesktopWorkspaceNavigationSections(
   role: PlatformRole,
-  unreadNotificationCount = 0,
 ): readonly WorkspaceNavigationSection[] {
   const workspaceItems = baseNavigationItems.map((item) => {
-    if (item.href === "/") {
-      return unreadNotificationCount > 0
-        ? {
-            ...item,
-            badge:
-              unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount),
-          }
-        : item;
-    }
-
     return item.href === "/calendario"
       ? { ...item, href: "/calendario?vista=mes" }
       : item;

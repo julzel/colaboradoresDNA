@@ -21,13 +21,7 @@ describe("mobile workspace navigation", () => {
   });
 
   it("keeps everyday destinations directly available to collaborators", () => {
-    render(
-      <MobileNavigation
-        displayName="Julio Zeledon"
-        role="collaborator"
-        unreadNotificationCount={2}
-      />,
-    );
+    render(<MobileNavigation displayName="Julio Zeledon" role="collaborator" />);
 
     const navigation = screen.getByRole("navigation", {
       name: "Navegación móvil",
