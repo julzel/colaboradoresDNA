@@ -5,7 +5,10 @@ import { cache } from "react";
 
 import type { PlatformUser } from "@/features/auth/domain/platform-user";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
-import type { CalendarEntry } from "@/features/calendar/domain/calendar-entry";
+import {
+  compareCalendarEntries,
+  type CalendarEntry,
+} from "@/features/calendar/domain/calendar-entry";
 import type {
   CalendarEvent,
   NormalizedCalendarEventInput,
@@ -228,6 +231,34 @@ export async function getCalendarEntries(month: string) {
     ],
     eventFormOptions,
     holidays,
+  };
+}
+
+export async function getCalendarDashboardOverview(now = new Date()) {
+  const actor = await requireCalendarActor();
+  const today = getTodayInCostaRica(now);
+  const tomorrow = addCalendarDays(today, 1);
+  const year = Number(today.slice(0, 4));
+  const [events, birthdays] = await Promise.all([
+    listVisibleCalendarEvents({
+      actor,
+      endsAt: calendarDateToUtc(tomorrow),
+      startsAt: calendarDateToUtc(today),
+    }),
+    listBirthdayCalendarEntries({ viewerRole: actor.role }),
+  ]);
+
+  return {
+    today,
+    todayAgenda: events
+      .map((event) => eventToEntry(actor, event))
+      .sort(compareCalendarEntries)
+      .slice(0, 4),
+    upcomingBirthdays: birthdays
+      .map((birthday) => birthdayToEntry({ ...birthday, year }))
+      .filter((birthday) => birthday.startDate >= today)
+      .sort(compareCalendarEntries)
+      .slice(0, 4),
   };
 }
 

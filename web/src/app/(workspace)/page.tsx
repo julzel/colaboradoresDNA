@@ -8,12 +8,16 @@ import {
   formatCalendarDate,
   formatCalendarTime,
 } from "@/features/calendar/domain/calendar-utils";
-import { getCalendarDashboardNotifications } from "@/features/calendar/server/calendar-service";
+import {
+  getCalendarDashboardNotifications,
+  getCalendarDashboardOverview,
+} from "@/features/calendar/server/calendar-service";
 import {
   openDashboardNotificationAction,
   readAllDashboardNotificationsAction,
 } from "@/features/dashboard/actions/dashboard-notification-actions";
 import styles from "@/features/dashboard/components/dashboard.module.css";
+import { DashboardHighlights } from "@/features/dashboard/components/dashboard-highlights";
 import { getDashboardDate } from "@/features/dashboard/domain/dashboard-date";
 import { getDashboardGreeting } from "@/features/dashboard/domain/dashboard-greeting";
 
@@ -39,6 +43,8 @@ function eventSchedule(notification: {
 
 export default async function HomePage() {
   const dashboard = await getCalendarDashboardNotifications();
+  const overview =
+    dashboard.role === "administrator" ? await getCalendarDashboardOverview() : null;
   const greeting = getDashboardGreeting();
   const firstName =
     dashboard.displayName.trim().split(/\s+/)[0] || dashboard.displayName;
@@ -72,6 +78,12 @@ export default async function HomePage() {
             </h1>
           </div>
         </header>
+      )}
+
+      {overview && (
+        <Container>
+          <DashboardHighlights {...overview} />
+        </Container>
       )}
 
       {dashboard.role === "administrator" && (
