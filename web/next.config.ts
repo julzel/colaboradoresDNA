@@ -3,13 +3,31 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: "2mb",
+      bodySizeLimit: "9mb",
     },
   },
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {
     return [
+      {
+        source: "/tareas",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/tareas/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+        ],
+      },
       {
         source: "/admin/desarrollo/:path*",
         headers: [

@@ -1,0 +1,19 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.icon {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: var(--space-3);
+  color: var(--color-text-subtle);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.root .input {
+  padding-left: var(--space-10);
+  border-radius: var(--radius-full);
+}

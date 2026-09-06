@@ -1,0 +1,14 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-surface-subtle);
+}
+
+@media (width <= 48rem) {
+  .toolbar {
+    padding: var(--space-4);
+  }
+}

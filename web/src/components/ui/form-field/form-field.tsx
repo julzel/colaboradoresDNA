@@ -59,7 +59,7 @@ function getDescribedBy(
   return undefined;
 }
 
-type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
+export type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
   description?: string | undefined;
   error?: string | undefined;
   id: string;

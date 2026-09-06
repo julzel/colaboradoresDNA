@@ -5,6 +5,7 @@ import type { ClientSession } from "mongodb";
  * employment changes do not depend on Scheduling repository details.
  */
 export interface EmployeeSchedulingIntegration {
+  hasAnySchedule(employeeId: string): Promise<boolean>;
   truncateSchedulesForEmploymentEnd(input: {
     actorPlatformUserId: string;
     employeeId: string;

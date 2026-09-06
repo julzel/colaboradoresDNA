@@ -7,7 +7,9 @@ import { requirePlatformUser } from "@/features/auth/server/require-platform-use
 import { getDevelopmentDirectoryForAdministration } from "@/features/development/server/development-service";
 
 vi.mock("@/features/auth/server/require-platform-user", () => ({
-  requirePlatformUser: vi.fn().mockResolvedValue({ role: "administrator" }),
+  requirePlatformUser: vi.fn().mockResolvedValue({
+    platformUser: { displayName: "Julio Zeledón", role: "administrator" },
+  }),
 }));
 
 vi.mock("@/features/development/server/development-service", () => ({
@@ -30,11 +32,6 @@ describe("development administration entry points", () => {
       "href",
       "/admin/desarrollo",
     );
-    expect(
-      screen.getByText(
-        "Priorizá seguimientos, documentá 1:1 y cerrá acciones acordadas.",
-      ),
-    ).toBeInTheDocument();
     expect(requirePlatformUser).toHaveBeenCalledWith({ roles: ["administrator"] });
   });
 

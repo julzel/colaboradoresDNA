@@ -27,11 +27,6 @@ const administratorNavigationItem: NavigationItem = {
 
 const administratorWorkspaceItems: readonly NavigationItem[] = [
   {
-    href: "/admin/colaboradores",
-    icon: UsersRound,
-    label: "Colaboradores",
-  },
-  {
     href: "/admin/horarios",
     icon: CalendarClock,
     label: "Horarios",
@@ -40,6 +35,11 @@ const administratorWorkspaceItems: readonly NavigationItem[] = [
     href: "/admin/ausencias",
     icon: ClipboardCheck,
     label: "Aprobar ausencias",
+  },
+  {
+    href: "/admin/colaboradores",
+    icon: UsersRound,
+    label: "Colaboradores",
   },
   {
     href: "/admin/desarrollo",
@@ -71,9 +71,9 @@ export function getWorkspaceNavigation(
   }
 
   return [
-    ...navigationItems.slice(0, 2),
+    navigationItems[0]!,
     administratorNavigationItem,
-    ...navigationItems.slice(2),
+    ...navigationItems.slice(1),
   ];
 }
 
@@ -185,6 +185,24 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
       { href: "/", label: "Inicio" },
       { href: "/admin", label: "Administración" },
       { label: "Desarrollo" },
+    ] as const;
+  }
+
+  if (pathname === "/admin/colaboradores/nuevo") {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/colaboradores", label: "Colaboradores" },
+      { label: "Nuevo colaborador" },
+    ] as const;
+  }
+
+  if (/^\/admin\/colaboradores\/[^/]+\/?$/.test(pathname)) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/colaboradores", label: "Colaboradores" },
+      { label: "Detalle" },
     ] as const;
   }
 

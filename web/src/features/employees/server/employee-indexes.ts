@@ -49,6 +49,12 @@ const collectionIndexes: Readonly<Record<string, readonly IndexDescription[]>> =
   ],
   employees: [
     {
+      key: { employeeCode: 1 },
+      name: "employees_employee_code_unique",
+      partialFilterExpression: { employeeCode: { $type: "string" } },
+      unique: true,
+    },
+    {
       key: { platformUserId: 1 },
       name: "employees_platform_user_unique",
       unique: true,

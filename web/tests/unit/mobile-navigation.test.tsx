@@ -55,9 +55,8 @@ describe("mobile workspace navigation", () => {
       name: "Navegación móvil",
     });
     expect(mobileNavigation).toHaveTextContent("Inicio");
-    expect(mobileNavigation).toHaveTextContent("Calendario");
     expect(mobileNavigation).toHaveTextContent("Administración");
-    expect(mobileNavigation).not.toHaveTextContent("Ausencias");
+    expect(mobileNavigation).toHaveTextContent("Calendario");
     expect(screen.getByRole("link", { name: "Administración" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -69,6 +68,10 @@ describe("mobile workspace navigation", () => {
     expect(screen.getByRole("link", { name: "Ausencias" })).toHaveAttribute(
       "href",
       "/ausencias",
+    );
+    expect(screen.getByRole("link", { name: "Calendario" })).toHaveAttribute(
+      "href",
+      "/calendario",
     );
     expect(
       screen.queryByRole("link", { name: "Colaboradores" }),

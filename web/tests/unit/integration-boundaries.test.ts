@@ -52,6 +52,8 @@ describe("cross-feature integration boundaries", () => {
       "src/features/employees/integrations/employee-scheduling-port.ts",
       "src/features/pto/integrations/pto-scheduling-port.ts",
       "src/features/scheduling/integrations/scheduling-employee-port.ts",
+      "src/features/production-tasks/integrations/production-task-availability-port.ts",
+      "src/features/production-tasks/integrations/production-task-employee-port.ts",
     ];
     const violations = ports
       .filter((path) => /from ["']@\/features\/.*\/server\//.test(read(path)))

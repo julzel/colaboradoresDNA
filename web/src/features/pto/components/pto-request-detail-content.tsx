@@ -58,7 +58,6 @@ const historyStatusIcons: Record<PtoStatus, LucideIcon> = {
 };
 
 function DetailFact({
-  icon: Icon,
   label,
   value,
 }: {

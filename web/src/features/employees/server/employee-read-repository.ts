@@ -26,6 +26,7 @@ import { listEmployeeAssignmentHistory } from "@/features/employees/server/assig
 import { listEmployeeScheduleHistory } from "@/features/employees/server/schedule-repository";
 import type {
   EmployeeDetail,
+  EmployeeDirectoryItem,
   EmployeeDirectoryResult,
   EmployeeManagerOption,
   EmployeeSelfServiceProfileDetail,
@@ -37,14 +38,27 @@ const pageSize = 20;
 type DirectoryAggregationRow = {
   _id: ObjectId;
   accessStatus: PlatformUserStatus;
+  clerkUserId: string | null;
   departmentId: ObjectId | null;
   departmentName: string | null;
   displayName: string;
+  employeeCode?: string;
   employmentStartedOn: string;
   employmentStatus: EmploymentStatus;
   managerName: string | null;
   platformRole: PlatformRole;
   positionTitle: string | null;
+};
+
+export type EmployeeDirectoryRepositoryResult = Omit<
+  EmployeeDirectoryResult,
+  "items"
+> & {
+  items: Array<
+    Omit<EmployeeDirectoryItem, "profileImageUrl"> & {
+      clerkUserId: string | null;
+    }
+  >;
 };
 
 function todayInCostaRica() {
@@ -126,6 +140,7 @@ export async function getEmployeeSelfServiceProfileDetail(
       birthday: formatEmployeeBirthday(employee),
       canonicalDisplayName,
       displayName,
+      employeeCode: employee.employeeCode ?? null,
       employmentEndedOn: employee.employmentEndedOn,
       employmentStartedOn: employee.employmentStartedOn,
       employmentStatus: employee.employmentStatus,
@@ -144,7 +159,7 @@ export async function getEmployeeSelfServiceProfileDetail(
 export async function listEmployeeDirectoryForAdministration(
   query: EmployeeDirectoryQuery,
   options: { paginate?: boolean } = {},
-): Promise<EmployeeDirectoryResult> {
+): Promise<EmployeeDirectoryRepositoryResult> {
   const database = await getDatabase();
   const today = todayInCostaRica();
   const match: Record<string, unknown> = {};
@@ -250,9 +265,11 @@ export async function listEmployeeDirectoryForAdministration(
       {
         $project: {
           accessStatus: "$access.status",
+          clerkUserId: "$access.clerkUserId",
           departmentId: "$assignment.departmentId",
           departmentName: { $arrayElemAt: ["$department.name", 0] },
           displayName: 1,
+          employeeCode: 1,
           employmentStartedOn: 1,
           employmentStatus: 1,
           managerName: {
@@ -277,8 +294,10 @@ export async function listEmployeeDirectoryForAdministration(
   const total = rows.length;
   const items = rows.map((row) => ({
     accessStatus: row.accessStatus,
+    clerkUserId: row.clerkUserId ?? null,
     departmentName: row.departmentName || null,
     displayName: row.displayName,
+    employeeCode: row.employeeCode ?? null,
     employmentStartedOn: row.employmentStartedOn,
     employmentStatus: row.employmentStatus,
     id: row._id.toHexString(),
@@ -406,6 +425,9 @@ export async function getEmployeeDetailForAdministration(
     access: {
       clerkUserId: access.clerkUserId ?? null,
       email: String(access.normalizedEmail),
+      hasInvitationBeenSent: Boolean(
+        access.invitation.lastSentAt || access.invitation.clerkInvitationId,
+      ),
       invitationStatus: access.invitation.status,
       role: access.role,
       status: access.status,
@@ -437,6 +459,7 @@ export async function getEmployeeDetailForAdministration(
       employmentEndedOn: employee.employmentEndedOn,
       employmentStartedOn: employee.employmentStartedOn,
       employmentStatus: employee.employmentStatus,
+      employeeCode: employee.employeeCode ?? null,
       firstSurname: employee.firstSurname,
       givenNames: employee.givenNames,
       id: employee._id.toHexString(),

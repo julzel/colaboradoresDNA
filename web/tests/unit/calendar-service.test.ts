@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createCalendarEventForActor,
+  getCalendarDashboardOverview,
   getCalendarDashboardNotifications,
   getCalendarEntries,
   getVisibleCalendarBirthdayDetail,
@@ -154,6 +155,68 @@ describe("calendar service authorization and aggregation", () => {
       startDate: "2026-07-06",
       title: "Ana Mora",
     });
+  });
+
+  it("builds a bounded dashboard agenda with only remaining birthdays this year", async () => {
+    mocks.listVisibleCalendarEvents.mockResolvedValue([
+      {
+        allDay: false,
+        createdAt: "2026-09-01T12:00:00.000Z",
+        departmentId: null,
+        description: null,
+        endDate: "2026-09-04",
+        endLocal: "2026-09-04T10:00",
+        endsAt: "2026-09-04T16:00:00.000Z",
+        eventType: "custom",
+        id: "507f1f77bcf86cd799439099",
+        inviteePlatformUserIds: [],
+        location: "Sala principal",
+        meetingUrl: null,
+        organizerPlatformUserId: "507f1f77bcf86cd799439011",
+        startDate: "2026-09-04",
+        startLocal: "2026-09-04T09:00",
+        startsAt: "2026-09-04T15:00:00.000Z",
+        title: "Reunión de equipo",
+        updatedAt: "2026-09-01T12:00:00.000Z",
+        visibility: "company",
+      },
+    ]);
+    mocks.listBirthdayCalendarEntries.mockResolvedValue([
+      {
+        birthday: "03/09",
+        displayName: "Cumpleaños anterior",
+        employeeId: "507f1f77bcf86cd799439021",
+      },
+      {
+        birthday: "04/09",
+        displayName: "Cumpleaños de hoy",
+        employeeId: "507f1f77bcf86cd799439022",
+      },
+    ]);
+
+    const overview = await getCalendarDashboardOverview(
+      new Date("2026-09-04T15:00:00.000Z"),
+    );
+
+    expect(mocks.listVisibleCalendarEvents).toHaveBeenCalledWith({
+      actor: {
+        departmentId: "507f1f77bcf86cd799439013",
+        platformUserId: "507f1f77bcf86cd799439011",
+        role: "supervisor",
+      },
+      endsAt: new Date("2026-09-05T06:00:00.000Z"),
+      startsAt: new Date("2026-09-04T06:00:00.000Z"),
+    });
+    expect(overview.todayAgenda).toEqual([
+      expect.objectContaining({
+        location: "Sala principal",
+        startDate: "2026-09-04",
+        title: "Reunión de equipo",
+      }),
+    ]);
+    expect(overview.upcomingBirthdays.map((entry) => entry.startDate)).toEqual([
+      "2026-09-04",
+    ]);
   });
 
   it("adds Costa Rican public holidays as read-only all-day entries", async () => {

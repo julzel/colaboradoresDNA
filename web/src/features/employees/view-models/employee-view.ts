@@ -16,12 +16,14 @@ export type EmployeeDirectoryItem = {
   accessStatus: PlatformUserStatus;
   departmentName: string | null;
   displayName: string;
+  employeeCode: string | null;
   employmentStartedOn: string;
   employmentStatus: EmploymentStatus;
   id: string;
   managerName: string | null;
   platformRole: PlatformRole;
   positionTitle: string | null;
+  profileImageUrl: string | null;
 };
 
 export type EmployeeDirectoryResult = {
@@ -52,6 +54,7 @@ export type EmployeeSelfServiceProfileDetail = {
     birthday: string;
     canonicalDisplayName: string;
     displayName: string;
+    employeeCode: string | null;
     employmentEndedOn: string | null;
     employmentStartedOn: string;
     employmentStatus: EmploymentStatus;
@@ -70,6 +73,7 @@ export type EmployeeDetail = {
   access: {
     clerkUserId: string | null;
     email: string;
+    hasInvitationBeenSent: boolean;
     invitationStatus: "pending" | "accepted" | "failed";
     role: PlatformRole;
     status: PlatformUserStatus;
@@ -93,6 +97,7 @@ export type EmployeeDetail = {
     employmentEndedOn: string | null;
     employmentStartedOn: string;
     employmentStatus: EmploymentStatus;
+    employeeCode: string | null;
     firstSurname: string;
     givenNames: string;
     id: string;

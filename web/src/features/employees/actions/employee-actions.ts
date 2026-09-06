@@ -177,14 +177,6 @@ export async function createEmployeeAction(
     managerEmployeeId: nullableString(formData, "managerEmployeeId"),
     positionTitle: formData.get("positionTitle"),
   });
-  const parsedSchedule = employeeScheduleInputSchema.safeParse({
-    createdByPlatformUserId: "000000000000000000000001",
-    days: readSchedule(formData),
-    effectiveFrom: formData.get("employmentStartedOn"),
-    effectiveTo: null,
-    employeeId: "000000000000000000000002",
-    timezone: "America/Costa_Rica",
-  });
   const parsedOpeningPtoBalance = ptoOpeningBalanceDaysSchema.safeParse(
     formData.get("initialPtoBalanceDays"),
   );
@@ -193,7 +185,6 @@ export async function createEmployeeAction(
     (!parsedEmployee.success && parsedEmployee.error) ||
     (!parsedAccess.success && parsedAccess.error) ||
     (!parsedAssignment.success && parsedAssignment.error) ||
-    (!parsedSchedule.success && parsedSchedule.error) ||
     (!parsedOpeningPtoBalance.success && parsedOpeningPtoBalance.error);
   if (failure) return zodState(failure);
 
@@ -220,7 +211,7 @@ export async function createEmployeeAction(
         shareBirthdayOnCalendar: employee.shareBirthdayOnCalendar,
       },
       openingPtoBalanceUnits: parsedOpeningPtoBalance.data,
-      schedule: parsedSchedule.data,
+      sendInvitation: booleanValue(formData, "sendInvitation"),
     });
   } catch (error) {
     return domainState(error);
@@ -230,10 +221,12 @@ export async function createEmployeeAction(
   redirect(
     createFeedbackUrl(
       `/admin/colaboradores/${result.employeeId}`,
-      result.invitationSent ? "notice" : "error",
-      result.invitationSent
+      result.invitationDisposition === "failed" ? "error" : "notice",
+      result.invitationDisposition === "sent"
         ? "employee_created"
-        : "employee_created_invitation_pending",
+        : result.invitationDisposition === "deferred"
+          ? "employee_created_invitation_deferred"
+          : "employee_created_invitation_pending",
     ),
   );
 }

@@ -28,7 +28,7 @@ import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
-import { BackLink } from "@/components/ui/navigation/back-link";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { resendEmployeeInvitation } from "@/features/employees/actions/employee-actions";
 import { EmployeeDetailCard } from "@/features/employees/components/employee-detail-card";
@@ -69,7 +69,7 @@ export default async function EmployeeDetailPage({
   const { employeeId } = await params;
   const pageData = await getEmployeeDetailPageData(employeeId);
   if (!pageData) notFound();
-  const { detail, development, profileImageUrl } = pageData;
+  const { detail, development, hasSchedule, profileImageUrl } = pageData;
   const displayName = [
     detail.employee.givenNames,
     detail.employee.firstSurname,
@@ -81,9 +81,13 @@ export default async function EmployeeDetailPage({
   return (
     <Container>
       <div className={styles.page}>
-        <BackLink href="/admin/colaboradores">Volver a colaboradores</BackLink>
+        <header className={styles.header}>
+          <PageSectionHeader icon={UserRound} title="Detalle del colaborador" />
+        </header>
+
         <ElevatedSurface
-          as="header"
+          aria-labelledby="employee-name"
+          as="section"
           className={`${styles.section} ${styles.detailHeader}`}
         >
           <span aria-hidden="true" className={styles.avatar}>
@@ -95,7 +99,9 @@ export default async function EmployeeDetailPage({
           </span>
           <div>
             <p className={`eyebrow ${styles.detailEyebrow}`}>Colaborador</p>
-            <h1>{displayName}</h1>
+            <h2 className={styles.detailName} id="employee-name">
+              {displayName}
+            </h2>
             <div className={styles.statusRow}>
               <StatusBadge
                 tone={
@@ -118,7 +124,9 @@ export default async function EmployeeDetailPage({
                 {detail.access.status === "active"
                   ? "Acceso activo"
                   : detail.access.status === "invited"
-                    ? "Invitado"
+                    ? detail.access.hasInvitationBeenSent
+                      ? "Invitación pendiente"
+                      : "Sin invitación"
                     : "Acceso desactivado"}
               </StatusBadge>
             </div>
@@ -130,6 +138,28 @@ export default async function EmployeeDetailPage({
             Editar información
           </ButtonLink>
         </ElevatedSurface>
+
+        {!hasSchedule && detail.employee.employmentStatus === "active" && (
+          <ElevatedSurface
+            aria-labelledby="missing-schedule-title"
+            as="section"
+            className={styles.setupNotice}
+          >
+            <span aria-hidden="true" className={styles.setupNoticeIcon}>
+              <CalendarClock size={24} strokeWidth={2} />
+            </span>
+            <div className={styles.setupNoticeContent}>
+              <h2 id="missing-schedule-title">Horario pendiente</h2>
+              <p>
+                Este colaborador todavía no tiene un horario configurado. Podés hacerlo
+                ahora o dejarlo pendiente para más adelante.
+              </p>
+            </div>
+            <ButtonLink href={`/admin/horarios/${employeeId}`} variant="secondary">
+              Configurar horario
+            </ButtonLink>
+          </ElevatedSurface>
+        )}
 
         <div className={styles.detailGrid}>
           <EmployeeDetailCard
@@ -236,6 +266,9 @@ export default async function EmployeeDetailPage({
 
           <EmployeeDetailCard icon={Building} title="Información laboral">
             <dl className={styles.detailItemGrid}>
+              <EmployeeDetailItem icon={Badge} label="Código de colaborador">
+                {detail.employee.employeeCode ?? "Pendiente de migración"}
+              </EmployeeDetailItem>
               <EmployeeDetailItem icon={CalendarClock} label="Fecha de ingreso">
                 {detail.employee.employmentStartedOn}
               </EmployeeDetailItem>
@@ -297,8 +330,15 @@ export default async function EmployeeDetailPage({
             {detail.access.status === "invited" && (
               <form action={resendEmployeeInvitation}>
                 <input name="employeeId" type="hidden" value={employeeId} />
-                <SubmitButton pendingLabel="Reenviando…" variant="secondary">
-                  Reenviar invitación
+                <SubmitButton
+                  pendingLabel={
+                    detail.access.hasInvitationBeenSent ? "Reenviando…" : "Enviando…"
+                  }
+                  variant="secondary"
+                >
+                  {detail.access.hasInvitationBeenSent
+                    ? "Reenviar invitación"
+                    : "Enviar invitación"}
                 </SubmitButton>
               </form>
             )}

@@ -67,7 +67,6 @@
 }
 
 .controlActions > a,
-.viewSelector a,
 .createEventButton {
   min-height: 2.75rem;
 }
@@ -84,7 +83,8 @@
 .viewSelector {
   position: relative;
   display: grid;
-  min-width: 9rem;
+  width: 8rem;
+  height: var(--control-height-sm);
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   padding: var(--space-1);
@@ -111,6 +111,8 @@
 .viewSelector a {
   z-index: 1;
   width: 100%;
+  min-height: 0;
+  padding-inline: var(--space-2);
   background: transparent;
   transition: color var(--duration-fast) var(--ease-standard);
 }
@@ -494,13 +496,6 @@
   margin: var(--space-1) 0 0;
   color: var(--color-text-muted);
   font-size: var(--text-xs);
-}
-
-.selectedDayCreateButton {
-  margin-top: var(--space-4);
-  border-color: var(--color-brand);
-  color: var(--color-brand-text);
-  box-shadow: none;
 }
 
 .miniCalendarSurface,

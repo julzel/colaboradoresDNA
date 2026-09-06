@@ -14,9 +14,9 @@ repositories.
 
 Canonical schedule reads, writes, and calculations use the dedicated
 `web/src/features/scheduling/` service boundary. Employment termination reaches
-that boundary through an explicit integration port. Existing employee setup
-screens retain a temporary v1 compatibility repository until the deferred
-scheduler UI moves them to the v2 service contract.
+that boundary through an explicit integration port. Collaborator creation does
+not accept or persist a schedule; initial setup and later changes belong only to
+the Scheduling module. Legacy v1 records remain readable for compatibility.
 
 Do not import repositories directly into Client Components or treat hidden
 controls as authorization. Identification, phone, birthday, and personal email
@@ -42,6 +42,29 @@ Updating a preferred name also synchronizes the derived display name into
 audit views use the same name. Clerk is the canonical profile-image store;
 `/perfil` is the only application UI that writes it, and all application avatar
 surfaces read the same Clerk image.
+
+Every employee also has an immutable operational code such as `DNA-0042`.
+Employee creation reserves the next code from an atomic sequence, and the
+bootstrap assigns codes to legacy records in creation order. Codes are never
+derived from personal data and are never reused. They are safe for authenticated
+assignment workflows and spreadsheet imports, while internal relationships
+continue to store the employee ObjectId.
+
+## Creation, access, and deferred setup
+
+`/admin/colaboradores/nuevo` creates the employee, current assignment, opening
+vacation balance, and an internal platform-access record in one transaction. It
+does not create a schedule. After creation, the collaborator detail checks the
+Scheduling-owned setup status through the Employees/Scheduling integration port.
+While no schedule record exists, administrators see a persistent notice linking
+directly to `/admin/horarios/[employeeId]`.
+
+Sending the external access invitation is optional and is disabled by default in
+the creation form. When deferred, no Clerk invitation call is made; the detail
+page displays `Sin invitación` and offers `Enviar invitación`. Once an invitation
+has previously been sent, the same action is labeled `Reenviar invitación`.
+Changing the email of a deferred account updates only the internal access record
+and does not implicitly send an invitation.
 
 ## Scheduling boundary
 

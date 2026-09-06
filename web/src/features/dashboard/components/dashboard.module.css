@@ -79,6 +79,30 @@
   letter-spacing: 0;
 }
 
+.adminWelcome {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.adminWelcome time,
+.adminWelcome h1,
+.adminWelcome p {
+  margin: 0;
+}
+
+.adminWelcome time,
+.adminWelcome p {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+}
+
+.adminWelcome h1 {
+  font-size: clamp(2.5rem, 12vw, 4.5rem);
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
 .notifications {
   display: grid;
   gap: var(--space-5);
@@ -177,6 +201,14 @@
 }
 
 @media (width >= 64rem) {
+  .adminWelcome {
+    gap: var(--space-3);
+  }
+
+  .adminWelcome h1 {
+    font-size: clamp(3.5rem, 7vw, 5rem);
+  }
+
   .header {
     display: none;
   }

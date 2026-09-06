@@ -11,7 +11,6 @@ export function AuthControls({ displayName }: { displayName: string }) {
   return (
     <div className={styles.controls}>
       <Show when="signed-in">
-        <span className={styles.displayName}>{displayName}</span>
         <UserButton
           appearance={{
             elements: {
@@ -41,6 +40,7 @@ export function AuthControls({ displayName }: { displayName: string }) {
             <UserButton.Action label="signOut" />
           </UserButton.MenuItems>
         </UserButton>
+        <span className={styles.displayName}>{displayName}</span>
       </Show>
     </div>
   );

@@ -103,6 +103,8 @@ employee model first and then the dedicated Scheduling slice:
 cd web
 pnpm bootstrap:employee-model
 pnpm bootstrap:scheduling-model
+pnpm bootstrap:production-tasks-model -- --dry-run
+pnpm bootstrap:production-tasks-model
 ```
 
 Both commands are idempotent and should run with migration-capable credentials.
@@ -173,6 +175,9 @@ Never configure Clerk live keys or a production database on this site. See the
 - [Design system](./docs/design-system.md)
 - [Employee model](./docs/employee-model.md)
 - [Collaborator scheduling](./docs/scheduling.md)
+- [Production tasks](./docs/production-tasks.md)
+- [Production tasks PRD](./docs/production-tasks-prd.md)
+- [Production tasks roadmap](./docs/production-tasks-roadmap.md)
 - [Collaborator development PRD](./docs/collaborator-development-prd.md)
 - [Collaborator development roadmap](./docs/collaborator-development-roadmap.md)
 - [Collaborator development security boundary](./docs/collaborator-development-security.md)

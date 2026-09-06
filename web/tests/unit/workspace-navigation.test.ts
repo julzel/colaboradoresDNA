@@ -32,8 +32,8 @@ describe("administrator navigation", () => {
 
     expect(items.map((item) => item.href)).toEqual([
       "/",
-      "/calendario",
       "/admin",
+      "/calendario",
       "/ausencias",
     ]);
     expect(getActiveNavigationHref("/admin/colaboradores", items)).toBe("/admin");
@@ -58,9 +58,9 @@ describe("administrator navigation", () => {
       "Administración",
     ]);
     expect(sections[1]?.items.map((item) => item.href)).toEqual([
-      "/admin/colaboradores",
       "/admin/horarios",
       "/admin/ausencias",
+      "/admin/colaboradores",
       "/admin/desarrollo",
       "/admin/accounts",
     ]);
@@ -85,6 +85,23 @@ describe("administrator navigation", () => {
       { href: "/admin", label: "Administración" },
       { href: "/admin/horarios", label: "Horarios" },
       { label: "Colaborador" },
+    ]);
+  });
+
+  it("nests collaborator creation and detail under the directory", () => {
+    expect(getWorkspaceBreadcrumbs("/admin/colaboradores/nuevo")).toEqual([
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/colaboradores", label: "Colaboradores" },
+      { label: "Nuevo colaborador" },
+    ]);
+    expect(
+      getWorkspaceBreadcrumbs("/admin/colaboradores/507f1f77bcf86cd799439012"),
+    ).toEqual([
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/colaboradores", label: "Colaboradores" },
+      { label: "Detalle" },
     ]);
   });
 

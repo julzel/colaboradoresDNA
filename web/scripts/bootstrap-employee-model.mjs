@@ -56,6 +56,14 @@ const collectionIndexes = {
   ],
   employees: [
     {
+      key: { employeeCode: 1 },
+      options: {
+        name: "employees_employee_code_unique",
+        partialFilterExpression: { employeeCode: { $type: "string" } },
+        unique: true,
+      },
+    },
+    {
       key: { platformUserId: 1 },
       options: { name: "employees_platform_user_unique", unique: true },
     },
@@ -149,6 +157,44 @@ async function bootstrap() {
         { preferredName: { $exists: false } },
         { $set: { preferredName: null } },
       );
+
+    const employeesWithoutCode = await database
+      .collection("employees")
+      .find(
+        { employeeCode: { $exists: false } },
+        { projection: { _id: 1 }, sort: { createdAt: 1, _id: 1 } },
+      )
+      .toArray();
+    const existingCodes = await database
+      .collection("employees")
+      .find({ employeeCode: { $type: "string" } }, { projection: { employeeCode: 1 } })
+      .toArray();
+    let employeeCodeSequence = existingCodes.reduce((maximum, employee) => {
+      const match = /^DNA-(\d+)$/.exec(String(employee.employeeCode));
+      return match ? Math.max(maximum, Number(match[1])) : maximum;
+    }, 0);
+
+    for (const employee of employeesWithoutCode) {
+      employeeCodeSequence += 1;
+      await database.collection("employees").updateOne(
+        { _id: employee._id, employeeCode: { $exists: false } },
+        {
+          $set: {
+            employeeCode: `DNA-${String(employeeCodeSequence).padStart(4, "0")}`,
+          },
+        },
+      );
+    }
+
+    await database.collection("employee_sequences").updateOne(
+      { _id: "employee_code" },
+      {
+        $max: { value: employeeCodeSequence },
+        $set: { updatedAt: now },
+        $setOnInsert: { createdAt: now },
+      },
+      { upsert: true },
+    );
 
     console.info("La inicialización del modelo de colaboradores finalizó.");
   } finally {

@@ -122,7 +122,11 @@ describe("administrator email updates", () => {
       action: "email_updated",
       actorClerkUserId: "user_admin",
       actorPlatformUserId: actorId,
-      metadata: { invitationSent: true, status: "active" },
+      metadata: {
+        invitationDeferred: false,
+        invitationSent: true,
+        status: "active",
+      },
       targetPlatformUserId: targetId,
     });
   });
@@ -195,5 +199,32 @@ describe("administrator email updates", () => {
       email: "invited@example.com",
       platformUserId: targetId,
     });
+  });
+
+  it("updates a deferred account without sending an invitation", async () => {
+    mocks.findPlatformUserById.mockResolvedValue({
+      ...activeTarget(),
+      clerkUserId: null,
+      invitation: {
+        clerkInvitationId: null,
+        lastSentAt: null,
+      },
+      status: "invited",
+    });
+
+    await expect(
+      updateEmployeeEmailAsAdministrator({
+        email: "pending@example.com",
+        employeeId,
+      }),
+    ).resolves.toEqual({ changed: true, invitationSent: true });
+
+    expect(mocks.revokeInvitation).not.toHaveBeenCalled();
+    expect(mocks.safelySendPlatformInvitation).not.toHaveBeenCalled();
+    expect(mocks.recordAuthAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({ invitationDeferred: true }),
+      }),
+    );
   });
 });

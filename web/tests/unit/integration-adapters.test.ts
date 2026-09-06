@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   findInternalOneOnOneCalendarEventSummaryForAdministrator: vi.fn(),
   findOneOnOneByCalendarEventId: vi.fn(),
   getPtoRequestDetail: vi.fn(),
+  hasAnySchedule: vi.fn(),
   listUpcomingProxyPtoNotifications: vi.fn(),
   listVisibleApprovedPtoForCalendar: vi.fn(),
   resolveEmployeeWorkRange: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock("@/features/scheduling/server/scheduler-service", () => ({
 vi.mock("@/features/scheduling/server/schedule-repository", () => ({
   closeSchedulesForEmploymentEndInSession:
     mocks.closeSchedulesForEmploymentEndInSession,
+  hasAnySchedule: mocks.hasAnySchedule,
 }));
 
 describe("cross-feature integration adapters", () => {
@@ -196,5 +198,14 @@ describe("cross-feature integration adapters", () => {
     await employeeSchedulingIntegration.truncateSchedulesForEmploymentEnd(input);
 
     expect(mocks.closeSchedulesForEmploymentEndInSession).toHaveBeenCalledWith(input);
+  });
+
+  it("reports whether Scheduling has any setup for an employee", async () => {
+    mocks.hasAnySchedule.mockResolvedValue(true);
+
+    await expect(
+      employeeSchedulingIntegration.hasAnySchedule("507f1f77bcf86cd799439012"),
+    ).resolves.toBe(true);
+    expect(mocks.hasAnySchedule).toHaveBeenCalledWith("507f1f77bcf86cd799439012");
   });
 });

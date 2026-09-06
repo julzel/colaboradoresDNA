@@ -1,0 +1,300 @@
+.grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.panel {
+  min-width: 0;
+  padding: var(--space-5);
+}
+
+.panelHeader,
+.panelTitle,
+.headerLink,
+.meta {
+  display: flex;
+  align-items: center;
+}
+
+.panelHeader {
+  min-height: 2.75rem;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+.panelTitle {
+  min-width: 0;
+  gap: var(--space-3);
+}
+
+.panelTitle > svg {
+  flex: 0 0 auto;
+  color: var(--color-brand-text);
+}
+
+.panelTitle h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  letter-spacing: -0.025em;
+}
+
+.headerLink {
+  flex: 0 0 auto;
+  gap: var(--space-1);
+  color: var(--color-brand-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.headerLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.agendaList,
+.birthdayList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agendaList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.agendaItem {
+  display: grid;
+  grid-template-columns: 4.25rem 0.75rem minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.agendaItem > time {
+  align-self: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.timelineMarker {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.timelineMarker::before {
+  position: absolute;
+  top: calc(-1 * var(--space-2));
+  bottom: calc(-1 * var(--space-2));
+  width: 1px;
+  background: var(--color-border);
+  content: "";
+}
+
+.agendaItem:first-child .timelineMarker::before {
+  top: 50%;
+}
+
+.agendaItem:last-child .timelineMarker::before {
+  bottom: 50%;
+}
+
+.timelineMarker::after {
+  position: relative;
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-full);
+  background: var(--color-brand);
+  box-shadow: 0 0 0 1px var(--color-brand);
+  content: "";
+}
+
+.agendaItem:nth-child(2n) .timelineMarker::after {
+  background: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.agendaCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 3.5rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-subtle);
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.agendaDetails,
+.person {
+  display: grid;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.agendaDetails strong,
+.person strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  gap: var(--space-1);
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta svg {
+  flex: 0 0 auto;
+}
+
+.duration {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.birthdayList > li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.birthdayRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 4.5rem;
+  padding: var(--space-3) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.agendaCard:hover,
+.birthdayRow:hover {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.avatar {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+  font-size: var(--text-xs);
+  font-weight: 800;
+}
+
+.person span {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.rowIcon {
+  display: none;
+  color: var(--color-text-subtle);
+}
+
+.datePill {
+  grid-column: 3;
+  min-width: 4.75rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.datePill[data-today="true"] {
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+@media (width >= 48rem) {
+  .panel {
+    padding: var(--space-6);
+  }
+
+  .rowIcon {
+    display: block;
+  }
+
+  .birthdayRow {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+
+  .datePill {
+    grid-column: 4;
+  }
+}
+
+@media (width >= 72rem) {
+  .grid {
+    grid-template-columns: minmax(0, 3fr) minmax(20rem, 2fr);
+  }
+}
+
+@media (width <= 24rem) {
+  .headerLink {
+    font-size: 0;
+  }
+
+  .headerLink svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .agendaItem {
+    grid-template-columns: 3.75rem 0.625rem minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .agendaCard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .duration {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agendaCard,
+  .birthdayRow {
+    transition: none;
+  }
+}

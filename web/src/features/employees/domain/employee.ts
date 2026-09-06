@@ -36,6 +36,7 @@ export type EmployeeDocument = {
   employmentEndedOn: string | null;
   employmentStartedOn: string;
   employmentStatus: EmploymentStatus;
+  employeeCode?: string;
   firstSurname: string;
   givenNames: string;
   identification: EmployeeIdentification;
@@ -47,7 +48,11 @@ export type EmployeeDocument = {
   updatedAt: Date;
 };
 
-export type Employee = Omit<EmployeeDocument, "_id" | "platformUserId"> & {
+export type Employee = Omit<
+  EmployeeDocument,
+  "_id" | "platformUserId" | "employeeCode"
+> & {
+  employeeCode: string | null;
   id: string;
   platformUserId: string;
 };
@@ -66,6 +71,12 @@ export const birthdayMonthOptions = [
   { label: "Noviembre", value: 11 },
   { label: "Diciembre", value: 12 },
 ] as const;
+
+export const employeeCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^DNA-\d{4,}$/, "El código de colaborador no es válido.");
 
 const requiredNameSchema = z
   .string()
@@ -317,6 +328,14 @@ export function formatNationalId(normalizedValue: string) {
   return `${normalizedValue.slice(0, 1)}-${normalizedValue.slice(1, 5)}-${normalizedValue.slice(5, 9)}`;
 }
 
+export function formatEmployeeCode(sequence: number) {
+  if (!Number.isSafeInteger(sequence) || sequence < 1) {
+    throw new Error("Employee code sequence must be a positive safe integer.");
+  }
+
+  return `DNA-${String(sequence).padStart(4, "0")}`;
+}
+
 export function formatEmployeeDisplayName(
   employee: Pick<EmployeeDocument, "firstSurname" | "givenNames" | "secondSurname">,
 ) {
@@ -369,6 +388,7 @@ export function toEmployee(document: EmployeeDocument): Employee {
 
   return {
     ...employee,
+    employeeCode: employee.employeeCode ?? null,
     id: _id.toHexString(),
     platformUserId: platformUserId.toHexString(),
     preferredName: employee.preferredName ?? null,

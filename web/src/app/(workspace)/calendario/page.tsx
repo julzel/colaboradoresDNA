@@ -28,12 +28,7 @@ export default async function CalendarPage({
         query={query}
       />
       {query.view === "month" ? (
-        <CalendarMonth
-          canCreateEvents={canCreateEvents}
-          entries={entries}
-          eventFormOptions={eventFormOptions}
-          query={query}
-        />
+        <CalendarMonth entries={entries} query={query} />
       ) : (
         <CalendarAgenda entries={entries} month={query.month} />
       )}

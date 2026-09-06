@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { EmployeeDirectory } from "@/features/employees/components/employee-directory";
+import { EmployeeDirectorySummary } from "@/features/employees/components/employee-directory-summary";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeeDirectoryPageData } from "@/features/employees/server/employee-query-service";
 
@@ -35,6 +36,8 @@ export default async function EmployeeDirectoryPage() {
             title="Colaboradores"
           />
         </header>
+
+        <EmployeeDirectorySummary items={directory.items} />
 
         {directory.total === 0 ? (
           <ElevatedSurface as="section" className={styles.empty}>
