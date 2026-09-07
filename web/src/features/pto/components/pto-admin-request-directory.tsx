@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { FilterBar, FilterChip } from "@/components/ui/filter-bar/filter-bar";
 import { ListToolbar } from "@/components/ui/list-toolbar/list-toolbar";
 import { SearchField } from "@/components/ui/search-field/search-field";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
@@ -89,15 +90,14 @@ export function PtoAdminRequestDirectory({
           value={search}
         />
 
-        <nav aria-label="Filtrar solicitudes" className={styles.adminRequestFilters}>
+        <FilterBar aria-label="Filtrar solicitudes" as="nav">
           {filters.map((filter) => {
             const isActive = initialFilter === filter.value;
 
             return (
-              <Link
-                aria-current={isActive ? "page" : undefined}
-                className={styles.adminRequestFilter}
-                data-active={isActive}
+              <FilterChip
+                active={isActive}
+                count={filterCounts[filter.value]}
                 href={
                   filter.value === "all"
                     ? "/admin/ausencias"
@@ -106,13 +106,10 @@ export function PtoAdminRequestDirectory({
                 key={filter.value}
               >
                 {filter.label}
-                <span className={styles.adminRequestFilterCount}>
-                  {filterCounts[filter.value]}
-                </span>
-              </Link>
+              </FilterChip>
             );
           })}
-        </nav>
+        </FilterBar>
       </ListToolbar>
 
       <p aria-live="polite" className={styles.adminRequestResultCount}>

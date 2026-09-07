@@ -36,6 +36,7 @@
 }
 
 .welcome h1 {
+  color: var(--color-accent);
   font-size: clamp(2.5rem, 12vw, 4.5rem);
   letter-spacing: -0.06em;
   line-height: 1;

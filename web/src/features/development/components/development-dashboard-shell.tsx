@@ -1,17 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  MessageSquareText,
-  Search,
-  Sprout,
-  UserPlus,
-} from "lucide-react";
+import { Search, Sprout, UserPlus } from "lucide-react";
 
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { ListToolbar } from "@/components/ui/list-toolbar/list-toolbar";
+import { MetricCard } from "@/components/ui/metric-card/metric-card";
+import { SearchField } from "@/components/ui/search-field/search-field";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import {
@@ -182,7 +178,6 @@ export function DevelopmentDashboardShell({
     <section aria-labelledby="development-title" className={styles.page}>
       <header className={styles.heading}>
         <PageSectionHeader
-          eyebrow="Administración"
           icon={Sprout}
           title="Desarrollo"
           titleId="development-title"
@@ -191,42 +186,27 @@ export function DevelopmentDashboardShell({
 
       {hasEmployees ? (
         <section aria-label="Filtrar por seguimiento 1:1" className={styles.metrics}>
-          <button
-            aria-pressed={status === "due"}
-            className={styles.metric}
-            data-selected={status === "due" ? "true" : undefined}
-            data-tone="danger"
-            onClick={() => selectMetric("due")}
-            type="button"
-          >
-            <AlertCircle aria-hidden="true" />
-            <span>Seguimiento vencido</span>
-            <strong>{statusCounts.due}</strong>
-          </button>
-          <button
-            aria-pressed={status === "never"}
-            className={styles.metric}
-            data-selected={status === "never" ? "true" : undefined}
-            data-tone="warning"
-            onClick={() => selectMetric("never")}
-            type="button"
-          >
-            <MessageSquareText aria-hidden="true" />
-            <span>Sin primer 1:1</span>
-            <strong>{statusCounts.never}</strong>
-          </button>
-          <button
-            aria-pressed={status === "current"}
-            className={styles.metric}
-            data-selected={status === "current" ? "true" : undefined}
-            data-tone="success"
-            onClick={() => selectMetric("current")}
-            type="button"
-          >
-            <CheckCircle2 aria-hidden="true" />
-            <span>Al día</span>
-            <strong>{statusCounts.current}</strong>
-          </button>
+          <MetricCard
+            label="Seguimiento vencido"
+            value={statusCounts.due}
+            tone="danger"
+            selected={status === "due"}
+            onSelect={() => selectMetric("due")}
+          />
+          <MetricCard
+            label="Sin primer 1:1"
+            value={statusCounts.never}
+            tone="warning"
+            selected={status === "never"}
+            onSelect={() => selectMetric("never")}
+          />
+          <MetricCard
+            label="Al día"
+            value={statusCounts.current}
+            tone="success"
+            selected={status === "current"}
+            onSelect={() => selectMetric("current")}
+          />
         </section>
       ) : null}
 
@@ -237,63 +217,58 @@ export function DevelopmentDashboardShell({
       >
         <div className={styles.directoryHeading}>
           <div>
-            <p className="eyebrow">Seguimiento</p>
             <h2 id="development-directory-title">Colaboradores</h2>
-            <p aria-live="polite" className={styles.directoryCount}>
-              {filteredItems.length} de {directory.items.length} colaboradores
-            </p>
           </div>
-
-          {hasEmployees ? (
-            <div
-              aria-label="Filtros de colaboradores"
-              className={styles.filters}
-              role="group"
-            >
-              <label className={styles.filterField}>
-                <span className={styles.filterLabel}>Buscar</span>
-                <span className={styles.searchControl}>
-                  <Search aria-hidden="true" size={18} />
-                  <input
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Nombre, puesto o área"
-                    type="search"
-                    value={query}
-                  />
-                </span>
-              </label>
-              <label className={styles.filterField}>
-                <span className={styles.filterLabel}>Seguimiento 1:1</span>
-                <select
-                  className={styles.select}
-                  onChange={(event) =>
-                    setStatus(event.target.value as DevelopmentDirectoryStatus | "all")
-                  }
-                  value={status}
-                >
-                  <option value="all">Todos</option>
-                  <option value="due">Vencido</option>
-                  <option value="never">Sin primer 1:1</option>
-                  <option value="current">Al día</option>
-                </select>
-              </label>
-              <label className={styles.filterField}>
-                <span className={styles.filterLabel}>Estado laboral</span>
-                <select
-                  className={styles.select}
-                  onChange={(event) =>
-                    setEmployment(event.target.value as EmploymentFilter)
-                  }
-                  value={employment}
-                >
-                  <option value="active">Activos</option>
-                  <option value="all">Todos</option>
-                  <option value="inactive">Inactivos</option>
-                </select>
-              </label>
-            </div>
-          ) : null}
         </div>
+
+        {hasEmployees ? (
+          <ListToolbar
+            aria-label="Filtros de colaboradores"
+            className={styles.filters}
+            role="group"
+          >
+            <SearchField
+              className={styles.searchBar}
+              id="development-search"
+              label="Buscar"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Nombre, puesto o área"
+              value={query}
+            />
+            <label className={styles.filterField}>
+              <span className={styles.filterLabel}>Seguimiento 1:1</span>
+              <select
+                className={styles.select}
+                onChange={(event) =>
+                  setStatus(event.target.value as DevelopmentDirectoryStatus | "all")
+                }
+                value={status}
+              >
+                <option value="all">Todos</option>
+                <option value="due">Vencido</option>
+                <option value="never">Sin primer 1:1</option>
+                <option value="current">Al día</option>
+              </select>
+            </label>
+            <label className={styles.filterField}>
+              <span className={styles.filterLabel}>Estado laboral</span>
+              <select
+                className={styles.select}
+                onChange={(event) =>
+                  setEmployment(event.target.value as EmploymentFilter)
+                }
+                value={employment}
+              >
+                <option value="active">Activos</option>
+                <option value="all">Todos</option>
+                <option value="inactive">Inactivos</option>
+              </select>
+            </label>
+          </ListToolbar>
+        ) : null}
+        <p aria-live="polite" className={styles.directoryCount}>
+          {filteredItems.length} de {directory.items.length} colaboradores
+        </p>
 
         {filteredItems.length ? (
           <>
