@@ -68,6 +68,10 @@ const collectionIndexes = {
       options: { name: "pto_requests_requester_range" },
     },
     {
+      key: { requesterPlatformUserId: 1, status: 1, endDate: 1, startDate: 1 },
+      options: { name: "pto_requests_requester_notifications" },
+    },
+    {
       key: { assignedApproverPlatformUserId: 1, status: 1, submittedAt: 1 },
       options: {
         name: "pto_requests_approver_queue",

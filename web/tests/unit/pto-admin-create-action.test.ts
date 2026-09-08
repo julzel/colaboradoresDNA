@@ -29,7 +29,7 @@ function requestForm({ confirmed = false }: { confirmed?: boolean } = {}) {
   formData.set("employeeId", "507f1f77bcf86cd799439012");
   formData.set("category", "vacation");
   formData.set("collaboratorNote", "Descanso");
-  formData.set("durationDays", "1");
+  formData.set("requestedPortion", "full");
   formData.set("endDate", "2026-09-14");
   formData.set("startDate", "2026-09-14");
   formData.set("confirmImmediateApproval", confirmed ? "true" : "false");

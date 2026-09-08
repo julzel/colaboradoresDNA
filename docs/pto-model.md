@@ -104,6 +104,23 @@ schedule-backed request fields. Before submission, the UI confirms that the
 absence will be approved immediately and that vacation balance will be updated
 when the selected category consumes it.
 
+The form sends the explicit **Jornada solicitada** choice (`full` or `half`),
+not a client-supplied total. Administrator creation requires the visible
+immediate-approval confirmation checkbox; the server checks the confirmation
+independently. Validation errors retain the selected employee, dates, portion,
+category and note. Approval warnings retain the decision note for confirmation.
+
+The personal dashboard counts the requester's own pending requests. Eligible
+supervisors and administrators also see a separate **Solicitudes por aprobar**
+queue. An account without an active employee record is not offered an own-request
+form. History filters use the shared horizontally scrollable `FilterBar`.
+
+A decision note is optional for both approval and denial. An active assigned
+approver must still have the supervisor or administrator role at decision time;
+old assignments do not preserve privileges after demotion. The same restriction
+applies to detail and calendar reads. Administrators can reassign requests whose
+assigned approver is inactive or no longer has an eligible role.
+
 Administrator-created requests do not remain as drafts or enter an approval
 queue. One repository transaction creates the approved request, freezes the
 schedule-derived duration, applies any vacation-balance change, appends its
@@ -131,3 +148,25 @@ It then applies a strict MongoDB validator to `pto_requests.category` using the
 seven supported codes. Historical balance ledger entries and balance snapshots
 are intentionally not rewritten: they remain an audit record of policy applied
 when those requests were approved.
+
+## Isolated lifecycle verification
+
+From `web/`, run the opt-in real-database suite with development credentials:
+
+```bash
+RUN_PTO_LIVE=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run tests/integration/pto-mongodb.test.ts
+```
+
+The suite creates a uniquely named `dna_audit_…` database, refuses to reuse an
+existing database, seeds only synthetic identities/employees/schedules and drops
+that exact database in teardown. It never writes to the configured application
+database. The connection must permit creating/deleting this disposable database
+and support transactions. Never run this command with production credentials.
+
+Only the authentication identity boundary and Next.js navigation/cache transport
+are mocked. Actions, schemas, services, schedule resolution, MongoDB transactions,
+audit records and the vacation ledger are real. Scenarios cover draft editing,
+submission, blank-note approval/denial, cancellation, administrator proxy creation,
+self-approval rejection, all non-vacation categories, missing schedules/balances,
+concurrent approval, and revoked supervisor access. Normal `pnpm verify` skips
+this opt-in suite; it is not a substitute for an authenticated browser walkthrough.

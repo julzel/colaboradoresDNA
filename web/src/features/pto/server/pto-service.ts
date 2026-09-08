@@ -1,12 +1,12 @@
 import "server-only";
 
-import { ObjectId } from "mongodb";
-
 import type { PlatformRole, PlatformUser } from "@/features/auth/domain/platform-user";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import { findPlatformUserById } from "@/features/auth/server/platform-user-repository";
 import { getTodayInCostaRica } from "@/features/calendar/domain/calendar-utils";
 import { formatEmployeePreferredDisplayName } from "@/features/employees/domain/employee";
+import { objectIdStringSchema } from "@/features/employees/domain/shared";
+import { ptoPeopleIntegration } from "@/features/employees/integrations/pto-people-adapter";
 import { findEffectiveEmployeeAssignment } from "@/features/employees/server/assignment-repository";
 import {
   findEmployeeById,
@@ -34,7 +34,7 @@ import {
   findPtoBalance,
   findPtoRequestById,
   getPtoRequestWarnings,
-  getPtoSupportingCollections,
+  listApprovedPtoInRange,
   listPendingPtoApprovals,
   listPtoBalanceLedger,
   listPtoRequestsForAdministration,
@@ -120,6 +120,36 @@ async function toRequestView(request: PtoRequest): Promise<PtoRequestView> {
   };
 }
 
+async function toRequestViews(requests: PtoRequest[]): Promise<PtoRequestView[]> {
+  if (requests.length === 0) return [];
+  const names = await ptoPeopleIntegration.getDisplayNames({
+    employeeIds: [...new Set(requests.map((request) => request.requesterEmployeeId))],
+    platformUserIds: [
+      ...new Set(
+        requests
+          .flatMap((request) => [
+            request.assignedApproverPlatformUserId,
+            request.createdByPlatformUserId,
+          ])
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ],
+  });
+  return requests.map((request) => ({
+    ...request,
+    requesterName: names.employees.get(request.requesterEmployeeId) ?? "Colaborador",
+    approverName: request.assignedApproverPlatformUserId
+      ? (names.platformUsers.get(request.assignedApproverPlatformUserId) ?? "Usuario")
+      : request.status === "draft"
+        ? null
+        : "Cualquier administrador activo",
+    createdByName:
+      request.createdByPlatformUserId !== request.requesterPlatformUserId
+        ? (names.platformUsers.get(request.createdByPlatformUserId) ?? "Usuario")
+        : null,
+  }));
+}
+
 async function resolveSubmissionApprover({
   platformUser,
   requesterEmployeeId,
@@ -167,7 +197,9 @@ export async function getPtoDashboard() {
   const [balance, ownRequests, pendingApprovals] = await Promise.all([
     employee ? findPtoBalance(employee.id) : Promise.resolve(null),
     employee ? listPtoRequestsForRequester(employee.id) : Promise.resolve([]),
-    listPendingPtoApprovals(platformUser.id, platformUser.role === "administrator"),
+    platformUser.role === "collaborator"
+      ? Promise.resolve([])
+      : listPendingPtoApprovals(platformUser.id, platformUser.role === "administrator"),
   ]);
   return {
     balanceUnits: balance?.currentBalanceUnits ?? null,
@@ -176,8 +208,8 @@ export async function getPtoDashboard() {
     employeeName: employee
       ? formatEmployeePreferredDisplayName(employee)
       : platformUser.displayName,
-    ownRequests: await Promise.all(ownRequests.map(toRequestView)),
-    pendingApprovals: await Promise.all(pendingApprovals.map(toRequestView)),
+    ownRequests: await toRequestViews(ownRequests),
+    pendingApprovals: await toRequestViews(pendingApprovals),
   };
 }
 
@@ -188,7 +220,7 @@ export async function getPtoAdministrationDashboard() {
     listEmployeeDirectory(),
     findEmployeeByPlatformUserId(platformUser.id),
   ]);
-  const views = await Promise.all(requests.map(toRequestView));
+  const views = await toRequestViews(requests);
   views.sort(
     (first, second) =>
       Number(second.status === "pending") - Number(first.status === "pending") ||
@@ -218,10 +250,13 @@ export async function getPtoAdministrationDashboard() {
 
 export async function getPtoRequestDetail(requestId: string) {
   const { platformUser } = await requirePlatformUser();
+  if (!objectIdStringSchema.safeParse(requestId).success) return null;
   const request = await findPtoRequestById(requestId);
   if (!request) return null;
   const isRequester = request.requesterPlatformUserId === platformUser.id;
-  const isApprover = request.assignedApproverPlatformUserId === platformUser.id;
+  const isApprover =
+    platformUser.role !== "collaborator" &&
+    request.assignedApproverPlatformUserId === platformUser.id;
   const isAdministratorProxy =
     platformUser.role === "administrator" &&
     request.createdByPlatformUserId !== request.requesterPlatformUserId;
@@ -235,7 +270,7 @@ export async function getPtoRequestDetail(requestId: string) {
     platformUser.role === "administrator" &&
     request.status === "pending" &&
     request.assignedApproverPlatformUserId !== null &&
-    currentApprover?.status !== "active";
+    (currentApprover?.status !== "active" || currentApprover.role === "collaborator");
   let reassignmentOptions: Array<{ displayName: string; id: string }> = [];
   if (canReassign) {
     const requester = await findPlatformUserById(request.requesterPlatformUserId);
@@ -463,7 +498,10 @@ export async function decideAssignedPtoRequest(input: {
   decisionNote: string | null;
   requestId: string;
 }) {
-  const { platformUser } = await requirePlatformUser();
+  const { platformUser } = await requirePlatformUser({
+    roles: ["administrator", "supervisor"],
+  });
+  if (platformUser.role === "collaborator") throw new PtoDomainError("forbidden");
   return decidePtoRequest({
     actorPlatformUserId: platformUser.id,
     administratorOverride: platformUser.role === "administrator",
@@ -583,40 +621,20 @@ export async function listVisibleApprovedPtoForCalendar({
   role: PlatformRole;
   startDate: string;
 }) {
-  const { employees, requests } = await getPtoSupportingCollections();
-  const platformObjectId = new ObjectId(platformUserId);
-  const visibility =
-    role === "administrator"
-      ? {}
-      : {
-          $or: [
-            { requesterPlatformUserId: platformObjectId },
-            { assignedApproverPlatformUserId: platformObjectId },
-          ],
-        };
-  const documents = await requests
-    .find({
-      ...visibility,
-      endDate: { $gte: startDate },
-      startDate: { $lte: endDate },
-      status: "approved",
-    })
-    .sort({ startDate: 1 })
-    .toArray();
-  return Promise.all(
-    documents.map(async (request) => {
-      const employee = await employees.findOne({ _id: request.requesterEmployeeId });
-      return {
-        durationUnits: request.durationUnits,
-        endDate: request.endDate,
-        id: request._id.toHexString(),
-        requesterName: employee
-          ? formatEmployeePreferredDisplayName(employee)
-          : "Colaborador",
-        startDate: request.startDate,
-      };
-    }),
-  );
+  const requests = await listApprovedPtoInRange({
+    endDate,
+    platformUserId,
+    role,
+    startDate,
+  });
+  const views = await toRequestViews(requests);
+  return views.map(({ durationUnits, endDate, id, requesterName, startDate }) => ({
+    durationUnits,
+    endDate,
+    id,
+    requesterName,
+    startDate,
+  }));
 }
 
 export async function listUpcomingProxyPtoNotifications(

@@ -141,7 +141,8 @@ export const ptoDecisionInputSchema = z.object({
   decision: z.enum(["approved", "denied"]),
   decisionNote: z
     .string()
-    .transform((value) => (value.trim() ? normalizeHumanText(value) : null))
+    .nullish()
+    .transform((value) => (value?.trim() ? normalizeHumanText(value) : null))
     .pipe(z.string().max(1000).nullable()),
   requestId: objectIdStringSchema,
 });

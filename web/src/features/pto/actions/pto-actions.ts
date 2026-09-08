@@ -10,7 +10,6 @@ import {
   ptoAdjustmentDaysSchema,
   ptoDecisionInputSchema,
   ptoDraftCommandSchema,
-  ptoDurationDaysSchema,
   ptoOpeningBalanceDaysSchema,
 } from "@/features/pto/domain/pto";
 import type { PtoActionState } from "@/features/pto/domain/pto-action-state";
@@ -35,7 +34,7 @@ function getText(formData: FormData, name: string) {
 function zodState(error: z.ZodError): PtoActionState {
   const errors: Record<string, string> = {};
   for (const issue of error.issues) {
-    const field = issue.path.join(".").replace("durationUnits", "durationDays");
+    const field = issue.path.join(".").replace("durationUnits", "requestedPortion");
     if (!errors[field]) errors[field] = issue.message;
   }
   return {
@@ -72,13 +71,11 @@ function ptoErrorState(error: unknown): PtoActionState {
 }
 
 function parseDraft(formData: FormData) {
-  const duration = ptoDurationDaysSchema.safeParse(getText(formData, "durationDays"));
-  if (!duration.success) throw duration.error;
   return ptoDraftCommandSchema.parse({
     category: getText(formData, "category"),
     collaboratorNote: getText(formData, "collaboratorNote"),
     endDate: getText(formData, "endDate"),
-    requestedPortion: duration.data === 1 ? "half" : "full",
+    requestedPortion: getText(formData, "requestedPortion"),
     startDate: getText(formData, "startDate"),
   });
 }

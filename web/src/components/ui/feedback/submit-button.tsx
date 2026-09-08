@@ -7,16 +7,19 @@ import { Spinner } from "@/components/ui/feedback/spinner";
 
 type SubmitButtonProps = Omit<ButtonProps, "disabled" | "type"> & {
   disabled?: boolean;
+  pending?: boolean;
   pendingLabel: string;
 };
 
 export function SubmitButton({
   children,
   disabled = false,
+  pending: actionPending = false,
   pendingLabel,
   ...props
 }: SubmitButtonProps) {
-  const { pending } = useFormStatus();
+  const { pending: formPending } = useFormStatus();
+  const pending = formPending || actionPending;
 
   return (
     <Button

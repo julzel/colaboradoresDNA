@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { Suspense } from "react";
 
 import {
@@ -18,11 +18,13 @@ import {
   listAccountsForAdministration,
 } from "@/features/auth/server/account-query-service";
 import { Card, CardBody, CardHeader } from "@/components/ui/card/card";
+import { ButtonLink } from "@/components/ui/button/button";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { SelectField, TextField } from "@/components/ui/form-field/form-field";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 
-import styles from "@/app/admin/accounts/accounts.module.css";
+import styles from "@/features/auth/components/account-administration.module.css";
 
 const roleLabels: Record<PlatformRole, string> = {
   administrator: "Administrador",
@@ -136,15 +138,16 @@ export default async function AccountsPage() {
 
   return (
     <section className={styles.shell}>
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>Administración</p>
-          <h1>Cuentas y acceso</h1>
-        </div>
-        <Link className={styles.backLink} href="/admin">
-          Volver a administración
-        </Link>
-      </header>
+      <PageSectionHeader
+        eyebrow="Administración"
+        icon={ShieldCheck}
+        title="Cuentas y acceso"
+        action={
+          <ButtonLink href="/admin" variant="quiet">
+            Volver a administración
+          </ButtonLink>
+        }
+      />
 
       <div className={styles.grid}>
         <Card>

@@ -160,13 +160,15 @@ async function insertAssignmentInTransaction({
     await acquireAssignmentGraphLock(locks, session);
   }
 
-  const [employee, department] = await Promise.all([
-    employees.findOne({ _id: new ObjectId(input.employeeId) }, { session }),
-    departments.findOne(
-      { _id: new ObjectId(input.departmentId), status: "active" },
-      { session },
-    ),
-  ]);
+  // A MongoDB transaction must not run parallel operations on its session.
+  const employee = await employees.findOne(
+    { _id: new ObjectId(input.employeeId) },
+    { session },
+  );
+  const department = await departments.findOne(
+    { _id: new ObjectId(input.departmentId), status: "active" },
+    { session },
+  );
 
   if (!employee) {
     throw new EmployeeDomainError("employee_not_found");

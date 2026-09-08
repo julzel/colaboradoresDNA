@@ -39,6 +39,9 @@ pnpm test:e2e        # browser and accessibility tests
 pnpm test:coverage   # unit-test coverage report
 ```
 
+See the [repository audit and remediation report](./docs/repository-audit-2026-09-07.md)
+for findings, verification evidence, and remaining production-readiness work.
+
 ## Deploy to Netlify
 
 The Netlify site is configured as a development environment. Netlify's

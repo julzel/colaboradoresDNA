@@ -121,6 +121,10 @@
   overflow: hidden;
 }
 
+.historyFilters {
+  margin: var(--space-4);
+}
+
 .historyPanel > h2 {
   margin: 0;
   padding: var(--space-5) var(--space-4) var(--space-3);
@@ -530,7 +534,7 @@
 .requestDetailFacts > div {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(10rem, 0.85fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   align-items: center;
   padding: var(--space-4);
@@ -560,7 +564,7 @@
   margin: 0;
   font-size: var(--text-xs);
   font-weight: 650;
-  text-align: right;
+  text-align: start;
   overflow-wrap: anywhere;
 }
 
@@ -1058,6 +1062,14 @@
 }
 
 @media (width >= 40rem) {
+  .requestDetailFacts dd {
+    text-align: end;
+  }
+
+  .requestDetailFacts > div {
+    grid-template-columns: minmax(10rem, 0.85fr) minmax(0, 1.15fr);
+  }
+
   .summaryCards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { SelectField, TextAreaField } from "@/components/ui/form-field/form-field";
@@ -62,6 +62,7 @@ export function PtoCancelForm({ requestId }: { requestId: string }) {
 
 export function PtoDecisionForm({ requestId }: { requestId: string }) {
   const [state, action] = useActionState(decidePtoRequestAction, initialPtoActionState);
+  const [note, setNote] = useState("");
   return (
     <form action={action} className={styles.formCard}>
       <input name="requestId" type="hidden" value={requestId} />
@@ -73,6 +74,8 @@ export function PtoDecisionForm({ requestId }: { requestId: string }) {
         label="Nota de decisión"
         maxLength={1000}
         name="decisionNote"
+        value={note}
+        onChange={(event) => setNote(event.target.value)}
         optional
         rows={4}
       />

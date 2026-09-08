@@ -2,7 +2,10 @@ import "server-only";
 
 import { MongoServerError, ObjectId, type ClientSession, type Filter } from "mongodb";
 
-import type { PlatformUserDocument } from "@/features/auth/domain/platform-user";
+import type {
+  PlatformRole,
+  PlatformUserDocument,
+} from "@/features/auth/domain/platform-user";
 import type { EmployeeDocument } from "@/features/employees/domain/employee";
 import { objectIdStringSchema } from "@/features/employees/domain/shared";
 import {
@@ -793,7 +796,10 @@ export async function reassignPtoRequestApprover(input: {
         { _id: existing.assignedApproverPlatformUserId },
         { session },
       );
-      if (currentApprover?.status === "active") {
+      if (
+        currentApprover?.status === "active" &&
+        currentApprover.role !== "collaborator"
+      ) {
         throw new PtoDomainError("forbidden");
       }
       if (existing.requesterPlatformUserId.equals(input.approverPlatformUserId)) {
@@ -803,6 +809,7 @@ export async function reassignPtoRequestApprover(input: {
         {
           _id: new ObjectId(input.approverPlatformUserId),
           status: "active",
+          role: { $in: ["administrator", "supervisor"] },
         },
         { session },
       );
@@ -954,6 +961,38 @@ export async function getPtoRequestWarnings(request: PtoRequest) {
   };
 }
 
-export async function getPtoSupportingCollections() {
-  return getPtoCollections();
+export async function listApprovedPtoInRange({
+  endDate,
+  platformUserId,
+  role,
+  startDate,
+}: {
+  endDate: string;
+  platformUserId: string;
+  role: PlatformRole;
+  startDate: string;
+}): Promise<PtoRequest[]> {
+  const { requests } = await getPtoCollections();
+  const platformObjectId = new ObjectId(objectIdStringSchema.parse(platformUserId));
+  const visibility: Filter<PtoRequestDocument> =
+    role === "administrator"
+      ? {}
+      : role === "supervisor"
+        ? {
+            $or: [
+              { requesterPlatformUserId: platformObjectId },
+              { assignedApproverPlatformUserId: platformObjectId },
+            ],
+          }
+        : { requesterPlatformUserId: platformObjectId };
+  const documents = await requests
+    .find({
+      ...visibility,
+      endDate: { $gte: startDate },
+      startDate: { $lte: endDate },
+      status: "approved",
+    })
+    .sort({ startDate: 1 })
+    .toArray();
+  return documents.map(toPtoRequest);
 }
