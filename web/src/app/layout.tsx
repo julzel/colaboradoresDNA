@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
 import { PwaRegistration } from "@/components/pwa/pwa-registration";
+import { PwaInstallProvider } from "@/components/pwa/pwa-install-provider";
 import { ToastProvider } from "@/components/ui/feedback/toast-provider";
 
 import "@/styles/tokens.css";
@@ -132,31 +133,33 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <ClerkProvider
-          afterSignOutUrl="/sign-in"
-          appearance={{
-            variables: {
-              borderRadius: "0.75rem",
-              colorBackground: "var(--color-surface)",
-              colorForeground: "var(--color-text)",
-              colorInput: "var(--color-surface)",
-              colorInputForeground: "var(--color-text)",
-              colorMutedForeground: "var(--color-text-muted)",
-              colorPrimary: "#31c7cf",
-              fontFamily: "var(--font-sans)",
-            },
-          }}
-          localization={esCR}
-          signInFallbackRedirectUrl="/"
-          signUpFallbackRedirectUrl="/"
-        >
-          <a className="skip-link" href="#main-content">
-            Ir al contenido principal
-          </a>
-          {children}
-          <PwaRegistration />
-          <ToastProvider />
-        </ClerkProvider>
+        <PwaInstallProvider>
+          <ClerkProvider
+            afterSignOutUrl="/sign-in"
+            appearance={{
+              variables: {
+                borderRadius: "0.75rem",
+                colorBackground: "var(--color-surface)",
+                colorForeground: "var(--color-text)",
+                colorInput: "var(--color-surface)",
+                colorInputForeground: "var(--color-text)",
+                colorMutedForeground: "var(--color-text-muted)",
+                colorPrimary: "#31c7cf",
+                fontFamily: "var(--font-sans)",
+              },
+            }}
+            localization={esCR}
+            signInFallbackRedirectUrl="/"
+            signUpFallbackRedirectUrl="/"
+          >
+            <a className="skip-link" href="#main-content">
+              Ir al contenido principal
+            </a>
+            {children}
+            <PwaRegistration />
+            <ToastProvider />
+          </ClerkProvider>
+        </PwaInstallProvider>
       </body>
     </html>
   );

@@ -1,5 +1,33 @@
 # Deployment guide
 
+## PWA behavior and verification
+
+The root `PwaInstallProvider` captures installation events on public pages and
+retains them during client navigation into the workspace. Its header button uses
+that shared state; iOS users receive home-screen installation instructions.
+
+The worker registers only in production builds. Use `pnpm build` followed by
+`pnpm start` (or the HTTPS Netlify deployment) for browser verification.
+`pnpm dev` intentionally does not register it.
+
+Cache policy is implemented in `web/public/sw.js`:
+
+- Content-hashed Next.js chunks use cache-first reads.
+- Icons, images and the offline page use cached reads with background HTTP
+  revalidation, so asset updates do not require changing the worker version.
+- Online document navigations refresh the offline fallback. Private pages,
+  API responses and mutations are not stored in the worker cache.
+- Cache schema changes use a new `colaboradores-dna-` version. Activation removes
+  only older caches with that prefix, preserving other same-origin caches.
+
+Netlify serves `/sw.js` as a public asset, so `web/netlify.toml` declares its
+JavaScript content type, `nosniff`, no-store cache policy and worker CSP directly.
+The Next.js header configuration supplies the equivalent worker CSP/cache policy
+when self-hosting. After deployment, verify the actual `/sw.js` response headers,
+worker activation, offline fallback and Retry, then test installation and
+standalone authentication on the target phones. A local build does not verify
+Netlify's deployed headers.
+
 ## Netlify development-site setup
 
 Connect the repository to Netlify and configure the project with these build

@@ -19,3 +19,12 @@
 # raw .next directory as a static site.
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Netlify serves public files directly, outside Next.js response headers.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'"
+    X-Content-Type-Options = "nosniff"
