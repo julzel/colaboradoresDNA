@@ -1,8 +1,4 @@
-import type {
-  HTMLAttributes,
-  MouseEventHandler,
-  ReactNode,
-} from "react";
+import type { HTMLAttributes, MouseEventHandler, ReactNode } from "react";
 import Link from "next/link";
 
 import styles from "./filter-bar.module.css";

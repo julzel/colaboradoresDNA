@@ -5,6 +5,7 @@ import {
   ClipboardCheck,
   ClipboardClock,
   House,
+  ListOrdered,
   Settings,
   ShieldCheck,
   UsersRound,
@@ -26,6 +27,7 @@ const administratorNavigationItem: NavigationItem = {
 };
 
 const administratorWorkspaceItems: readonly NavigationItem[] = [
+  { href: "/admin/prioridades", icon: ListOrdered, label: "Mis prioridades" },
   {
     href: "/admin/horarios",
     icon: CalendarClock,
@@ -102,6 +104,13 @@ export function getActiveNavigationHref(
 }
 
 export function getWorkspaceBreadcrumbs(pathname: string) {
+  if (pathname.startsWith("/admin/prioridades")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Mis prioridades" },
+    ] as const;
+  }
   if (pathname.startsWith("/ausencias")) {
     return [
       { href: "/", label: "Inicio" },
