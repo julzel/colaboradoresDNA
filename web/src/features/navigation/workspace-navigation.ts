@@ -5,7 +5,6 @@ import {
   ClipboardCheck,
   ClipboardClock,
   House,
-  ListOrdered,
   Settings,
   ShieldCheck,
   UsersRound,
@@ -27,7 +26,6 @@ const administratorNavigationItem: NavigationItem = {
 };
 
 const administratorWorkspaceItems: readonly NavigationItem[] = [
-  { href: "/admin/prioridades", icon: ListOrdered, label: "Mis prioridades" },
   {
     href: "/admin/horarios",
     icon: CalendarClock,
