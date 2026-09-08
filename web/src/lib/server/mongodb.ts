@@ -10,6 +10,8 @@ const databaseEnvironmentSchema = z.object({
 
 const clientOptions: MongoClientOptions = {
   maxPoolSize: 10,
+  serverSelectionTimeoutMS: 10000,
+  waitQueueTimeoutMS: 10000,
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
@@ -33,7 +35,14 @@ export function getMongoClient(): Promise<MongoClient> {
 
   if (!globalThis.mongoClientPromise) {
     const client = new MongoClient(MONGODB_URI, clientOptions);
-    globalThis.mongoClientPromise = client.connect();
+    const connection = client.connect().catch(async (error: unknown) => {
+      if (globalThis.mongoClientPromise === connection) {
+        globalThis.mongoClientPromise = undefined;
+      }
+      await client.close().catch(() => undefined);
+      throw error;
+    });
+    globalThis.mongoClientPromise = connection;
   }
 
   return globalThis.mongoClientPromise;

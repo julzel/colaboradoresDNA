@@ -49,6 +49,37 @@ async function getEmployeesCollection(): Promise<Collection<EmployeeDocument>> {
   return database.collection<EmployeeDocument>("employees");
 }
 
+export async function listEmployeeDisplayNamesByIds(ids: string[]) {
+  if (ids.length === 0) return new Map<string, string>();
+  const collection = await getEmployeesCollection();
+  const employees = await collection
+    .find(
+      {
+        _id: {
+          $in: [...new Set(ids)].map(
+            (id) => new ObjectId(objectIdStringSchema.parse(id)),
+          ),
+        },
+      },
+      {
+        projection: {
+          _id: 1,
+          givenNames: 1,
+          firstSurname: 1,
+          secondSurname: 1,
+          preferredName: 1,
+        },
+      },
+    )
+    .toArray();
+  return new Map(
+    employees.map((employee) => [
+      employee._id.toHexString(),
+      formatEmployeePreferredDisplayName(employee),
+    ]),
+  );
+}
+
 function createEmployeeDocument(
   employee: NormalizedEmployeeInput,
   employeeCode: string,

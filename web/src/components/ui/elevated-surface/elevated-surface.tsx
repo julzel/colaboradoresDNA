@@ -10,7 +10,8 @@ import styles from "./elevated-surface.module.css";
 
 type ElevatedSurfaceProps = HTMLAttributes<HTMLElement> &
   Pick<FormHTMLAttributes<HTMLFormElement>, "action" | "method"> & {
-    as?: "div" | "form" | "header" | "li" | "section";
+    as?: "button" | "div" | "form" | "header" | "li" | "section";
+    type?: "button" | "submit" | "reset";
     children: ReactNode;
   };
 

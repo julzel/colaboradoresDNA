@@ -61,7 +61,10 @@ export async function ensureAuthIndexes() {
       await Promise.all(
         indexes.map((index) => collection.createIndex(index.key, index)),
       );
-    })();
+    })().catch((error: unknown) => {
+      globalThis.authIndexesPromise = undefined;
+      throw error;
+    });
   }
 
   return globalThis.authIndexesPromise;
@@ -95,6 +98,18 @@ export async function findPlatformUserById(id: string): Promise<PlatformUser | n
   const document = await collection.findOne({ _id: new ObjectId(id) });
 
   return document ? toPlatformUser(document) : null;
+}
+
+export async function listPlatformUserDisplayNamesByIds(ids: string[]) {
+  if (ids.length === 0) return new Map<string, string>();
+  const collection = await getPlatformUsersCollection();
+  const users = await collection
+    .find(
+      { _id: { $in: [...new Set(ids)].map((id) => new ObjectId(id)) } },
+      { projection: { _id: 1, displayName: 1 } },
+    )
+    .toArray();
+  return new Map(users.map((user) => [user._id.toHexString(), user.displayName]));
 }
 
 export async function claimInvitedPlatformUser({

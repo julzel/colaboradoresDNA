@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 
 // import { Button } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { FilterBar, FilterChip } from "@/components/ui/filter-bar/filter-bar";
 import { ListToolbar } from "@/components/ui/list-toolbar/list-toolbar";
 import { MetricCard } from "@/components/ui/metric-card/metric-card";
 import { SearchField } from "@/components/ui/search-field/search-field";
@@ -181,20 +182,18 @@ export function SchedulerDashboard({
             placeholder="Buscar por nombre…"
             value={search}
           />
-          <div aria-label="Filtrar horarios" className={styles.filters} role="group">
+          <FilterBar aria-label="Filtrar horarios" role="group">
             {filters.map((item) => (
-              <button
-                aria-pressed={filter === item.value}
-                className={styles.filter}
+              <FilterChip
+                active={filter === item.value}
+                count={filterCounts[item.value]}
                 key={item.value}
                 onClick={() => setFilter(item.value)}
-                type="button"
               >
                 {item.label}
-                <span className={styles.filterCount}>{filterCounts[item.value]}</span>
-              </button>
+              </FilterChip>
             ))}
-          </div>
+          </FilterBar>
         </ListToolbar>
 
         <p aria-live="polite" className={styles.resultCount}>

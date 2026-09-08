@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useRef, useState, type FormEvent } from "react";
+import { startTransition, useActionState, useState } from "react";
 
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import {
+  CheckboxField,
   SelectField,
   TextAreaField,
   TextField,
@@ -14,11 +15,7 @@ import {
   saveEmployeePtoDraftAction,
   savePtoDraftAction,
 } from "@/features/pto/actions/pto-actions";
-import {
-  formatPtoDays,
-  ptoCategoryLabels,
-  type PtoCategory,
-} from "@/features/pto/domain/pto";
+import { ptoCategoryLabels, type PtoCategory } from "@/features/pto/domain/pto";
 import { initialPtoActionState } from "@/features/pto/domain/pto-action-state";
 
 import styles from "./pto.module.css";
@@ -29,6 +26,7 @@ type EditablePtoRequest = {
   durationUnits: number;
   endDate: string;
   id: string;
+  requestedPortion?: "full" | "half";
   startDate: string;
 };
 
@@ -55,11 +53,17 @@ export function PtoRequestForm({
   const saveAction = isAdministratorRequest
     ? saveEmployeePtoDraftAction
     : savePtoDraftAction;
-  const [state, action] = useActionState(saveAction, initialPtoActionState);
-  const confirmationInputRef = useRef<HTMLInputElement>(null);
-  const [selectedCategory, setSelectedCategory] = useState<PtoCategory>(
-    request?.category ?? "vacation",
-  );
+  const [state, action, pending] = useActionState(saveAction, initialPtoActionState);
+  const [fields, setFields] = useState({
+    employeeId: employeeId ?? "",
+    startDate: request?.startDate ?? "",
+    endDate: request?.endDate ?? "",
+    requestedPortion:
+      request?.requestedPortion ?? (request?.durationUnits === 1 ? "half" : "full"),
+    category: request?.category ?? "vacation",
+    collaboratorNote: request?.collaboratorNote ?? "",
+    confirmImmediateApproval: false,
+  });
   const cancelHref = employeeId
     ? request
       ? `/ausencias/${request.id}`
@@ -68,41 +72,22 @@ export function PtoRequestForm({
       ? `/ausencias/${request.id}`
       : "/ausencias";
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    if (!isAdministratorCreation) return;
-
-    const selectedEmployeeId = new FormData(event.currentTarget).get("employeeId");
-    const collaboratorName = collaborators?.find(
-      (collaborator) => collaborator.id === selectedEmployeeId,
-    )?.displayName;
-    const confirmed = window.confirm(
-      `La ausencia${collaboratorName ? ` de ${collaboratorName}` : ""} se aprobará inmediatamente y actualizará su saldo cuando corresponda. ¿Querés continuar?`,
-    );
-
-    if (!confirmed) {
-      event.preventDefault();
-      return;
-    }
-    if (confirmationInputRef.current) confirmationInputRef.current.value = "true";
-  }
-
   return (
     <ElevatedSurface
       action={action}
       as="form"
       className={styles.formCard}
       data-presentation={presentation}
-      onSubmit={handleSubmit}
+      // Dispatch explicitly to avoid the automatic native reset on a fulfilled
+      // validation-error result. Keep the action for progressive enhancement.
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (pending) return;
+        const formData = new FormData(event.currentTarget as HTMLFormElement);
+        startTransition(() => action(formData));
+      }}
     >
       {employeeId && <input name="employeeId" type="hidden" value={employeeId} />}
-      {isAdministratorCreation && (
-        <input
-          name="confirmImmediateApproval"
-          ref={confirmationInputRef}
-          type="hidden"
-          value="false"
-        />
-      )}
       {request && <input name="requestId" type="hidden" value={request.id} />}
       {state.message && (
         <p className={styles.error} role="alert">
@@ -113,7 +98,10 @@ export function PtoRequestForm({
         {collaborators && (
           <div className={styles.fullWidth}>
             <SelectField
-              defaultValue=""
+              value={fields.employeeId}
+              onChange={(event) =>
+                setFields({ ...fields, employeeId: event.target.value })
+              }
               error={state.errors?.employeeId}
               id="employeeId"
               label="Colaborador"
@@ -132,7 +120,8 @@ export function PtoRequestForm({
           </div>
         )}
         <TextField
-          defaultValue={request?.startDate}
+          value={fields.startDate}
+          onChange={(event) => setFields({ ...fields, startDate: event.target.value })}
           error={state.errors?.startDate}
           id="startDate"
           label="Fecha inicial"
@@ -141,7 +130,9 @@ export function PtoRequestForm({
           type="date"
         />
         <TextField
-          defaultValue={request?.endDate}
+          value={fields.endDate}
+          min={fields.startDate || undefined}
+          onChange={(event) => setFields({ ...fields, endDate: event.target.value })}
           error={state.errors?.endDate}
           id="endDate"
           label="Fecha final"
@@ -149,26 +140,36 @@ export function PtoRequestForm({
           required
           type="date"
         />
-        <TextField
-          defaultValue={request ? formatPtoDays(request.durationUnits) : "1"}
-          error={state.errors?.durationDays}
-          id="durationDays"
-          label="Duración (días)"
-          min="0.5"
-          name="durationDays"
+        <SelectField
+          value={fields.requestedPortion}
+          onChange={(event) =>
+            setFields({
+              ...fields,
+              requestedPortion: event.target.value as "full" | "half",
+            })
+          }
+          error={state.errors?.requestedPortion}
+          id="requestedPortion"
+          label="Jornada solicitada"
+          description="La duración se calcula con el horario asignado. Medio día requiere una sola fecha laboral."
+          name="requestedPortion"
           required
-          step="0.5"
-          type="number"
-        />
+        >
+          <option value="full">Días completos del rango</option>
+          <option value="half">Medio día</option>
+        </SelectField>
         <div className={styles.categoryField}>
           <SelectField
-            defaultValue={selectedCategory}
+            value={fields.category}
             error={state.errors?.category}
             id="category"
             label="Categoría"
             name="category"
             onChange={(event) =>
-              setSelectedCategory(event.currentTarget.value as PtoCategory)
+              setFields({
+                ...fields,
+                category: event.currentTarget.value as PtoCategory,
+              })
             }
             required
           >
@@ -183,7 +184,10 @@ export function PtoRequestForm({
         </div>
         <div className={styles.fullWidth}>
           <TextAreaField
-            defaultValue={request?.collaboratorNote ?? ""}
+            value={fields.collaboratorNote}
+            onChange={(event) =>
+              setFields({ ...fields, collaboratorNote: event.target.value })
+            }
             error={state.errors?.collaboratorNote}
             id="collaboratorNote"
             label="Nota"
@@ -194,8 +198,22 @@ export function PtoRequestForm({
           />
         </div>
       </div>
+      {isAdministratorCreation && (
+        <CheckboxField
+          id="confirmImmediateApproval"
+          name="confirmImmediateApproval"
+          label="Confirmo que esta ausencia se aprobará inmediatamente"
+          description="Si la categoría es Vacaciones, se descontará la duración calculada del saldo del colaborador."
+          checked={fields.confirmImmediateApproval}
+          onChange={(event) =>
+            setFields({ ...fields, confirmImmediateApproval: event.target.checked })
+          }
+          required
+          value="true"
+        />
+      )}
       <div className={styles.actions}>
-        <SubmitButton pendingLabel="Guardando…">
+        <SubmitButton pending={pending} pendingLabel="Guardando…">
           {isAdministratorCreation ? "Crear y aprobar" : "Guardar borrador"}
         </SubmitButton>
         {onCancel ? (

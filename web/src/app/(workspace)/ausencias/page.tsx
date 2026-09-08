@@ -10,6 +10,7 @@ import Link from "next/link";
 
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { FilterBar, FilterChip } from "@/components/ui/filter-bar/filter-bar";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { PtoCategoryIcon } from "@/features/pto/components/pto-category-badge";
@@ -28,9 +29,10 @@ export const metadata: Metadata = { title: "Solicitudes de ausencia" };
 
 const historyFilters = [
   { label: "Todas", value: "all" },
+  { label: "Borradores", value: "draft" },
   { label: "Pendientes", value: "pending" },
   { label: "Aprobadas", value: "approved" },
-  { label: "Rechazadas", value: "denied" },
+  { label: "Denegadas", value: "denied" },
   { label: "Canceladas", value: "cancelled" },
 ] as const;
 
@@ -107,7 +109,7 @@ export default async function PtoDashboardPage({
       <div className={styles.page}>
         <header className={styles.header}>
           <PageSectionHeader
-            action={<PtoRequestModal />}
+            action={dashboard.canRequest ? <PtoRequestModal /> : undefined}
             icon={ClipboardClock}
             title="Ausencias"
           />
@@ -142,31 +144,67 @@ export default async function PtoDashboardPage({
             <div className={styles.summaryCardContent}>
               <h2>Solicitudes pendientes</h2>
               <p className={styles.summaryMetric}>
-                <strong>{dashboard.pendingApprovals.length}</strong>
-                <span>
-                  {dashboard.pendingApprovals.length === 1
-                    ? "solicitud"
-                    : "solicitudes"}
-                </span>
+                <strong>{pendingCount}</strong>
+                <span>{pendingCount === 1 ? "solicitud" : "solicitudes"}</span>
               </p>
             </div>
           </ElevatedSurface>
         </section>
 
+        {dashboard.pendingApprovals.length > 0 && (
+          <ElevatedSurface
+            as="section"
+            className={styles.historyPanel}
+            aria-label="Solicitudes por aprobar"
+          >
+            <h2>Solicitudes por aprobar</h2>
+            <ul className={styles.adminRequestList}>
+              {dashboard.pendingApprovals.map((request) => (
+                <li className={styles.adminRequestItem} key={request.id}>
+                  <Link
+                    className={styles.adminRequestRow}
+                    href={`/ausencias/${request.id}`}
+                  >
+                    <PtoCategoryIcon category={request.category} />
+                    <div className={styles.adminRequestCopy}>
+                      <strong>{request.requesterName}</strong>
+                      <p className={styles.adminRequestMeta}>
+                        {ptoCategoryLabels[request.category]} ·{" "}
+                        {formatPtoDateRange(request.startDate, request.endDate)} ·{" "}
+                        {formatPtoDays(request.durationUnits)} días
+                      </p>
+                    </div>
+                    <ChevronRight aria-hidden="true" size={18} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </ElevatedSurface>
+        )}
+
         <ElevatedSurface as="section" className={styles.historyPanel}>
-          <nav aria-label="Filtrar historial" className={styles.historyTabs}>
+          <FilterBar
+            as="nav"
+            aria-label="Filtrar historial"
+            className={styles.historyFilters}
+          >
             {historyFilters.map((filter) => (
-              <Link
-                aria-current={selectedFilter === filter.value ? "page" : undefined}
-                data-active={selectedFilter === filter.value}
+              <FilterChip
+                active={selectedFilter === filter.value}
+                count={
+                  filter.value === "all"
+                    ? dashboard.ownRequests.length
+                    : dashboard.ownRequests.filter(
+                        (request) => request.status === filter.value,
+                      ).length
+                }
                 href={historyHref(filter.value)}
                 key={filter.value}
               >
                 {filter.label}
-                {filter.value === "pending" ? ` (${pendingCount})` : ""}
-              </Link>
+              </FilterChip>
             ))}
-          </nav>
+          </FilterBar>
 
           <div aria-hidden="true" className={styles.historyTableHeader}>
             <span>Tipo de solicitud</span>

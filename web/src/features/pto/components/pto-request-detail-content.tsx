@@ -116,7 +116,9 @@ function RequestHistory({ history }: Pick<PtoRequestDetailView, "history">) {
                 <span>{entry.actorName}</span>
               </div>
               <time dateTime={entry.occurredAt.toISOString()}>
-                {entry.occurredAt.toLocaleString("es-CR")}
+                {entry.occurredAt.toLocaleString("es-CR", {
+                  timeZone: "America/Costa_Rica",
+                })}
               </time>
             </div>
           </li>
@@ -199,7 +201,7 @@ export function PtoRequestDetailContent({
             <DetailFact
               icon={Clock3}
               label="Duración"
-              value={`${formatPtoDays(request.durationUnits)} días`}
+              value={`${formatPtoDays(request.durationUnits)} ${request.durationUnits === 2 ? "día" : "días"}`}
             />
             <DetailFact
               icon={UserRound}

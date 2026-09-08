@@ -377,10 +377,14 @@ export async function createOrGetProductionWeekDraft({
           return;
         }
 
-        const [latest, published] = await Promise.all([
-          collection.findOne({ weekStart }, { session, sort: { revision: -1 } }),
-          collection.findOne({ currentSlot: "published", weekStart }, { session }),
-        ]);
+        const latest = await collection.findOne(
+          { weekStart },
+          { session, sort: { revision: -1 } },
+        );
+        const published = await collection.findOne(
+          { currentSlot: "published", weekStart },
+          { session },
+        );
         const document = createEmptyWeekDraft({
           actorPlatformUserId,
           revision: (latest?.revision ?? 0) + 1,
@@ -757,16 +761,14 @@ export async function commitProductionImportDrafts({
           { session },
         );
         if (!draft) {
-          const [latest, published] = await Promise.all([
-            plans.findOne(
-              { weekStart: sheet.weekStart },
-              { session, sort: { revision: -1 } },
-            ),
-            plans.findOne(
-              { currentSlot: "published", weekStart: sheet.weekStart },
-              { session },
-            ),
-          ]);
+          const latest = await plans.findOne(
+            { weekStart: sheet.weekStart },
+            { session, sort: { revision: -1 } },
+          );
+          const published = await plans.findOne(
+            { currentSlot: "published", weekStart: sheet.weekStart },
+            { session },
+          );
           draft = createEmptyWeekDraft({
             actorPlatformUserId,
             revision: (latest?.revision ?? 0) + 1,

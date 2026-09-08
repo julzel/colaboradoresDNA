@@ -11,6 +11,7 @@ import {
   ptoCategoryConsumesBalance,
   ptoCategoryLabels,
   ptoDraftCommandSchema,
+  ptoDecisionInputSchema,
   ptoDraftInputSchema,
   ptoDurationDaysSchema,
   ptoOpeningBalanceDaysSchema,
@@ -19,6 +20,19 @@ import {
 } from "@/features/pto/domain/pto";
 
 describe("PTO domain", () => {
+  it("normalizes optional decision notes idempotently across action and repository boundaries", () => {
+    for (const decision of ["approved", "denied"] as const) {
+      for (const decisionNote of [undefined, null, "", "   ", "  De acuerdo  "]) {
+        const parsed = ptoDecisionInputSchema.parse({
+          decision,
+          decisionNote,
+          requestId: "507f1f77bcf86cd799439015",
+        });
+        expect(ptoDecisionInputSchema.parse(parsed)).toEqual(parsed);
+        expect(parsed.decisionNote).toBe(decisionNote?.trim() || null);
+      }
+    }
+  });
   it("defines the supported leave categories in UI order", () => {
     expect(
       ptoCategories.map((category) => [category, ptoCategoryLabels[category]]),

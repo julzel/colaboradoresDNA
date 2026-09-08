@@ -23,6 +23,31 @@
   color: var(--color-warning);
 }
 
+.card[data-tone="danger"] .value {
+  color: var(--color-danger);
+}
+
+.card[data-tone="success"] .value {
+  color: var(--color-success);
+}
+
+.card[aria-pressed] {
+  width: 100%;
+  border: 1px solid transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card[aria-pressed]:hover {
+  border-color: var(--color-border-strong);
+}
+
+.card[aria-pressed="true"] {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
 @media (width <= 30rem) {
   .card {
     padding: var(--space-4);

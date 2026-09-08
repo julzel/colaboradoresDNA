@@ -102,6 +102,13 @@ export function getActiveNavigationHref(
 }
 
 export function getWorkspaceBreadcrumbs(pathname: string) {
+  if (pathname.startsWith("/admin/prioridades")) {
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { label: "Mis prioridades" },
+    ] as const;
+  }
   if (pathname.startsWith("/ausencias")) {
     return [
       { href: "/", label: "Inicio" },

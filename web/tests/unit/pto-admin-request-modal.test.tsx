@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -20,7 +20,6 @@ describe("administrator PTO request modal", () => {
 
   it("selects an active collaborator and confirms immediate approval", async () => {
     const user = userEvent.setup();
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
 
     render(
       <PtoAdminRequestModal
@@ -35,18 +34,19 @@ describe("administrator PTO request modal", () => {
       screen.getByRole("combobox", { name: "Colaborador" }),
       "507f1f77bcf86cd799439012",
     );
-    const submit = screen.getByRole("button", { name: "Crear y aprobar" });
-    const form = submit.closest("form");
-    expect(form).not.toBeNull();
-
-    fireEvent.submit(form!);
-
-    expect(confirm).toHaveBeenCalledWith(
-      expect.stringMatching(/Ana Mora.*aprobará inmediatamente/),
+    const confirmation = screen.getByRole("checkbox", {
+      name: "Confirmo que esta ausencia se aprobará inmediatamente",
+    });
+    expect(confirmation).toBeRequired();
+    expect(confirmation).not.toBeChecked();
+    await user.click(confirmation);
+    expect(confirmation).toBeChecked();
+    expect(screen.getByRole("combobox", { name: "Jornada solicitada" })).toHaveValue(
+      "full",
     );
-    expect(form?.querySelector('[name="confirmImmediateApproval"]')).toHaveValue(
-      "false",
-    );
+    expect(
+      screen.queryByRole("spinbutton", { name: "Duración (días)" }),
+    ).not.toBeInTheDocument();
   });
 
   it("disables creation when there are no active collaborators", () => {

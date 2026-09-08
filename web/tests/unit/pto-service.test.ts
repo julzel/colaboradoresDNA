@@ -7,6 +7,7 @@ import {
   getPtoAdministrationDashboard,
   getPtoDashboard,
   getPtoRequestDetail,
+  listVisibleApprovedPtoForCalendar,
   submitOwnPtoDraft,
   updateOwnPtoDraft,
 } from "@/features/pto/server/pto-service";
@@ -21,6 +22,8 @@ const mocks = vi.hoisted(() => ({
   findPtoBalance: vi.fn(),
   findPtoRequestById: vi.fn(),
   getPtoRequestWarnings: vi.fn(),
+  getDisplayNames: vi.fn(),
+  listApprovedPtoInRange: vi.fn(),
   createApprovedPtoRequestAsAdministrator: vi.fn(),
   createPtoDraft: vi.fn(),
   decidePtoRequest: vi.fn(),
@@ -34,6 +37,12 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+
+vi.mock("@/features/employees/integrations/pto-people-adapter", () => ({
+  ptoPeopleIntegration: {
+    getDisplayNames: mocks.getDisplayNames,
+  },
+}));
 
 vi.mock("@/features/auth/server/require-platform-user", () => ({
   requirePlatformUser: mocks.requirePlatformUser,
@@ -70,7 +79,7 @@ vi.mock("@/features/pto/server/pto-repository", () => ({
   findPtoBalance: mocks.findPtoBalance,
   findPtoRequestById: mocks.findPtoRequestById,
   getPtoRequestWarnings: mocks.getPtoRequestWarnings,
-  getPtoSupportingCollections: vi.fn(),
+  listApprovedPtoInRange: mocks.listApprovedPtoInRange,
   listPendingPtoApprovals: mocks.listPendingPtoApprovals,
   listPtoBalanceLedger: vi.fn(),
   listPtoRequestsForAdministration: mocks.listPtoRequestsForAdministration,
@@ -113,8 +122,21 @@ function expectedSubmittedDuration({
 }
 
 describe("PTO submission routing", () => {
+  it("denies a demoted approver before reaching the decision repository", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: approverId, role: "collaborator" },
+    });
+    await expect(
+      decideAssignedPtoRequest({ decision: "approved", decisionNote: null, requestId }),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    expect(mocks.decidePtoRequest).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getDisplayNames.mockResolvedValue({
+      employees: new Map(),
+      platformUsers: new Map(),
+    });
     mocks.calculateFullDayLeave.mockResolvedValue(defaultScheduleCalculation);
     mocks.findEmployeeByPlatformUserId.mockResolvedValue({
       employmentStatus: "active",
@@ -147,6 +169,52 @@ describe("PTO submission routing", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("treats malformed detail ids as not found without querying MongoDB", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: actorId, role: "collaborator" },
+    });
+    expect(await getPtoRequestDetail("invalid-id")).toBeNull();
+    expect(mocks.findPtoRequestById).not.toHaveBeenCalled();
+  });
+
+  it("batches calendar display names instead of loading each employee", async () => {
+    const request = {
+      id: requestId,
+      requesterEmployeeId: employeeId,
+      requesterPlatformUserId: actorId,
+      createdByPlatformUserId: actorId,
+      assignedApproverPlatformUserId: approverId,
+      status: "approved",
+      durationUnits: 2,
+      startDate: "2026-10-05",
+      endDate: "2026-10-05",
+    };
+    mocks.listApprovedPtoInRange.mockResolvedValue([
+      request,
+      { ...request, id: scheduleId },
+    ]);
+    mocks.getDisplayNames.mockResolvedValue({
+      employees: new Map([[employeeId, "Audit collaborator"]]),
+      platformUsers: new Map(),
+    });
+    const input = {
+      startDate: "2026-10-01",
+      endDate: "2026-10-31",
+      platformUserId: actorId,
+      role: "collaborator" as const,
+    };
+    const results = await listVisibleApprovedPtoForCalendar(input);
+    expect(mocks.listApprovedPtoInRange).toHaveBeenCalledWith(input);
+    expect(mocks.getDisplayNames).toHaveBeenCalledTimes(1);
+    expect(mocks.getDisplayNames).toHaveBeenCalledWith({
+      employeeIds: [employeeId],
+      platformUserIds: [approverId, actorId],
+    });
+    expect(results).toHaveLength(2);
+    expect(results[0]?.requesterName).toBe("Audit collaborator");
+    expect(mocks.findEmployeeById).not.toHaveBeenCalled();
   });
 
   it("routes a collaborator only to the active assigned supervisor", async () => {
