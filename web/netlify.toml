@@ -6,8 +6,8 @@
   NODE_VERSION = "24"
   NETLIFY_NEXT_SKEW_PROTECTION = "true"
 
-# The configured production branch hosts the persistent development site.
-# The build guard enforces development-only credentials in that context.
+# APP_ENVIRONMENT defaults to development. Set production explicitly in the
+# production site's environment settings; previews must remain development.
 [context.branch-deploy]
   ignore = "exit 0"
 

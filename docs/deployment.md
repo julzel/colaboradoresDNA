@@ -1,5 +1,73 @@
 # Deployment guide
 
+## Production release
+
+Production builds are now supported explicitly with `APP_ENVIRONMENT=production`.
+The existing development site stays in development mode by default. The development
+site instructions below apply only to that site, not to a new production site.
+
+Create a separate Netlify production site using base `web`, publish `.next`,
+Node 24 and `pnpm build`. Select the reviewed release branch in Netlify.
+Configure these variables in the Production context through Netlify settings:
+
+| Variable                                    | Production requirement                              | Scope                |
+| ------------------------------------------- | --------------------------------------------------- | -------------------- |
+| `APP_ENVIRONMENT`                           | `production`                                        | Builds and Functions |
+| `APP_BASE_URL`                              | Final public HTTPS origin, with no path             | Builds and Functions |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`         | Production `pk_live_` key                           | Builds and Functions |
+| `CLERK_SECRET_KEY`                          | Matching production `sk_live_` secret               | Builds and Functions |
+| `MONGODB_URI`                               | Dedicated production Atlas connection               | Builds and Functions |
+| `MONGODB_DB`                                | Dedicated production database name                  | Builds and Functions |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`             | `/sign-in`                                          | Builds and Functions |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL`             | `/sign-up`                                          | Builds and Functions |
+| `DEVELOPMENT_ENCRYPTION_ACTIVE_KEY_VERSION` | Active HR encryption key version                    | Functions            |
+| `DEVELOPMENT_ENCRYPTION_KEY_V1`             | Independent 32-byte base64 secret when v1 is active | Functions            |
+
+Here `DEVELOPMENT_ENCRYPTION_*` refers to the collaborator-development feature,
+not the deployment environment. Preserve old key versions when rotating keys.
+Back up keys separately from Atlas and verify restoration before storing real HR
+narratives. Never copy development encryption keys into production.
+
+Do not expose production secrets to previews. If previews are enabled, give them
+explicit `APP_ENVIRONMENT=development`, Clerk test keys and an isolated database.
+The build rejects production mode in preview contexts, mixed Clerk key modes,
+development database names, invalid canonical URLs and leftover admin bootstrap
+variables. Database names and key prefixes are configuration checks, not proof
+of database isolation or credential validity.
+
+Before release:
+
+1. Run `pnpm install --frozen-lockfile`, `pnpm verify` and `pnpm audit` in `web`.
+   Run `pnpm test:e2e` against a trusted test environment. Opt-in live tests are
+   not included in the default unit suite.
+2. Configure Clerk's production domain/DNS, invitation-only access, recovery,
+   administrator MFA and session policy. Confirm the production instance is ready
+   in Clerk's dashboard.
+3. Configure Atlas network access, least-privilege runtime credentials, a separate
+   migration user and backups; verify a restore. Use a replica set/Atlas cluster
+   because leave balances and other workflows require transactions.
+4. With migration credentials targeting the verified production database, run the
+   employee, scheduling, PTO, development and production-task model bootstraps.
+   Review production-task dry-run output first. Scripts currently load `.env.local`;
+   use a protected release workstation and verify the target before execution.
+   Bootstrap administrators once and remove bootstrap variables afterwards.
+5. On staging, complete collaborator submission → administrator approval/denial →
+   collaborator refresh, cancellation, duplicate submission and balance checks.
+   The previous audit's two-account browser acceptance remains a release gate.
+6. After deployment, verify sign-in/out, invitation redirects, protected routes,
+   mobile views, PWA installation/offline recovery and `/sw.js` headers. Inspect
+   function errors and set up error/availability alerts.
+7. Record the released commit, previous deploy and database/key backup references.
+   Roll back the Netlify deploy if smoke checks fail; do not automatically reverse
+   database migrations or remove encryption keys.
+
+The planning route is still an optional prototype. Its hidden navigation item is
+not an access toggle. If using it, configure its server-only API key and a model
+available to your API project, and complete an approved-data/cost review first.
+
+Provider references: [Clerk production setup](https://clerk.com/docs/guides/development/deployment/production)
+and [Netlify function environment scopes](https://docs.netlify.com/build/functions/environment-variables/).
+
 ## PWA behavior and verification
 
 The root `PwaInstallProvider` captures installation events on public pages and

@@ -44,6 +44,10 @@ for findings, verification evidence, and remaining production-readiness work.
 
 ## Deploy to Netlify
 
+For a real production release, follow [Production release](./docs/deployment.md#production-release).
+Explicit `APP_ENVIRONMENT=production` supports live Clerk credentials on a separate
+production site. The instructions below describe the existing development site.
+
 The Netlify site is configured as a development environment. Netlify's
 `production` context deploys the configured `mvp/main` branch to a stable
 development URL; it is not an application production release. Pull requests

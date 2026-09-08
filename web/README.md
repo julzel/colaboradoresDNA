@@ -41,6 +41,10 @@ pnpm test:e2e
 
 ## Netlify
 
+Production is supported with explicit `APP_ENVIRONMENT=production`; see the
+[production release checklist](../docs/deployment.md#production-release). The
+configuration below describes the existing development site.
+
 Select `web` as the site/package and base directory. The checked-in Netlify
 configuration uses Netlify's `production` context as the persistent development site for
 `mvp/main`. Pull-request Deploy Previews are supported and other branch deploys are
