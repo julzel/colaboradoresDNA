@@ -1,6 +1,14 @@
-.shell {
-  width: min(100%, var(--content-max));
-  margin-inline: auto;
+.page {
+  display: grid;
+  gap: var(--space-6);
+  padding-block: var(--space-6) var(--space-12);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
 }
 
 .grid {
@@ -21,12 +29,12 @@
 
 .tableWrap {
   overflow-x: auto;
+  padding: 0 var(--space-6) var(--space-3);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--text-sm);
 }
 
 .table caption {
@@ -40,22 +48,45 @@
 
 .table th,
 .table td {
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4);
   text-align: left;
-  vertical-align: middle;
+  vertical-align: top;
+}
+
+.table td {
+  padding-block: var(--space-5);
 }
 
 .table th {
-  background: var(--color-surface-subtle);
   color: var(--color-text-muted);
-  font-size: var(--text-xs);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: var(--text-sm);
 }
 
-.table tbody tr:last-child td {
-  border-bottom: 0;
+.table th:first-child,
+.table td:first-child {
+  padding-left: 0;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 0;
+}
+
+.table tr {
+  background-image: linear-gradient(var(--color-border), var(--color-border));
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: calc(100% - (2 * var(--space-4))) 1px;
+}
+
+.table tbody tr:last-child {
+  background-image: none;
+}
+
+.mobileIdentity span {
+  overflow-wrap: anywhere;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
 }
 
 .table td:first-child strong,
@@ -69,10 +100,64 @@
   font-size: var(--text-xs);
 }
 
+.table tbody td:nth-child(2) {
+  font-size: var(--text-xs);
+  line-height: var(--line-body);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.mobileList {
+  display: none;
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-3);
+  list-style: none;
+}
+
+.mobileItem {
+  position: relative;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5) 0;
+}
+
+.mobileItem:not(:last-child)::after {
+  position: absolute;
+  right: var(--space-4);
+  bottom: 0;
+  left: var(--space-4);
+  height: 1px;
+  background: var(--color-border);
+  content: "";
+}
+
+.mobileIdentity {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.mobileDetails {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+@media (width <= 64rem) {
+  .tableWrap {
+    display: none;
+  }
+
+  .mobileList {
+    display: grid;
+  }
 }
 
 @media (width > 72rem) {
