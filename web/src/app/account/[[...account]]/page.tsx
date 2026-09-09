@@ -1,4 +1,4 @@
-import { UserProfile } from "@clerk/nextjs";
+import { AccountSecurity } from "@/features/auth/components/account-security";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -12,7 +12,7 @@ export default async function AccountPage({
 }: {
   params: Promise<{ account?: string[] }>;
 }) {
-  const { clerkTwoFactorEnabled, platformUser } = await requirePlatformUser({
+  const { twoFactorEnabled, platformUser } = await requirePlatformUser({
     allowMfaSetup: true,
   });
   const { account = [] } = await params;
@@ -21,7 +21,7 @@ export default async function AccountPage({
     redirect("/account/security");
   }
 
-  const mfaRequired = requiresMfa(platformUser.role) && !clerkTwoFactorEnabled;
+  const mfaRequired = requiresMfa(platformUser.role) && !twoFactorEnabled;
 
   return (
     <main className={styles.shell} id="main-content">
@@ -53,19 +53,7 @@ export default async function AccountPage({
       )}
 
       <div className={styles.profile}>
-        <UserProfile
-          __experimental_startPath="/security"
-          appearance={{
-            elements: {
-              navbar: { display: "none" },
-              navbarMobileMenuRow: { display: "none" },
-              profilePage__account: { display: "none" },
-              profileSection__danger: { display: "none" },
-            },
-          }}
-          path="/account"
-          routing="path"
-        />
+        <AccountSecurity enabled={twoFactorEnabled} />
       </div>
     </main>
   );

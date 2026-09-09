@@ -1,6 +1,6 @@
 import "server-only";
 
-import { clerkClient } from "@clerk/nextjs/server";
+import { updateManagedIdentityEmail } from "./identity-administration";
 
 import { normalizeEmail } from "@/features/auth/domain/platform-user";
 import { recordAuthAudit } from "@/features/auth/server/auth-audit-repository";
@@ -23,69 +23,6 @@ export class AdminEmailUpdateError extends Error {
   constructor(readonly code: AdminEmailUpdateErrorCode) {
     super(code);
     this.name = "AdminEmailUpdateError";
-  }
-}
-
-async function updateActiveClerkEmail({
-  clerkUserId,
-  email,
-  updatePlatformRecord,
-}: {
-  clerkUserId: string;
-  email: string;
-  updatePlatformRecord: () => Promise<boolean>;
-}) {
-  const client = await clerkClient();
-  const clerkUser = await client.users.getUser(clerkUserId);
-  const normalizedEmail = normalizeEmail(email);
-  const previousPrimaryId = clerkUser.primaryEmailAddressId;
-  const existingAddress = clerkUser.emailAddresses.find(
-    (address) => normalizeEmail(address.emailAddress) === normalizedEmail,
-  );
-  let createdAddressId: string | null = null;
-
-  try {
-    const address = existingAddress
-      ? await client.emailAddresses.updateEmailAddress(existingAddress.id, {
-          verified: true,
-        })
-      : await client.emailAddresses.createEmailAddress({
-          emailAddress: normalizedEmail,
-          userId: clerkUserId,
-          verified: true,
-        });
-
-    if (!existingAddress) createdAddressId = address.id;
-
-    await client.users.updateUser(clerkUserId, {
-      notifyPrimaryEmailAddressChanged: true,
-      primaryEmailAddressID: address.id,
-    });
-
-    if (!(await updatePlatformRecord())) {
-      throw new AdminEmailUpdateError("account_not_editable");
-    }
-  } catch (error) {
-    if (previousPrimaryId) {
-      try {
-        await client.users.updateUser(clerkUserId, {
-          primaryEmailAddressID: previousPrimaryId,
-        });
-      } catch {
-        // The application record remains unchanged, so authorization stays fail-closed.
-      }
-    }
-
-    if (createdAddressId) {
-      try {
-        await client.emailAddresses.deleteEmailAddress(createdAddressId);
-      } catch {
-        // A non-primary orphaned address is safer than committing inconsistent app data.
-      }
-    }
-
-    if (error instanceof AdminEmailUpdateError) throw error;
-    throw new AdminEmailUpdateError("identity_sync_failed");
   }
 }
 
@@ -121,30 +58,21 @@ export async function updateEmployeeEmailAsAdministrator({
   let invitationSent = true;
   const invitationWasSent =
     target.status === "invited" &&
-    Boolean(target.invitation.lastSentAt || target.invitation.clerkInvitationId);
+    Boolean(target.invitation.lastSentAt || target.invitation.invitationId);
 
   if (target.status === "active") {
-    if (!target.clerkUserId) {
+    if (!target.authUserId) {
       throw new AdminEmailUpdateError("identity_sync_failed");
     }
 
-    await updateActiveClerkEmail({
-      clerkUserId: target.clerkUserId,
-      email: normalizedEmail,
-      updatePlatformRecord,
-    });
+    try {
+      await updateManagedIdentityEmail(target.authUserId, target.id, normalizedEmail);
+    } catch {
+      throw new AdminEmailUpdateError("identity_sync_failed");
+    }
   } else {
     if (!(await updatePlatformRecord())) {
       throw new AdminEmailUpdateError("account_not_editable");
-    }
-
-    if (target.invitation.clerkInvitationId) {
-      try {
-        const client = await clerkClient();
-        await client.invitations.revokeInvitation(target.invitation.clerkInvitationId);
-      } catch {
-        // Expired invitations cannot claim the record after its email changes.
-      }
     }
 
     if (invitationWasSent) {
@@ -157,7 +85,7 @@ export async function updateEmployeeEmailAsAdministrator({
 
   await recordAuthAudit({
     action: "email_updated",
-    actorClerkUserId: actor.clerkUserId,
+    actorAuthUserId: actor.authUserId,
     actorPlatformUserId: actor.platformUser.id,
     metadata: {
       invitationDeferred: target.status === "invited" && !invitationWasSent,

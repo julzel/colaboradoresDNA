@@ -1,6 +1,6 @@
 import "server-only";
 
-import { auth } from "@clerk/nextjs/server";
+import { getIdentitySession } from "@/features/auth/server/auth-provider";
 import { z } from "zod";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import { PlanningError } from "../domain/contracts";
@@ -62,8 +62,8 @@ export async function planningHttp(
   action: (actor: PlanningActor) => Promise<unknown>,
 ) {
   try {
-    const session = await auth();
-    if (!session.userId)
+    const session = await getIdentitySession();
+    if (!session?.user.id)
       throw new PlanningError("unauthorized", "Iniciá sesión para continuar.", 401);
     const user = await requirePlatformUser({ roles: ["administrator"] });
     if (request.method !== "GET") assertSameOrigin(request);

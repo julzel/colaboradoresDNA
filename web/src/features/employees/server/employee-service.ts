@@ -242,15 +242,15 @@ export async function getBirthdayCalendarEntries() {
 }
 
 export async function getOwnEmployeeProfile() {
-  const { clerkHasImage, clerkImageUrl, platformUser } = await requirePlatformUser();
+  const { hasImage, imageUrl, platformUser } = await requirePlatformUser();
   const profile = await getEmployeeSelfServiceProfileDetail(platformUser.id);
 
   return profile
     ? {
         ...profile,
         image: {
-          hasImage: clerkHasImage,
-          url: clerkImageUrl,
+          hasImage: hasImage,
+          url: imageUrl,
         },
       }
     : null;

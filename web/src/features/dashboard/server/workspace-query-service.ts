@@ -6,7 +6,7 @@ import { formatEmployeePreferredDisplayName } from "@/features/employees/domain/
 import { findEmployeeByPlatformUserId } from "@/features/employees/server/employee-repository";
 
 export async function getWorkspaceShellData() {
-  const { clerkHasImage, clerkImageUrl, platformUser } = await requirePlatformUser();
+  const { hasImage, imageUrl, platformUser } = await requirePlatformUser();
   const [employee, unreadNotificationCount] = await Promise.all([
     findEmployeeByPlatformUserId(platformUser.id),
     getCalendarDashboardUnreadCount(platformUser.id),
@@ -16,7 +16,7 @@ export async function getWorkspaceShellData() {
     displayName: employee
       ? formatEmployeePreferredDisplayName(employee)
       : platformUser.displayName,
-    profileImageUrl: clerkHasImage ? clerkImageUrl : null,
+    profileImageUrl: hasImage ? imageUrl : null,
     role: platformUser.role,
     unreadNotificationCount,
   };

@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/verify-netlify-preview.mjs && next build",
-    "bootstrap:admins": "node --env-file=.env.local scripts/bootstrap-admins.mjs",
+    "bootstrap:admins": "tsx --conditions=react-server --env-file=.env.local scripts/bootstrap-admins.mts",
     "bootstrap:employee-model": "node --env-file=.env.local scripts/bootstrap-employee-model.mjs",
     "bootstrap:development-model": "node --env-file=.env.local scripts/bootstrap-development-model.mjs",
     "bootstrap:pto-model": "node --env-file=.env.local scripts/bootstrap-pto-model.mjs",
@@ -26,17 +26,19 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "stylelint": "stylelint \"src/**/*.css\"",
-    "verify": "pnpm format:check && pnpm lint && pnpm stylelint && pnpm typecheck && pnpm test && pnpm build"
+    "verify": "pnpm format:check && pnpm lint && pnpm stylelint && pnpm typecheck && pnpm test && pnpm build",
+    "bootstrap:auth": "tsx --conditions=react-server --env-file=.env.local scripts/bootstrap-auth.mts",
+    "migrate:auth": "tsx --env-file=.env.local scripts/migrate-clerk-accounts.mts"
   },
   "dependencies": {
-    "@clerk/backend": "3.13.2",
-    "@clerk/localizations": "^4.13.8",
-    "@clerk/nextjs": "^7.6.2",
+    "better-auth": "^1.7.3",
     "exceljs": "^4.4.0",
     "lucide-react": "^1.27.0",
     "mongodb": "7.5.0",
-    "next": "16.2.12",
+    "next": "16.3.3",
+    "nodemailer": "^10.0.1",
     "openai": "^7.10.0",
+    "qrcode": "^1.5.4",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "server-only": "0.0.1",
@@ -53,7 +55,8 @@
       "brace-expansion@>=2 <2.1.4": "2.1.4",
       "brace-expansion@>=5 <5.0.9": "5.0.9",
       "fast-uri@>=3 <3.1.6": "3.1.6",
-      "js-yaml@>=4 <4.3.1": "4.3.1",
+      "js-yaml@>=4 <4.3.2": "4.3.2",
+      "colord@<2.9.4": "2.9.4",
       "exceljs>uuid": "11.1.1"
     }
   },
@@ -65,19 +68,22 @@
     "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "14.6.1",
     "@types/node": "24.3.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "19.1.12",
     "@types/react-dom": "19.1.9",
     "@vitejs/plugin-react": "5.0.2",
-    "@vitest/coverage-v8": "3.2.7",
+    "@vitest/coverage-v8": "4.1.11",
     "eslint": "9.34.0",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "16.3.3",
     "jsdom": "26.1.0",
     "prettier": "3.6.2",
     "stylelint": "16.23.1",
     "stylelint-config-standard": "39.0.0",
+    "tsx": "^4.23.13",
     "typescript": "5.9.2",
     "vite": "7.3.6",
     "vite-tsconfig-paths": "5.1.4",
-    "vitest": "3.2.7"
+    "vitest": "4.1.11"
   }
 }

@@ -2,7 +2,7 @@ import "server-only";
 
 import { File as NodeFile } from "node:buffer";
 
-import { clerkClient } from "@clerk/nextjs/server";
+import { setIdentityImage } from "@/features/auth/server/identity-administration";
 import sharp from "sharp";
 
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
@@ -103,15 +103,15 @@ export async function normalizeProfileImage(file: ProfileImageSource) {
 }
 
 export async function updateOwnEmployeeProfileImage(file: File) {
-  const { clerkUserId, platformUser } = await requirePlatformUser();
+  const { authUserId, platformUser } = await requirePlatformUser();
   const employee = await findEmployeeByPlatformUserId(platformUser.id);
   if (!employee) throw new EmployeeDomainError("employee_not_found");
 
   const normalizedFile = await normalizeProfileImage(file);
-  const client = await clerkClient();
-  const updatedUser = await client.users.updateUserProfileImage(clerkUserId, {
-    file: normalizedFile as unknown as Blob,
-  });
+  const imageUrl = await setIdentityImage(
+    authUserId,
+    new Uint8Array(await normalizedFile.arrayBuffer()),
+  );
 
   await recordEmployeeAudit({
     action: "profile_image_updated",
@@ -120,16 +120,15 @@ export async function updateOwnEmployeeProfileImage(file: File) {
     targetEmployeeId: employee.id,
   });
 
-  return { imageUrl: updatedUser.imageUrl };
+  return { imageUrl };
 }
 
 export async function removeOwnEmployeeProfileImage() {
-  const { clerkUserId, platformUser } = await requirePlatformUser();
+  const { authUserId, platformUser } = await requirePlatformUser();
   const employee = await findEmployeeByPlatformUserId(platformUser.id);
   if (!employee) throw new EmployeeDomainError("employee_not_found");
 
-  const client = await clerkClient();
-  await client.users.deleteUserProfileImage(clerkUserId);
+  await setIdentityImage(authUserId, null);
   await recordEmployeeAudit({
     action: "profile_image_removed",
     actorPlatformUserId: platformUser.id,

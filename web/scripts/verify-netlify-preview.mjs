@@ -25,8 +25,11 @@ if (production && isNetlifyBuild && process.env.CONTEXT !== "production") {
 }
 
 const requiredVariables = [
-  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-  "CLERK_SECRET_KEY",
+  "BETTER_AUTH_SECRET",
+  "APP_BASE_URL",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "AUTH_EMAIL_FROM",
   "MONGODB_URI",
   "MONGODB_DB",
 ];
@@ -39,19 +42,22 @@ if (missingVariables.length > 0) {
 }
 
 if (
-  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.startsWith(
-    production ? "pk_live_" : "pk_test_",
-  )
+  process.env.BETTER_AUTH_SECRET.length < 32 ||
+  /replace|example|placeholder/i.test(process.env.BETTER_AUTH_SECRET)
 ) {
   throw new Error(
-    `The ${environment} environment requires a matching Clerk publishable key.`,
+    "BETTER_AUTH_SECRET must be an independently generated secret of at least 32 characters.",
   );
 }
-
-if (!process.env.CLERK_SECRET_KEY.startsWith(production ? "sk_live_" : "sk_test_")) {
-  throw new Error(
-    `The ${environment} environment requires a matching Clerk secret key.`,
-  );
+if (
+  !Number.isInteger(Number(process.env.SMTP_PORT)) ||
+  Number(process.env.SMTP_PORT) < 1 ||
+  Number(process.env.SMTP_PORT) > 65535
+) {
+  throw new Error("SMTP_PORT must be a valid port.");
+}
+if (Boolean(process.env.SMTP_USER) !== Boolean(process.env.SMTP_PASSWORD)) {
+  throw new Error("Configure SMTP_USER and SMTP_PASSWORD together.");
 }
 
 if (!/^mongodb(?:\+srv)?:\/\//.test(process.env.MONGODB_URI)) {
@@ -84,7 +90,8 @@ if (production) {
   }
   if (
     process.env.BOOTSTRAP_ADMIN_IDENTITIES ||
-    process.env.ALLOW_PRODUCTION_ADMIN_BOOTSTRAP
+    process.env.ALLOW_PRODUCTION_ADMIN_BOOTSTRAP ||
+    process.env.ALLOW_PRODUCTION_AUTH_MIGRATION
   ) {
     throw new Error(
       "Remove one-time administrator bootstrap variables before deployment.",

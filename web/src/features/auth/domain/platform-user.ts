@@ -18,13 +18,13 @@ export type InvitationStatus = z.infer<typeof invitationStatusSchema>;
 export type PlatformUserDocument = {
   _id: ObjectId;
   activatedAt: Date | null;
-  clerkSyncStatus: "synced" | "pending_deactivation" | "pending_reactivation";
-  clerkUserId: string | null;
+  authSyncStatus: "synced" | "pending_deactivation" | "pending_reactivation";
+  authUserId: string | null;
   createdAt: Date;
   deactivatedAt: Date | null;
   displayName: string;
   invitation: {
-    clerkInvitationId: string | null;
+    invitationId: string | null;
     expiresAt: Date | null;
     lastSentAt: Date | null;
     status: InvitationStatus;

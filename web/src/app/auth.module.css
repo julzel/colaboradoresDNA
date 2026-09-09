@@ -2,13 +2,14 @@
   display: grid;
   min-height: 100vh;
   background: var(--color-canvas);
-  grid-template-columns: minmax(18rem, 0.8fr) minmax(22rem, 1.2fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .brandPanel {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: var(--space-8);
   padding: clamp(var(--space-8), 6vw, var(--space-16));
   background: var(--color-sidebar);
   color: var(--color-sidebar-text);
@@ -54,6 +55,7 @@
 }
 
 .support {
+  display: none;
   color: var(--color-sidebar-muted);
   font-size: var(--text-xs);
 }
@@ -68,44 +70,16 @@
 .formContent {
   display: grid;
   width: min(100%, 30rem);
-  justify-items: center;
+  min-width: 0;
   gap: var(--space-6);
 }
 
-.formIntro {
-  text-align: center;
-}
-
-.formIntro h2 {
-  margin: 0;
-  color: var(--color-text);
-  font-size: var(--text-xl);
-  letter-spacing: -0.03em;
-}
-
-.formContent .formIntro p {
-  margin: var(--space-2) 0 0;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  line-height: var(--line-body);
-}
-
-@media (width <= 48rem) {
+@media (width > 48rem) {
   .shell {
-    grid-template-columns: 1fr;
-  }
-
-  .brandPanel {
-    min-height: 14rem;
-    gap: var(--space-8);
-  }
-
-  .brandCopy h1 {
-    max-width: 18ch;
-    font-size: clamp(1.8rem, 9vw, 2.75rem);
+    grid-template-columns: minmax(18rem, 0.8fr) minmax(22rem, 1.2fr);
   }
 
   .support {
-    display: none;
+    display: block;
   }
 }

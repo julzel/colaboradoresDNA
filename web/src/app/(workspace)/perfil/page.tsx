@@ -41,19 +41,6 @@ const identificationLabels = {
   residence_id: "DIMEX",
 } as const;
 
-function optimizedClerkImageUrl(imageUrl: string) {
-  try {
-    const url = new URL(imageUrl);
-    url.searchParams.set("width", "256");
-    url.searchParams.set("height", "256");
-    url.searchParams.set("fit", "crop");
-    url.searchParams.set("quality", "85");
-    return url.toString();
-  } catch {
-    return imageUrl;
-  }
-}
-
 export default async function ProfilePage() {
   const profile = await getOwnEmployeeProfile();
 
@@ -73,7 +60,7 @@ export default async function ProfilePage() {
     );
   }
 
-  const imageUrl = optimizedClerkImageUrl(profile.image.url);
+  const imageUrl = profile.image.url;
 
   return (
     <Container>

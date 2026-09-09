@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
     throw new Error(`REDIRECT:${path}`);
   },
 }));
-// Only the Clerk identity boundary is replaced. Services, validation, schedule
+// Only the application identity boundary is replaced. Services, validation, schedule
 // resolution, transactions, ledger, audit and all MongoDB reads/writes are real.
 vi.mock("@/features/auth/server/require-platform-user", () => ({
   requirePlatformUser: async ({ roles }: { roles?: string[] } = {}) => {
@@ -109,13 +109,13 @@ describe.skipIf(!runLive)(
         await database.collection<PlatformUserDocument>("platform_users").insertOne({
           _id: users[key],
           activatedAt: now,
-          clerkSyncStatus: "synced",
-          clerkUserId: `audit-${key}`,
+          authSyncStatus: "synced",
+          authUserId: `audit-${key}`,
           createdAt: now,
           deactivatedAt: null,
           displayName: `Audit ${key}`,
           invitation: {
-            clerkInvitationId: null,
+            invitationId: null,
             expiresAt: null,
             lastSentAt: null,
             status: "accepted",

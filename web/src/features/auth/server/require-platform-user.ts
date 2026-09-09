@@ -1,69 +1,22 @@
 import "server-only";
-
-import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-
-import {
-  normalizeEmail,
-  type PlatformRole,
-  type PlatformUser,
-} from "@/features/auth/domain/platform-user";
-import { getAccessDecision } from "@/features/auth/lib/access-policy";
+import type { PlatformRole, PlatformUser } from "../domain/platform-user";
+import { normalizeEmail } from "../domain/platform-user";
+import { getAccessDecision } from "../lib/access-policy";
 import {
   claimInvitedPlatformUser,
-  findPlatformUserByClerkId,
-} from "@/features/auth/server/platform-user-repository";
+  findPlatformUserByAuthId,
+} from "./platform-user-repository";
+import { getIdentitySession, revokeIdentitySessions } from "./auth-provider";
 
 export type AuthenticatedPlatformUser = {
-  clerkHasImage: boolean;
-  clerkImageUrl: string;
-  clerkTwoFactorEnabled: boolean;
-  clerkUserId: string;
+  hasImage: boolean;
+  imageUrl: string;
+  twoFactorEnabled: boolean;
+  authUserId: string;
   platformUser: PlatformUser;
   sessionId: string;
 };
-
-function getVerifiedEmails(
-  clerkUser: NonNullable<Awaited<ReturnType<typeof currentUser>>>,
-) {
-  return clerkUser.emailAddresses
-    .filter((email) => email.verification?.status === "verified")
-    .map((email) => email.emailAddress);
-}
-
-function getVerifiedPrimaryEmail(
-  clerkUser: NonNullable<Awaited<ReturnType<typeof currentUser>>>,
-) {
-  const primary = clerkUser.emailAddresses.find(
-    (email) => email.id === clerkUser.primaryEmailAddressId,
-  );
-
-  return primary?.verification?.status === "verified"
-    ? normalizeEmail(primary.emailAddress)
-    : null;
-}
-
-async function revokeCurrentSession(sessionId: string) {
-  try {
-    const client = await clerkClient();
-    await client.sessions.revokeSession(sessionId);
-  } catch {
-    // MongoDB still denies access. A later administrator action can retry Clerk sync.
-  }
-}
-
-async function enforceManagedAccountPolicy(
-  clerkUser: NonNullable<Awaited<ReturnType<typeof currentUser>>>,
-) {
-  if (!clerkUser.deleteSelfEnabled) return;
-
-  try {
-    const client = await clerkClient();
-    await client.users.updateUser(clerkUser.id, { deleteSelfEnabled: false });
-  } catch {
-    redirect("/access-denied?reason=account_policy");
-  }
-}
 
 export async function requirePlatformUser({
   allowMfaSetup = false,
@@ -72,73 +25,39 @@ export async function requirePlatformUser({
   allowMfaSetup?: boolean;
   roles?: readonly PlatformRole[];
 } = {}): Promise<AuthenticatedPlatformUser> {
-  const authState = await auth();
-
-  if (!authState.isAuthenticated || !authState.userId || !authState.sessionId) {
-    return authState.redirectToSignIn();
-  }
-
-  const clerkUser = await currentUser();
-
-  if (!clerkUser) {
-    return authState.redirectToSignIn();
-  }
-
-  await enforceManagedAccountPolicy(clerkUser);
-
-  let platformUser = await findPlatformUserByClerkId(authState.userId);
-
-  if (!platformUser) {
-    platformUser = await claimInvitedPlatformUser({
-      clerkUserId: authState.userId,
-      verifiedEmails: getVerifiedEmails(clerkUser),
-    });
-  }
-
-  const decision = getAccessDecision(platformUser, clerkUser.twoFactorEnabled);
-
+  const identity = await getIdentitySession();
+  if (!identity) redirect("/sign-in");
+  const { user, session } = identity;
+  if (!user.emailVerified) redirect("/sign-in?verification=required");
+  let platformUser = await findPlatformUserByAuthId(user.id);
+  platformUser ??= await claimInvitedPlatformUser({
+    authUserId: user.id,
+    verifiedEmails: [user.email],
+  });
+  if (!platformUser) redirect("/access-denied?reason=not_invited");
+  if (normalizeEmail(user.email) !== platformUser.normalizedEmail)
+    redirect("/access-denied?reason=email_mismatch");
+  const decision = getAccessDecision(
+    platformUser,
+    Boolean(user.twoFactorEnabled && session.mfaVerified),
+  );
   if (!decision.granted) {
     if (decision.reason === "deactivated") {
-      await revokeCurrentSession(authState.sessionId);
+      await revokeIdentitySessions(user.id).catch(() => undefined);
       redirect("/access-denied?reason=deactivated");
     }
-
-    if (decision.reason === "mfa_required" && allowMfaSetup && platformUser) {
-      return {
-        clerkHasImage: clerkUser.hasImage,
-        clerkImageUrl: clerkUser.imageUrl,
-        clerkTwoFactorEnabled: clerkUser.twoFactorEnabled,
-        clerkUserId: authState.userId,
-        platformUser,
-        sessionId: authState.sessionId,
-      };
-    }
-
     if (decision.reason === "mfa_required") {
-      redirect("/account?requirement=mfa");
-    }
-
-    redirect(`/access-denied?reason=${decision.reason}`);
+      if (!allowMfaSetup) redirect("/account?requirement=mfa");
+    } else redirect(`/access-denied?reason=${decision.reason}`);
   }
-
-  if (!platformUser) {
-    redirect("/access-denied?reason=not_invited");
-  }
-
-  if (getVerifiedPrimaryEmail(clerkUser) !== platformUser.normalizedEmail) {
-    redirect("/access-denied?reason=email_mismatch");
-  }
-
-  if (roles && !roles.includes(platformUser.role)) {
+  if (roles && !roles.includes(platformUser.role))
     redirect("/access-denied?reason=forbidden");
-  }
-
   return {
-    clerkHasImage: clerkUser.hasImage,
-    clerkImageUrl: clerkUser.imageUrl,
-    clerkTwoFactorEnabled: clerkUser.twoFactorEnabled,
-    clerkUserId: authState.userId,
+    hasImage: Boolean(user.image),
+    imageUrl: user.image ?? "",
+    twoFactorEnabled: Boolean(user.twoFactorEnabled),
+    authUserId: user.id,
     platformUser,
-    sessionId: authState.sessionId,
+    sessionId: session.id,
   };
 }

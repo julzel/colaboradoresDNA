@@ -111,7 +111,7 @@
     radial-gradient(circle at 12% 95%, rgb(49 199 207 / 16%), transparent 28%),
     var(--color-sidebar);
   --background-primary-action: var(--brand-cyan);
-  --color-primary-action-text: var(--neutral-0);
+  --color-primary-action-text: var(--color-brand-contrast);
   --color-topbar: rgb(247 245 239 / 92%);
   --color-skeleton: var(--neutral-100);
   --color-skeleton-highlight: rgb(255 255 255 / 72%);

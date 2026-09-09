@@ -86,7 +86,7 @@ export const planningOpenApi = {
       "Administrator-only personal planning. Ownership is derived from the authenticated platform user; clients cannot choose another owner. Context is shared by administrators. Responses are private and non-cacheable.",
   },
   servers: [{ url: "/api/planning/v1" }],
-  security: [{ clerkSession: [] }],
+  security: [{ applicationSession: [] }],
   paths: {
     "/workspace": {
       get: operation(
@@ -136,12 +136,12 @@ export const planningOpenApi = {
   },
   components: {
     securitySchemes: {
-      clerkSession: {
+      applicationSession: {
         type: "apiKey",
         in: "cookie",
-        name: "__session",
+        name: "__Secure-better-auth.session_token",
         description:
-          "Existing Clerk session, active invited platform account, administrator role and MFA required.",
+          "Existing Better Auth session, active invited platform account, administrator role and MFA required.",
       },
     },
     schemas: {

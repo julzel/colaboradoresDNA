@@ -6,6 +6,7 @@ import type {
 } from "react";
 
 import styles from "./form-field.module.css";
+import { PasswordInput } from "./password-input";
 
 type FieldChromeProps = {
   children: ReactNode;
@@ -78,6 +79,7 @@ export function TextField({
   visuallyHiddenLabel,
   ...props
 }: TextFieldProps) {
+  const Input = props.type === "password" ? PasswordInput : "input";
   return (
     <FieldChrome
       description={description}
@@ -87,7 +89,7 @@ export function TextField({
       optional={optional}
       visuallyHiddenLabel={visuallyHiddenLabel}
     >
-      <input
+      <Input
         aria-describedby={getDescribedBy(id, description, error)}
         aria-invalid={Boolean(error)}
         className={`${styles.control} ${className}`.trim()}

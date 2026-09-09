@@ -156,7 +156,7 @@ export default async function AccountsPage() {
         <div className={styles.grid}>
           <Card>
             <CardHeader
-              description="Clerk enviará un enlace de registro válido por 14 días."
+              description="Enviaremos un enlace de registro válido por 14 días."
               title="Invitar una persona"
             />
             <CardBody>

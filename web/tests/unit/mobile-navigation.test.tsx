@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
 }));
 
-vi.mock("@clerk/nextjs", () => ({
+vi.mock("@/features/auth/components/sign-out-button", () => ({
   SignOutButton: ({ children }: { children: ReactNode }) => children,
 }));
 

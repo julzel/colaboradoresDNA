@@ -68,8 +68,8 @@ describe("employee service authorization boundaries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requirePlatformUser.mockResolvedValue({
-      clerkHasImage: true,
-      clerkImageUrl: "https://img.clerk.com/user",
+      hasImage: true,
+      imageUrl: "/api/profile-images/507f1f77bcf86cd799439011",
       platformUser: {
         id: "507f1f77bcf86cd799439011",
         role: "collaborator",
@@ -120,7 +120,7 @@ describe("employee service authorization boundaries", () => {
     });
   });
 
-  it("composes the profile with the authenticated Clerk image", async () => {
+  it("composes the profile with the authenticated identity image", async () => {
     mocks.getEmployeeSelfServiceProfileDetail.mockResolvedValue({
       employee: { displayName: "Julio" },
     });
@@ -134,7 +134,7 @@ describe("employee service authorization boundaries", () => {
       employee: { displayName: "Julio" },
       image: {
         hasImage: true,
-        url: "https://img.clerk.com/user",
+        url: "/api/profile-images/507f1f77bcf86cd799439011",
       },
     });
   });

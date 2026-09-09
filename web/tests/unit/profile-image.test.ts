@@ -9,17 +9,16 @@ import {
 } from "@/features/employees/server/profile-image-service";
 
 const mocks = vi.hoisted(() => ({
-  clerkClient: vi.fn(),
   findEmployeeByPlatformUserId: vi.fn(),
   recordEmployeeAudit: vi.fn(),
   requirePlatformUser: vi.fn(),
-  updateUserProfileImage: vi.fn(),
+  setIdentityImage: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 
-vi.mock("@clerk/nextjs/server", () => ({
-  clerkClient: mocks.clerkClient,
+vi.mock("@/features/auth/server/identity-administration", () => ({
+  setIdentityImage: mocks.setIdentityImage,
 }));
 
 vi.mock("@/features/auth/server/require-platform-user", () => ({
@@ -90,20 +89,15 @@ describe("profile image normalization", () => {
 });
 
 describe("profile image ownership", () => {
-  it("derives employee and Clerk targets from the authenticated actor", async () => {
+  it("derives employee and identity targets from the authenticated actor", async () => {
     mocks.requirePlatformUser.mockResolvedValue({
-      clerkUserId: "user_clerk_123",
+      authUserId: "auth_user_123",
       platformUser: { id: "507f1f77bcf86cd799439011" },
     });
     mocks.findEmployeeByPlatformUserId.mockResolvedValue({
       id: "507f1f77bcf86cd799439012",
     });
-    mocks.updateUserProfileImage.mockResolvedValue({
-      imageUrl: "https://img.clerk.com/updated",
-    });
-    mocks.clerkClient.mockResolvedValue({
-      users: { updateUserProfileImage: mocks.updateUserProfileImage },
-    });
+    mocks.setIdentityImage.mockResolvedValue("/api/profile-images/updated");
     const source = await sharp({
       create: {
         background: "#07bbc7",
@@ -124,9 +118,9 @@ describe("profile image ownership", () => {
     expect(mocks.findEmployeeByPlatformUserId).toHaveBeenCalledWith(
       "507f1f77bcf86cd799439011",
     );
-    expect(mocks.updateUserProfileImage).toHaveBeenCalledWith(
-      "user_clerk_123",
-      expect.objectContaining({ file: expect.any(NodeFile) }),
+    expect(mocks.setIdentityImage).toHaveBeenCalledWith(
+      "auth_user_123",
+      expect.any(Uint8Array),
     );
     expect(mocks.recordEmployeeAudit).toHaveBeenCalledWith({
       action: "profile_image_updated",

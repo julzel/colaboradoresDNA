@@ -26,16 +26,16 @@ const indexes: IndexDescription[] = [
     unique: true,
   },
   {
-    key: { clerkUserId: 1 },
-    name: "platform_users_clerk_user_id_unique",
-    partialFilterExpression: { clerkUserId: { $type: "string" } },
+    key: { authUserId: 1 },
+    name: "platform_users_auth_user_id_unique",
+    partialFilterExpression: { authUserId: { $type: "string" } },
     unique: true,
   },
   {
-    key: { "invitation.clerkInvitationId": 1 },
-    name: "platform_users_invitation_id_unique",
+    key: { "invitation.invitationId": 1 },
+    name: "platform_users_auth_invitation_id_unique",
     partialFilterExpression: {
-      "invitation.clerkInvitationId": { $type: "string" },
+      "invitation.invitationId": { $type: "string" },
     },
     unique: true,
   },
@@ -70,12 +70,12 @@ export async function ensureAuthIndexes() {
   return globalThis.authIndexesPromise;
 }
 
-export async function findPlatformUserByClerkId(
-  clerkUserId: string,
+export async function findPlatformUserByAuthId(
+  authUserId: string,
 ): Promise<PlatformUser | null> {
   await ensureAuthIndexes();
   const collection = await getPlatformUsersCollection();
-  const document = await collection.findOne({ clerkUserId });
+  const document = await collection.findOne({ authUserId });
 
   return document ? toPlatformUser(document) : null;
 }
@@ -113,13 +113,13 @@ export async function listPlatformUserDisplayNamesByIds(ids: string[]) {
 }
 
 export async function claimInvitedPlatformUser({
-  clerkUserId,
+  authUserId,
   verifiedEmails,
 }: {
-  clerkUserId: string;
+  authUserId: string;
   verifiedEmails: readonly string[];
 }): Promise<PlatformUser | null> {
-  const existing = await findPlatformUserByClerkId(clerkUserId);
+  const existing = await findPlatformUserByAuthId(authUserId);
 
   if (existing) {
     return existing;
@@ -135,8 +135,10 @@ export async function claimInvitedPlatformUser({
   const now = new Date();
   const claimableUser: Filter<PlatformUserDocument> = {
     normalizedEmail: { $in: normalizedEmails },
-    status: { $in: ["invited", "active"] },
-    $or: [{ clerkUserId: null }, { clerkUserId: { $exists: false } }],
+    status: "invited",
+    "invitation.expiresAt": { $gt: now },
+    "invitation.status": "pending",
+    $or: [{ authUserId: null }, { authUserId: { $exists: false } }],
   };
 
   const document = await collection.findOneAndUpdate(
@@ -144,8 +146,8 @@ export async function claimInvitedPlatformUser({
     {
       $set: {
         activatedAt: now,
-        clerkSyncStatus: "synced",
-        clerkUserId,
+        authSyncStatus: "synced",
+        authUserId,
         "invitation.status": "accepted",
         status: "active",
         updatedAt: now,
@@ -175,13 +177,13 @@ export async function createInvitedPlatformUser(
   const document: PlatformUserDocument = {
     _id: new ObjectId(),
     activatedAt: null,
-    clerkSyncStatus: "synced",
-    clerkUserId: null,
+    authSyncStatus: "synced",
+    authUserId: null,
     createdAt: now,
     deactivatedAt: null,
     displayName,
     invitation: {
-      clerkInvitationId: null,
+      invitationId: null,
       expiresAt: null,
       lastSentAt: null,
       status: "pending",
@@ -237,11 +239,11 @@ export async function updatePlatformUserEmail({
 }
 
 export async function setPlatformUserInvitation({
-  clerkInvitationId,
+  invitationId,
   expiresAt,
   id,
 }: {
-  clerkInvitationId: string;
+  invitationId: string;
   expiresAt: Date;
   id: string;
 }) {
@@ -252,7 +254,7 @@ export async function setPlatformUserInvitation({
     { _id: new ObjectId(id), status: "invited" },
     {
       $set: {
-        "invitation.clerkInvitationId": clerkInvitationId,
+        "invitation.invitationId": invitationId,
         "invitation.expiresAt": expiresAt,
         "invitation.lastSentAt": now,
         "invitation.status": "pending",
@@ -294,7 +296,7 @@ export async function deactivatePlatformUserRecord(id: string) {
     { _id: new ObjectId(id), status: { $ne: "deactivated" } },
     {
       $set: {
-        clerkSyncStatus: "pending_deactivation",
+        authSyncStatus: "pending_deactivation",
         deactivatedAt: now,
         status: "deactivated",
         updatedAt: now,
@@ -319,7 +321,7 @@ export async function reactivatePlatformUserRecord({
     { _id: new ObjectId(id), status: "deactivated" },
     {
       $set: {
-        clerkSyncStatus: "synced",
+        authSyncStatus: "synced",
         deactivatedAt: null,
         status,
         updatedAt: now,
@@ -331,17 +333,17 @@ export async function reactivatePlatformUserRecord({
   return document ? toPlatformUser(document) : null;
 }
 
-export async function setPlatformUserClerkSyncStatus({
+export async function setPlatformUserAuthSyncStatus({
   id,
   status,
 }: {
   id: string;
-  status: PlatformUserDocument["clerkSyncStatus"];
+  status: PlatformUserDocument["authSyncStatus"];
 }) {
   const collection = await getPlatformUsersCollection();
 
   await collection.updateOne(
     { _id: new ObjectId(id) },
-    { $set: { clerkSyncStatus: status, updatedAt: new Date() } },
+    { $set: { authSyncStatus: status, updatedAt: new Date() } },
   );
 }

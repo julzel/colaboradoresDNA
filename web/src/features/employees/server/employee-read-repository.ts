@@ -38,7 +38,7 @@ const pageSize = 20;
 type DirectoryAggregationRow = {
   _id: ObjectId;
   accessStatus: PlatformUserStatus;
-  clerkUserId: string | null;
+  authUserId: string | null;
   departmentId: ObjectId | null;
   departmentName: string | null;
   displayName: string;
@@ -56,7 +56,7 @@ export type EmployeeDirectoryRepositoryResult = Omit<
 > & {
   items: Array<
     Omit<EmployeeDirectoryItem, "profileImageUrl"> & {
-      clerkUserId: string | null;
+      authUserId: string | null;
     }
   >;
 };
@@ -265,7 +265,7 @@ export async function listEmployeeDirectoryForAdministration(
       {
         $project: {
           accessStatus: "$access.status",
-          clerkUserId: "$access.clerkUserId",
+          authUserId: "$access.authUserId",
           departmentId: "$assignment.departmentId",
           departmentName: { $arrayElemAt: ["$department.name", 0] },
           displayName: 1,
@@ -294,7 +294,7 @@ export async function listEmployeeDirectoryForAdministration(
   const total = rows.length;
   const items = rows.map((row) => ({
     accessStatus: row.accessStatus,
-    clerkUserId: row.clerkUserId ?? null,
+    authUserId: row.authUserId ?? null,
     departmentName: row.departmentName || null,
     displayName: row.displayName,
     employeeCode: row.employeeCode ?? null,
@@ -423,10 +423,10 @@ export async function getEmployeeDetailForAdministration(
 
   return {
     access: {
-      clerkUserId: access.clerkUserId ?? null,
+      authUserId: access.authUserId ?? null,
       email: String(access.normalizedEmail),
       hasInvitationBeenSent: Boolean(
-        access.invitation.lastSentAt || access.invitation.clerkInvitationId,
+        access.invitation.lastSentAt || access.invitation.invitationId,
       ),
       invitationStatus: access.invitation.status,
       role: access.role,

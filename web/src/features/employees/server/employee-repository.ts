@@ -333,7 +333,7 @@ export async function endEmployeeEmployment({
         { _id: employee.platformUserId },
         {
           $set: {
-            clerkSyncStatus: "pending_deactivation",
+            authSyncStatus: "pending_deactivation",
             deactivatedAt: new Date(),
             status: "deactivated",
             updatedAt: new Date(),

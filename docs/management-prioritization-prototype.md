@@ -24,7 +24,7 @@ OPENAI_PLANNING_MODEL=gpt-5.6-sol
 APP_BASE_URL=http://localhost:3000
 ```
 
-The existing Clerk and MongoDB configuration is also required. Never use `NEXT_PUBLIC_` for the OpenAI key. The default model is GPT-5.6 Sol, with medium reasoning effort, the Responses API, Structured Outputs, `store: false`, a 120-second timeout, no automatic retries, and a 12,000 output-token cap. The output budget includes model reasoning and is a maximum, not expected usage.
+The existing Better Auth and MongoDB configuration is also required. Never use `NEXT_PUBLIC_` for the OpenAI key. The default model is GPT-5.6 Sol, with medium reasoning effort, the Responses API, Structured Outputs, `store: false`, a 120-second timeout, no automatic retries, and a 12,000 output-token cap. The output budget includes model reasoning and is a maximum, not expected usage.
 
 `store: false` disables stored Response objects; it is not a statement that all provider retention is disabled. Review the provider’s data policies before adding sensitive company information. No prompts, task content, or raw provider errors are logged by the feature.
 
@@ -70,7 +70,7 @@ Base path: `/api/planning/v1`. The authenticated OpenAPI 3.1 document is served 
 
 Success responses use `{ "data": ... }`. Errors use `{ "error": { "code": "...", "message": "..." } }`. The JSON contract does not expose database identifiers for ownership or allow callers to select another workspace owner. Error messages are currently localized in Spanish; codes are stable for other clients.
 
-All endpoints require the existing Clerk session and server-side administrator authorization. Every mutation requires JSON and an `Origin` matching `APP_BASE_URL`. A replacement frontend on the same origin can use this contract unchanged. A separately hosted frontend needs an explicitly designed authentication and allowed-origin policy; this prototype does not enable permissive CORS.
+All endpoints require the existing Better Auth session and server-side administrator authorization. Every mutation requires JSON and an `Origin` matching `APP_BASE_URL`. A replacement frontend on the same origin can use this contract unchanged. A separately hosted frontend needs an explicitly designed authentication and allowed-origin policy; this prototype does not enable permissive CORS.
 
 Mutations carry an expected `version`. Stale versions return HTTP 409. The generated proposal has its own ID and context version, both checked during acceptance. Generation reserves a workspace version before the provider call, so reload `/workspace` after a failed request before retrying. API responses and the page are private and non-cacheable.
 
