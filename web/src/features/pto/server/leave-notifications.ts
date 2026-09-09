@@ -5,6 +5,7 @@ import { findPlatformUserById } from "@/features/auth/server/platform-user-repos
 import type { DashboardNotification } from "@/features/dashboard/domain/dashboard-notification";
 import {
   ptoCategoryLabels,
+  normalizePtoCategory,
   ptoStatusLabels,
   type PtoRequestDocument,
 } from "../domain/pto";
@@ -63,7 +64,7 @@ export async function listLeaveNotifications(
               : `Ausencia ${ptoStatusLabels[entry.to].toLocaleLowerCase("es")}`,
             startDate: request.startDate,
             startsAt: entry.occurredAt.toISOString(),
-            title: ptoCategoryLabels[request.category],
+            title: ptoCategoryLabels[normalizePtoCategory(request.category)],
           },
         ];
       }),

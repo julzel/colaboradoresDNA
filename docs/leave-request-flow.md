@@ -29,6 +29,7 @@ New calculations carry policy version 2. Previously approved requests retain the
 - The requester receives approval, denial and admin cancellation notifications, including administrator-created approved leave.
 - Notifications derive from transactionally committed status history. Each transition has its own read key, so reading an approval does not hide a later cancellation.
 - The bell and dashboard refresh every 60 seconds while the page is visible and when the tab becomes visible again. This is in-app delivery, not email or browser push.
+- Notifications are shown only in the bell's responsive drawer, not as a home-page section. Each unread entry offers a mark-as-read button; successful reads animate out and remain excluded on subsequent loads. Opening an entry persists its read state before navigating to its authorized detail page. Failed writes leave the entry available to retry.
 - The feed is bounded to the latest 100 relevant requests/events. Leave transitions are shown newest-first ahead of upcoming calendar events. Open a notification for full request details and cancellation reason.
 
 ## Monthly PTO accrual deployment

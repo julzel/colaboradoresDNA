@@ -420,7 +420,7 @@ export async function getCalendarDashboardNotifications() {
 
   return {
     displayName: platformUser.displayName,
-    notifications: state.notifications.slice(0, 5),
+    notifications: state.notifications.filter((notification) => notification.isUnread),
     role: platformUser.role,
     unreadCount: state.unreadCount,
   };

@@ -3,7 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-header";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+}));
+vi.mock("@/features/dashboard/actions/dashboard-notification-actions", () => ({
+  getUnreadNotificationsAction: vi.fn(),
+  markNotificationReadAction: vi.fn(),
+}));
 vi.mock("@/components/auth/auth-controls", () => ({
   AuthControls: () => <span>Cuenta</span>,
 }));
@@ -22,10 +29,10 @@ describe("workspace header notifications", () => {
       />,
     );
 
-    const notifications = screen.getByRole("link", {
+    const notifications = screen.getByRole("button", {
       name: "3 notificaciones sin leer",
     });
-    expect(notifications).toHaveAttribute("href", "/#notifications");
+    expect(notifications).toHaveAttribute("aria-haspopup", "dialog");
     expect(notifications).toHaveTextContent("3");
   });
 });

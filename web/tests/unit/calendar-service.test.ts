@@ -534,4 +534,34 @@ describe("calendar service authorization and aggregation", () => {
     });
     expect(href).toBe(`/calendario/eventos/${eventId}`);
   });
+
+  it("excludes persisted read notifications and returns more than five unread items", async () => {
+    mocks.listUpcomingAbsenceNotifications.mockResolvedValue(
+      Array.from({ length: 8 }, (_, index) => ({
+        id: `request-${index}`,
+        key: `leave:request-${index}:1:approved`,
+        kind: "pto",
+        title: "Vacaciones",
+        label: "Ausencia aprobada",
+        allDay: true,
+        eventType: null,
+        startDate: "2026-10-01",
+        endDate: "2026-10-01",
+        startsAt: "2026-09-09T12:00:00Z",
+        href: `/ausencias/request-${index}`,
+      })),
+    );
+    mocks.listReadNotificationKeys.mockResolvedValue(
+      new Set(["leave:request-0:1:approved"]),
+    );
+    const result = await getCalendarDashboardNotifications();
+    expect(result.notifications).toHaveLength(7);
+    expect(result.notifications.every((notification) => notification.isUnread)).toBe(
+      true,
+    );
+    expect(
+      result.notifications.some((notification) => notification.id === "request-0"),
+    ).toBe(false);
+    expect(result.unreadCount).toBe(7);
+  });
 });
