@@ -1,4 +1,6 @@
-const CACHE_NAME = "colaboradores-dna-v2";
+const CACHE_PREFIX = "colaboradores-dna-";
+// Bump for cache-schema changes. Mutable assets revalidate independently of this version.
+const CACHE_NAME = `${CACHE_PREFIX}v3`;
 const PRECACHE_URLS = [
   "/offline.html",
   "/icons/icon-192.png",
@@ -9,8 +11,14 @@ const PRECACHE_URLS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
-  self.skipWaiting();
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) =>
+        cache.addAll(PRECACHE_URLS.map((url) => new Request(url, { cache: "reload" }))),
+      )
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -19,12 +27,33 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)),
+          keys
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
         ),
-      ),
+      )
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
+
+async function cached(request) {
+  return caches
+    .open(CACHE_NAME)
+    .then((cache) => cache.match(request))
+    .catch(() => undefined);
+}
+
+async function fetchAndCache(request, revalidate = false) {
+  const response = await fetch(request, revalidate ? { cache: "no-cache" } : undefined);
+  if (response.ok && !response.redirected) {
+    // Storage failures must not turn a successful network request into an error.
+    await caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.put(request, response.clone()))
+      .catch(() => undefined);
+  }
+  return response;
+}
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
@@ -40,33 +69,34 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("/offline.html")));
+    event.waitUntil(fetchAndCache("/offline.html", true).catch(() => undefined));
+    event.respondWith(
+      fetch(request).catch(
+        async () => (await cached("/offline.html")) ?? Response.error(),
+      ),
+    );
     return;
   }
 
-  const isPublicAsset =
-    url.pathname.startsWith("/_next/static/") ||
+  const isImmutableAsset = url.pathname.startsWith("/_next/static/");
+  const isMutableAsset =
     url.pathname.startsWith("/icons/") ||
-    url.pathname.startsWith("/images/");
+    url.pathname.startsWith("/images/") ||
+    url.pathname === "/offline.html";
 
-  if (!isPublicAsset) {
+  if (!isImmutableAsset && !isMutableAsset) {
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then(async (cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      const networkResponse = await fetch(request);
-
-      if (networkResponse.ok) {
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(request, networkResponse.clone());
-      }
-
-      return networkResponse;
-    }),
-  );
+  if (isMutableAsset) {
+    // Serve cached artwork immediately, while checking for a newer deployment.
+    const refresh = fetchAndCache(request, true);
+    event.waitUntil(refresh.catch(() => undefined));
+    event.respondWith(cached(request).then((response) => response ?? refresh));
+  } else {
+    // Next.js chunks have content hashes, so their URLs already identify a version.
+    event.respondWith(
+      cached(request).then((response) => response ?? fetchAndCache(request)),
+    );
+  }
 });

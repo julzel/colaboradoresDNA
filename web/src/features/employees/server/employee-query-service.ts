@@ -1,6 +1,6 @@
 import "server-only";
 
-import { clerkClient } from "@clerk/nextjs/server";
+import { getIdentityImageUrls } from "@/features/auth/server/identity-administration";
 
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import { DevelopmentDomainError } from "@/features/development/domain/shared";
@@ -19,41 +19,11 @@ async function requireEmployeeAdministrator() {
   return requirePlatformUser({ roles: ["administrator"] });
 }
 
-async function getProfileImageUrl(clerkUserId: string | null) {
-  if (!clerkUserId) return null;
-
-  try {
-    const client = await clerkClient();
-    const user = await client.users.getUser(clerkUserId);
-    return user.hasImage ? user.imageUrl : null;
-  } catch {
-    // The collaborator detail remains available with its initials fallback.
-    return null;
-  }
+async function getProfileImageUrl(authUserId: string | null) {
+  if (!authUserId) return null;
+  return (await getIdentityImageUrls([authUserId])).get(authUserId) ?? null;
 }
-
-async function getProfileImageUrls(clerkUserIds: string[]) {
-  const uniqueIds = [...new Set(clerkUserIds)];
-  const imageUrls = new Map<string, string>();
-  if (uniqueIds.length === 0) return imageUrls;
-
-  try {
-    const client = await clerkClient();
-
-    for (let index = 0; index < uniqueIds.length; index += 100) {
-      const userIds = uniqueIds.slice(index, index + 100);
-      const response = await client.users.getUserList({ limit: 100, userId: userIds });
-
-      for (const user of response.data) {
-        if (user.hasImage) imageUrls.set(user.id, user.imageUrl);
-      }
-    }
-  } catch {
-    // The directory remains available with initials when Clerk cannot be reached.
-  }
-
-  return imageUrls;
-}
+const getProfileImageUrls = getIdentityImageUrls;
 
 async function getOptionalDevelopmentSummary(employeeId: string) {
   try {
@@ -83,11 +53,11 @@ export async function getEmployeeDirectoryPageData() {
     { paginate: false },
   );
   const imageUrls = await getProfileImageUrls(
-    directory.items.flatMap(({ clerkUserId }) => (clerkUserId ? [clerkUserId] : [])),
+    directory.items.flatMap(({ authUserId }) => (authUserId ? [authUserId] : [])),
   );
-  const items = directory.items.map(({ clerkUserId, ...item }) => ({
+  const items = directory.items.map(({ authUserId, ...item }) => ({
     ...item,
-    profileImageUrl: clerkUserId ? (imageUrls.get(clerkUserId) ?? null) : null,
+    profileImageUrl: authUserId ? (imageUrls.get(authUserId) ?? null) : null,
   }));
 
   return { ...directory, items };
@@ -99,7 +69,7 @@ export async function getEmployeeDetailPageData(employeeId: string) {
   if (!detail) return null;
 
   const [profileImageUrl, development, hasSchedule] = await Promise.all([
-    getProfileImageUrl(detail.access.clerkUserId),
+    getProfileImageUrl(detail.access.authUserId),
     getOptionalDevelopmentSummary(employeeId),
     employeeSchedulingIntegration.hasAnySchedule(employeeId),
   ]);

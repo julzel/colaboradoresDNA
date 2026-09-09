@@ -20,6 +20,7 @@ type ModalProps = {
   icon?: ReactNode;
   onClose?: () => void;
   title: string;
+  variant?: "modal" | "drawer";
 };
 
 const focusableSelector = [
@@ -31,7 +32,14 @@ const focusableSelector = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
-export function Modal({ children, description, icon, onClose, title }: ModalProps) {
+export function Modal({
+  children,
+  description,
+  icon,
+  onClose,
+  title,
+  variant = "modal",
+}: ModalProps) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -113,7 +121,11 @@ export function Modal({ children, description, icon, onClose, title }: ModalProp
   }, []);
 
   return (
-    <div className={styles.backdrop} onClick={handleBackdropClick}>
+    <div
+      className={styles.backdrop}
+      data-variant={variant}
+      onClick={handleBackdropClick}
+    >
       <div
         aria-describedby={description ? descriptionId : undefined}
         aria-labelledby={titleId}

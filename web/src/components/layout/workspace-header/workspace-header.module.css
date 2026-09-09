@@ -43,6 +43,8 @@
 }
 
 .notificationButton {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   position: relative;
   display: grid;
   width: auto;

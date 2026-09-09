@@ -34,14 +34,14 @@ visibility must be enforced by server projections.
 | `employee_timeline_locks` | Transaction serialization for temporal rules        |
 
 `platform_users` remains authoritative for platform role, personal login email,
-invitation state, access status, and the stable Clerk identifier.
+invitation state, access status, and the stable Better Auth identifier.
 
 The employee record is the canonical source for legal and preferred names.
 Updating a preferred name also synchronizes the derived display name into
 `platform_users` in the same MongoDB transaction so legacy notification and
-audit views use the same name. Clerk is the canonical profile-image store;
+audit views use the same name. The auth feature's private MongoDB image store is the canonical profile-image store;
 `/perfil` is the only application UI that writes it, and all application avatar
-surfaces read the same Clerk image.
+surfaces read the same authenticated image endpoint.
 
 Every employee also has an immutable operational code such as `DNA-0042`.
 Employee creation reserves the next code from an atomic sequence, and the
@@ -60,7 +60,7 @@ While no schedule record exists, administrators see a persistent notice linking
 directly to `/admin/horarios/[employeeId]`.
 
 Sending the external access invitation is optional and is disabled by default in
-the creation form. When deferred, no Clerk invitation call is made; the detail
+the creation form. When deferred, no invitation email is sent; the detail
 page displays `Sin invitación` and offers `Enviar invitación`. Once an invitation
 has previously been sent, the same action is labeled `Reenviar invitación`.
 Changing the email of a deferred account updates only the internal access record
@@ -108,7 +108,7 @@ procedure and use migration-capable credentials.
 - Role, department, and position never imply one another.
 - Employment deactivation must use the existing fail-closed access lifecycle
   when the CRUD workflow is implemented.
-- Self-service profile writes derive their employee and Clerk targets from the
+- Self-service profile writes derive their employee and auth identity targets from the
   authenticated server identity; clients never submit a target user ID.
-- Login-email updates require the administrator role and synchronize Clerk with
+- Login-email updates require the administrator role and synchronize Better Auth with
   `platform_users`; employees cannot change their own login email in `/perfil`.

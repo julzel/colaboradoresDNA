@@ -1,196 +1,137 @@
 # Colaboradores DNA
 
-Colaboradores DNA is a full-stack web application built with Next.js, React,
-TypeScript, Clerk, MongoDB Atlas, and Netlify.
-
-The repository is intentionally organised around a single application in
-[`web/`](./web). Application code and its tooling configuration live there;
-this root README and [`docs/`](./docs) provide project-level documentation.
+Full-stack employee platform built with Next.js, React, TypeScript, **Better Auth**,
+MongoDB Atlas, and Netlify. Application code lives in [web/](./web); project
+documentation lives in [docs/](./docs).
 
 ## Start locally
 
-### Prerequisites
+Requires Node.js 24, pnpm 10, MongoDB Atlas (or a replica set), and an SMTP
+provider or local email capture server.
 
-- Node.js 24
-- pnpm 10
-
-### Run the application
+1. Run `pnpm install --frozen-lockfile` from `web/`.
+2. Copy `web/.env.example` to `web/.env.local` only if the latter does not exist.
+   Otherwise merge the new settings without overwriting existing secrets.
+3. Configure `MONGODB_URI`, `MONGODB_DB`, `APP_BASE_URL=http://localhost:3000`,
+   `BETTER_AUTH_SECRET`, and the SMTP settings. Generate the auth secret with
+   `openssl rand -base64 32`; keep it server-only and independent per environment.
+4. Initialize the authentication schema using the **exact configured database name**:
 
 ```bash
 cd web
-pnpm install
+pnpm bootstrap:auth colaboradores_dna_dev
+pnpm bootstrap:employee-model
+pnpm bootstrap:scheduling-model
+pnpm bootstrap:pto-model
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). Use this canonical hostname
+consistently; `127.0.0.1` is not interchangeable for authenticated requests.
 
-The application requires Clerk development credentials to render authentication
-controls. The project is already linked to its Clerk development application;
-see the [development guide](./docs/development.md#authentication-with-clerk).
-MongoDB remains optional until a database-backed feature is used.
+There is no public administrator signup. To create the first administrator, set
+`BOOTSTRAP_ADMIN_IDENTITIES` temporarily as described in the
+[authentication guide](./docs/authentication.md#first-administrator), then run
+`pnpm bootstrap:admins colaboradores_dna_dev`. The administrator receives an
+invitation, creates a password, verifies their email, and enrolls an authenticator.
+
+**Existing Clerk database?** Follow the
+[Better Auth migration guide](./docs/better-auth-migration.md) before bootstrapping.
+Do not delete employee records or leave balances. Existing accounts must be
+re-invited; Clerk passwords, MFA factors, sessions, and avatars are not imported.
+
+## Authentication
+
+- Invitation-only email/password registration; verified email required.
+- Mandatory authenticator-app MFA for administrators and supervisors, optional
+  for collaborators; one-time recovery codes.
+- Password recovery, password changes, and session management at
+  `/account/security`.
+- Server-side application roles and active status remain in `platform_users`.
+- Better Auth exposes same-origin HTTP endpoints under `/api/auth/*`.
+  Business services use a provider-neutral authorization boundary.
+- Clerk keys and a Clerk production subscription are no longer required.
+  SMTP delivery and operating authentication securely are now our responsibility.
+
+See [implementation and security](./docs/authentication.md) and
+[cutover, testing, and rollback](./docs/better-auth-migration.md).
 
 ## Quality checks
 
-Run these commands from `web/`:
+Run from `web/`:
 
 ```bash
-pnpm verify          # formatting, linting, CSS checks, types, unit tests, build
-pnpm test:e2e        # browser and accessibility tests
-pnpm test:coverage   # unit-test coverage report
+pnpm verify          # format, lint, styles, types, default tests, build
+pnpm test:e2e        # browser and accessibility checks
+pnpm test:coverage
 ```
 
-See the [repository audit and remediation report](./docs/repository-audit-2026-09-07.md)
-for findings, verification evidence, and remaining production-readiness work.
-
-## Deploy to Netlify
-
-The Netlify site is configured as a development environment. Netlify's
-`production` context deploys the configured `mvp/main` branch to a stable
-development URL; it is not an application production release. Pull requests
-can also receive Deploy Preview URLs. Other branch deploys remain blocked.
-
-### Create the Netlify project
-
-1. Push the repository to GitHub, GitLab, Bitbucket, or Azure DevOps.
-2. In Netlify, select **Add new project → Import an existing project**.
-3. Select this repository and configure:
-
-   | Setting           | Value        |
-   | ----------------- | ------------ |
-   | Base directory    | `web`        |
-   | Build command     | `pnpm build` |
-   | Publish directory | `.next`      |
-   | Node version      | `24`         |
-
-Set `mvp/main` as the Netlify production branch. A push or merge to that branch
-updates the stable development URL. The checked-in Next.js runtime plugin must
-appear in the deploy log and package the application before the deploy stage.
-
-### Configure development environment variables
-
-Add these variables in Netlify to both **Production** and **Deploy Previews**.
-Make them available to Builds and Functions where scope controls are available.
-
-```text
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-MONGODB_URI=mongodb+srv://...
-MONGODB_DB=colaboradores_dna_dev
-```
-
-For the **Production** context, also set:
-
-```text
-APP_BASE_URL=https://colaboradoresdna.netlify.app
-```
-
-Do not set `APP_BASE_URL` to `http://localhost:3000` in Netlify.
-
-Use Clerk development keys and a non-production MongoDB database. The build
-rejects Clerk live keys. The local development database can also be used when
-it is remotely reachable and sharing test data is intentional.
-
-Mark `CLERK_SECRET_KEY` and `MONGODB_URI` as secret. Do not mark
-`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` as secret because it is intentionally
-included in browser assets. Require approval before exposing secrets to
-previews created by untrusted contributors.
-
-### Initialize collaborators and scheduling for an environment
-
-After pointing `.env.local` at the target development database, initialize the
-employee model first and then the dedicated Scheduling slice:
+Opt-in integration tests create and delete uniquely named disposable databases;
+they never target `MONGODB_DB` for test data. Use a dedicated test Atlas credential:
 
 ```bash
-cd web
-pnpm bootstrap:employee-model
-pnpm bootstrap:scheduling-model
+RUN_AUTH_LIVE=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run tests/integration/better-auth-mongodb.test.ts
+RUN_PTO_LIVE=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run tests/integration/pto-mongodb.test.ts
+```
+
+Auth integration tests capture emails in memory; they do not send real email.
+See the [repository audit](./docs/repository-audit-2026-09-07.md) for earlier
+findings; its Clerk-specific configuration is superseded by this migration.
+
+## Production deployment
+
+Follow the [deployment checklist](./docs/deployment.md). Netlify settings:
+base directory `web`, build command `pnpm build`, publish directory `.next`,
+Node 24. Select the reviewed release branch in Netlify's build settings; the
+repository does not select it automatically.
+
+For the production site use
+`APP_BASE_URL=https://colaboradores.dnaturefood.com`,
+`APP_ENVIRONMENT=production`, a dedicated production database, a unique
+`BETTER_AUTH_SECRET`, and verified TLS SMTP delivery. Configure variables for
+Builds and Functions. Keep production secrets out of Deploy Previews.
+
+Do not cut over until email delivery, MFA recovery, account deactivation, and the
+collaborator → administrator leave workflow pass on staging. Deploying this code
+does not automatically migrate existing data, send invitations, or clear databases.
+
+## Feature initialization
+
+After verifying the target environment, additional idempotent model bootstraps
+are available:
+
+```bash
 pnpm bootstrap:production-tasks-model -- --dry-run
 pnpm bootstrap:production-tasks-model
-```
-
-Both commands are idempotent and should run with migration-capable credentials.
-The scheduling bootstrap reconciles its indexes and installs dual-read v1/v2
-validation. It leaves legacy unversioned schedules readable as v1 and never
-invents missing start or end times. Scheduling runtime paths do not need
-index-management privileges. See [Collaborator scheduling](./docs/scheduling.md)
-for the v2 model and compatibility policy.
-
-### Initialize PTO for an environment
-
-After pointing `.env.local` at the target development database, create the PTO
-indexes with the idempotent bootstrap command:
-
-```bash
-cd web
-pnpm bootstrap:pto-model
-```
-
-Any active administrator can approve or deny a pending PTO request, except
-their own. Collaborator requests also route to their assigned supervisor.
-
-New collaborators receive an opening PTO balance during creation. For existing
-collaborators, open their administration detail, select **Saldo de ausencias**,
-and manually register the opening balance once. A missing balance is distinct
-from a zero balance and prevents submission, but not draft creation.
-
-### Initialize collaborator development for an environment
-
-The development module includes the administrator dashboard and encrypted 1:1
-workflow. Use synthetic data only. After pointing `.env.local` at the isolated
-development database, create its reviewed indexes with:
-
-```bash
-cd web
 pnpm bootstrap:development-model
 ```
 
-Encrypted narrative work additionally requires the server-only key variables
-documented in `web/.env.example`. Do not add those keys to untrusted Deploy
-Previews, and do not use this development deployment for real HR records.
-
-### Deploy the development site
-
-1. Keep `mvp/main` selected as the production branch and branch deploys disabled.
-2. Enable Deploy Previews for pull requests if per-PR URLs are desired.
-3. Merge or push to `mvp/main` to update the stable development URL, or open a
-   pull request to generate a preview.
-4. Confirm the build log contains one of:
-
-   ```text
-   Netlify development environment verified (production).
-   Netlify development environment verified (deploy-preview).
-   ```
-
-5. Test authentication, database-backed operations, invitation links, and the
-   PWA resources at `/manifest.webmanifest` and `/sw.js`.
-
-Never configure Clerk live keys or a production database on this site. See the
-[deployment guide](./docs/deployment.md) for the complete checklist.
+The collaborator-development feature needs independent server-only encryption
+keys for narrative records. Preserve old key versions and back them up separately.
+A new employee receives an opening PTO balance during creation; existing
+employees need an explicit opening balance under **Saldo de ausencias**.
+Missing and zero balances are intentionally different.
 
 ## Documentation
 
 - [Architecture](./docs/architecture.md)
 - [Authentication and account lifecycle](./docs/authentication.md)
+- [Better Auth migration](./docs/better-auth-migration.md)
 - [Development guide](./docs/development.md)
 - [Deployment guide](./docs/deployment.md)
 - [Design system](./docs/design-system.md)
 - [Employee model](./docs/employee-model.md)
 - [Collaborator scheduling](./docs/scheduling.md)
+- [Leave requests, notifications and monthly PTO accrual](./docs/leave-request-flow.md)
 - [Production tasks](./docs/production-tasks.md)
-- [Production tasks PRD](./docs/production-tasks-prd.md)
-- [Production tasks roadmap](./docs/production-tasks-roadmap.md)
-- [Collaborator development PRD](./docs/collaborator-development-prd.md)
-- [Collaborator development roadmap](./docs/collaborator-development-roadmap.md)
-- [Collaborator development security boundary](./docs/collaborator-development-security.md)
-- [Technology-stack decision](./tasks/done/tech-stack.md)
+- [Collaborator development security](./docs/collaborator-development-security.md)
+- [Management prioritization prototype](./docs/management-prioritization-prototype.md)
 
 ## Repository layout
 
 ```text
 .
 ├── docs/       Project documentation
-├── tasks/      Product and technical decisions
+├── tasks/      Product and technical decisions (historical decisions may mention Clerk)
 └── web/        Next.js application, tests, and deployment configuration
 ```

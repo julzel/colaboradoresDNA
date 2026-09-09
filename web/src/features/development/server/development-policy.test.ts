@@ -30,7 +30,7 @@ describe("development access policy", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requirePlatformUser.mockResolvedValue({
-      clerkTwoFactorEnabled: true,
+      twoFactorEnabled: true,
       platformUser: {
         id: "507f1f77bcf86cd799439012",
         role: "administrator",
@@ -128,7 +128,7 @@ describe("development access policy", () => {
 
   it("derives the self-view target from the authenticated platform user", async () => {
     mocks.requirePlatformUser.mockResolvedValue({
-      clerkTwoFactorEnabled: false,
+      twoFactorEnabled: false,
       platformUser: {
         id: "507f1f77bcf86cd799439012",
         role: "collaborator",

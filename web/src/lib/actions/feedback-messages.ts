@@ -68,7 +68,7 @@ export const feedbackMessages = {
   },
   employee_ended_sync_pending: {
     message:
-      "La persona ya no puede entrar. La revocación en Clerk quedó pendiente para reintentar.",
+      "La persona ya no puede entrar. El cierre de sesiones quedó pendiente para reintentar.",
     tone: "warning",
   },
   employee_personal_updated: {
@@ -93,7 +93,7 @@ export const feedbackMessages = {
   },
   deactivated_sync_pending: {
     message:
-      "La cuenta ya no puede entrar, pero la revocación en Clerk debe reintentarse.",
+      "La cuenta ya no puede entrar, pero el cierre de sesiones debe reintentarse.",
     tone: "error",
   },
   deactivation_failed: {
@@ -134,7 +134,7 @@ export const feedbackMessages = {
     tone: "error",
   },
   reactivation_sync_failed: {
-    message: "Clerk no pudo desbloquear la identidad. La cuenta permanece desactivada.",
+    message: "No pudimos reactivar la identidad. La cuenta permanece desactivada.",
     tone: "error",
   },
 } as const satisfies Record<

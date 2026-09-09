@@ -1,18 +1,20 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/features/auth/server/auth-provider", () => ({
+  getIdentitySession: vi.fn(),
+}));
 vi.mock("@/features/auth/server/require-platform-user", () => ({
   requirePlatformUser: vi.fn(),
 }));
-import { auth } from "@clerk/nextjs/server";
+import { getIdentitySession } from "@/features/auth/server/auth-provider";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import { planningHttp, readJson } from "@/features/planning/http/handler";
 
 beforeEach(() => {
-  vi.mocked(auth).mockResolvedValue({ userId: "clerk-admin" } as Awaited<
-    ReturnType<typeof auth>
-  >);
+  vi.mocked(getIdentitySession).mockResolvedValue({
+    user: { id: "auth-admin" },
+  } as Awaited<ReturnType<typeof getIdentitySession>>);
   vi.mocked(requirePlatformUser).mockResolvedValue({
     platformUser: { id: "platform-admin", role: "administrator" },
   } as Awaited<ReturnType<typeof requirePlatformUser>>);
@@ -48,11 +50,9 @@ describe("planning HTTP boundary", () => {
       expect(action).not.toHaveBeenCalled();
     }
   });
-  it("returns 401 for signed-out callers and JSON 403 for auth redirects", async () => {
+  it("returns 401 for signed-out callers and JSON 403 for getIdentitySession redirects", async () => {
     const action = vi.fn();
-    vi.mocked(auth).mockResolvedValueOnce({ userId: null } as Awaited<
-      ReturnType<typeof auth>
-    >);
+    vi.mocked(getIdentitySession).mockResolvedValueOnce(null);
     expect(
       (
         await planningHttp(

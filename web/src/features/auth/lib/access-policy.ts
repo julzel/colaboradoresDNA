@@ -9,7 +9,7 @@ export type AccessDecision =
 
 export function getAccessDecision(
   user: PlatformUser | null,
-  clerkTwoFactorEnabled: boolean,
+  twoFactorEnabled: boolean,
 ): AccessDecision {
   if (!user) {
     return { granted: false, reason: "not_invited" };
@@ -23,7 +23,7 @@ export function getAccessDecision(
     return { granted: false, reason: "invitation_pending" };
   }
 
-  if (requiresMfa(user.role) && !clerkTwoFactorEnabled) {
+  if (requiresMfa(user.role) && !twoFactorEnabled) {
     return { granted: false, reason: "mfa_required" };
   }
 

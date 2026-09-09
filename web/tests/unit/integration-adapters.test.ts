@@ -21,6 +21,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/features/calendar/integrations/nager-date-calendar-adapter", () => ({
+  calendarHolidayIntegration: {
+    listPublicHolidays: vi
+      .fn()
+      .mockResolvedValue([{ date: "2026-09-03", name: "Synthetic holiday" }]),
+  },
+}));
 
 vi.mock("@/features/calendar/server/calendar-event-repository", () => ({
   createInternalOneOnOneCalendarEvent: mocks.createInternalOneOnOneCalendarEvent,
@@ -131,7 +138,12 @@ describe("cross-feature integration adapters", () => {
     const sourceScheduleIds = ["507f1f77bcf86cd799439020"];
     const workingDates = ["2026-09-01", "2026-09-04"];
     mocks.resolveEmployeeWorkRange.mockResolvedValue({
-      dateBreakdown: [{ privateSchedulingFact: true }],
+      dateBreakdown: [
+        { date: "2026-09-01", isWorkingDay: true, scheduledMinutes: 480 },
+        { date: "2026-09-02", isWorkingDay: false, scheduledMinutes: 0 },
+        { date: "2026-09-03", isWorkingDay: true, scheduledMinutes: 480 },
+        { date: "2026-09-04", isWorkingDay: true, scheduledMinutes: 360 },
+      ],
       endDate: "2026-09-05",
       sourceScheduleIds,
       startDate: "2026-09-01",

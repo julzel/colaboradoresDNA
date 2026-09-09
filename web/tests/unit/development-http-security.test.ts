@@ -37,6 +37,6 @@ describe("development HTTP security boundary", () => {
     expect(precacheSource).not.toContain("/admin");
     expect(precacheSource).not.toContain("/desarrollo");
     expect(serviceWorker).toContain('if (request.mode === "navigate")');
-    expect(serviceWorker).toContain("event.respondWith(fetch(request)");
+    expect(serviceWorker).toMatch(/event\.respondWith\(\s*fetch\(request\)/);
   });
 });

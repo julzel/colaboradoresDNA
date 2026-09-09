@@ -160,7 +160,7 @@ describe("PTO domain", () => {
     expect(canTransitionPtoStatus("pending", "approved")).toBe(true);
     expect(canTransitionPtoStatus("pending", "denied")).toBe(true);
     expect(canTransitionPtoStatus("pending", "cancelled")).toBe(true);
-    expect(canTransitionPtoStatus("approved", "cancelled")).toBe(false);
+    expect(canTransitionPtoStatus("approved", "cancelled")).toBe(true);
     expect(canTransitionPtoStatus("draft", "approved")).toBe(false);
   });
 });

@@ -1,122 +1,97 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
-
 const mocks = vi.hoisted(() => ({
-  auth: vi.fn(),
-  claimInvitedPlatformUser: vi.fn(),
-  clerkClient: vi.fn(),
-  currentUser: vi.fn(),
-  findPlatformUserByClerkId: vi.fn(),
-  redirect: vi.fn((url: string) => {
-    throw new Error(`redirect:${url}`);
-  }),
-  updateUser: vi.fn(),
+  session: vi.fn(),
+  revoke: vi.fn(),
+  find: vi.fn(),
+  claim: vi.fn(),
 }));
-
 vi.mock("server-only", () => ({}));
-
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: mocks.auth,
-  clerkClient: mocks.clerkClient,
-  currentUser: mocks.currentUser,
+vi.mock("@/features/auth/server/auth-provider", () => ({
+  getIdentitySession: mocks.session,
+  revokeIdentitySessions: mocks.revoke,
 }));
-
-vi.mock("next/navigation", () => ({
-  redirect: mocks.redirect,
-}));
-
 vi.mock("@/features/auth/server/platform-user-repository", () => ({
-  claimInvitedPlatformUser: mocks.claimInvitedPlatformUser,
-  findPlatformUserByClerkId: mocks.findPlatformUserByClerkId,
+  findPlatformUserByAuthId: mocks.find,
+  claimInvitedPlatformUser: mocks.claim,
 }));
-
-function platformUser() {
-  return {
-    clerkUserId: "user_123",
-    id: "507f1f77bcf86cd799439011",
-    normalizedEmail: "julio@example.com",
-    role: "collaborator",
-    status: "active",
-  };
-}
-
-function clerkUser({
-  deleteSelfEnabled = false,
-  email = "julio@example.com",
-}: {
-  deleteSelfEnabled?: boolean;
-  email?: string;
-} = {}) {
-  return {
-    deleteSelfEnabled,
-    emailAddresses: [
-      {
-        emailAddress: email,
-        id: "idn_primary",
-        verification: { status: "verified" },
-      },
-    ],
-    hasImage: true,
-    id: "user_123",
-    imageUrl: "https://img.example.com/profile.webp",
-    primaryEmailAddressId: "idn_primary",
-    twoFactorEnabled: false,
-  };
-}
-
+vi.mock("next/navigation", () => ({
+  redirect: (url: string) => {
+    throw new Error("redirect:" + url);
+  },
+}));
+const user = {
+  id: "identity",
+  email: "julio@example.com",
+  emailVerified: true,
+  image: "/api/profile-images/identity",
+  twoFactorEnabled: false,
+};
+const platform = {
+  id: "platform",
+  normalizedEmail: user.email,
+  role: "collaborator",
+  status: "active",
+};
 describe("managed platform authorization", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.auth.mockResolvedValue({
-      isAuthenticated: true,
-      redirectToSignIn: vi.fn(),
-      sessionId: "sess_123",
-      userId: "user_123",
+    vi.resetAllMocks();
+    mocks.session.mockResolvedValue({
+      user,
+      session: { id: "session", mfaVerified: false },
     });
-    mocks.currentUser.mockResolvedValue(clerkUser());
-    mocks.findPlatformUserByClerkId.mockResolvedValue(platformUser());
-    mocks.clerkClient.mockResolvedValue({
-      sessions: { revokeSession: vi.fn() },
-      users: { updateUser: mocks.updateUser },
-    });
+    mocks.find.mockResolvedValue(platform);
+    mocks.revoke.mockResolvedValue(undefined);
   });
-
-  it("returns one canonical Clerk image and platform identity", async () => {
+  it("returns provider-neutral identity and platform permissions", async () => {
     await expect(requirePlatformUser()).resolves.toMatchObject({
-      clerkHasImage: true,
-      clerkImageUrl: "https://img.example.com/profile.webp",
-      clerkUserId: "user_123",
-      platformUser: { normalizedEmail: "julio@example.com" },
-    });
-    expect(mocks.updateUser).not.toHaveBeenCalled();
-  });
-
-  it("fails closed when a user changes the provider primary email", async () => {
-    mocks.currentUser.mockResolvedValue(clerkUser({ email: "other@example.com" }));
-
-    await expect(requirePlatformUser()).rejects.toThrow(
-      "redirect:/access-denied?reason=email_mismatch",
-    );
-    expect(mocks.redirect).toHaveBeenCalledWith("/access-denied?reason=email_mismatch");
-  });
-
-  it("disables self-deletion before granting workspace access", async () => {
-    mocks.currentUser.mockResolvedValue(clerkUser({ deleteSelfEnabled: true }));
-
-    await expect(requirePlatformUser()).resolves.toBeDefined();
-    expect(mocks.updateUser).toHaveBeenCalledWith("user_123", {
-      deleteSelfEnabled: false,
+      authUserId: user.id,
+      platformUser: platform,
+      hasImage: true,
     });
   });
-
-  it("fails closed when the managed-account policy cannot be applied", async () => {
-    mocks.currentUser.mockResolvedValue(clerkUser({ deleteSelfEnabled: true }));
-    mocks.updateUser.mockRejectedValue(new Error("provider unavailable"));
-
-    await expect(requirePlatformUser()).rejects.toThrow(
-      "redirect:/access-denied?reason=account_policy",
+  it("redirects unauthenticated visitors", async () => {
+    mocks.session.mockResolvedValue(null);
+    await expect(requirePlatformUser()).rejects.toThrow("redirect:/sign-in");
+  });
+  it("requires email verification before claiming an account", async () => {
+    mocks.session.mockResolvedValue({
+      user: { ...user, emailVerified: false },
+      session: {},
+    });
+    await expect(requirePlatformUser()).rejects.toThrow("verification=required");
+    expect(mocks.claim).not.toHaveBeenCalled();
+  });
+  it("rejects mismatched identity emails", async () => {
+    mocks.find.mockResolvedValue({ ...platform, normalizedEmail: "other@example.com" });
+    await expect(requirePlatformUser()).rejects.toThrow("email_mismatch");
+  });
+  it("revokes sessions for disabled accounts", async () => {
+    mocks.find.mockResolvedValue({ ...platform, status: "deactivated" });
+    await expect(requirePlatformUser()).rejects.toThrow("deactivated");
+    expect(mocks.revoke).toHaveBeenCalledWith(user.id);
+  });
+  it("does not treat enrollment as proof of an MFA-verified session", async () => {
+    mocks.find.mockResolvedValue({ ...platform, role: "administrator" });
+    mocks.session.mockResolvedValue({
+      user: { ...user, twoFactorEnabled: true },
+      session: { id: "s", mfaVerified: false },
+    });
+    await expect(requirePlatformUser()).rejects.toThrow("requirement=mfa");
+    await expect(requirePlatformUser({ allowMfaSetup: true })).resolves.toBeDefined();
+  });
+  it("admits an administrator after MFA and rejects unauthorized roles", async () => {
+    mocks.find.mockResolvedValue({ ...platform, role: "administrator" });
+    mocks.session.mockResolvedValue({
+      user: { ...user, twoFactorEnabled: true },
+      session: { id: "s", mfaVerified: true },
+    });
+    await expect(
+      requirePlatformUser({ roles: ["administrator"] }),
+    ).resolves.toBeDefined();
+    mocks.find.mockResolvedValue(platform);
+    await expect(requirePlatformUser({ roles: ["administrator"] })).rejects.toThrow(
+      "forbidden",
     );
-    expect(mocks.findPlatformUserByClerkId).not.toHaveBeenCalled();
   });
 });

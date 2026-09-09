@@ -10,7 +10,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@clerk/nextjs/server", () => ({ clerkClient: vi.fn() }));
+vi.mock("@/features/auth/server/identity-administration", () => ({
+  getIdentityImageUrls: vi.fn().mockResolvedValue(new Map()),
+}));
 vi.mock("@/features/auth/server/require-platform-user", () => ({
   requirePlatformUser: mocks.requirePlatformUser,
 }));
@@ -42,7 +44,7 @@ describe("employee detail setup status", () => {
     });
     mocks.getDevelopmentSummaryForAdministration.mockResolvedValue(null);
     mocks.getEmployeeDetailForAdministration.mockResolvedValue({
-      access: { clerkUserId: null },
+      access: { authUserId: null },
       employee: { id: "507f1f77bcf86cd799439012" },
     });
   });

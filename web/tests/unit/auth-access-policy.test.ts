@@ -9,14 +9,14 @@ function createPlatformUser(overrides: Partial<PlatformUser> = {}): PlatformUser
 
   return {
     activatedAt: now,
-    clerkSyncStatus: "synced",
-    clerkUserId: "user_test",
+    authSyncStatus: "synced",
+    authUserId: "user_test",
     createdAt: now,
     deactivatedAt: null,
     displayName: "Ana Mora",
     id: "507f1f77bcf86cd799439011",
     invitation: {
-      clerkInvitationId: "inv_test",
+      invitationId: "inv_test",
       expiresAt: now,
       lastSentAt: now,
       status: "accepted",

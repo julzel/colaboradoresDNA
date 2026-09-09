@@ -18,7 +18,7 @@ import {
   listAccountsForAdministration,
 } from "@/features/auth/server/account-query-service";
 import { Card, CardBody, CardHeader } from "@/components/ui/card/card";
-import { ButtonLink } from "@/components/ui/button/button";
+import { Container } from "@/components/ui/container/container";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { SelectField, TextField } from "@/components/ui/form-field/form-field";
@@ -37,6 +37,47 @@ const statusLabels: Record<PlatformUserStatus, string> = {
   deactivated: "Desactivado",
   invited: "Invitado",
 };
+
+function AccountStatus({ status }: { status: PlatformUserStatus }) {
+  return (
+    <StatusBadge
+      tone={status === "active" ? "success" : status === "invited" ? "info" : "danger"}
+    >
+      {statusLabels[status]}
+    </StatusBadge>
+  );
+}
+
+function AccountActions({ actor, user }: { actor: PlatformUser; user: PlatformUser }) {
+  return (
+    <div className={styles.actions}>
+      {user.status === "invited" && (
+        <form action={resendPlatformInvitation}>
+          <input name="platformUserId" type="hidden" value={user.id} />
+          <SubmitButton pendingLabel="Reenviando…" size="small" variant="secondary">
+            Reenviar
+          </SubmitButton>
+        </form>
+      )}
+      {user.status !== "deactivated" && user.id !== actor.id && (
+        <form action={deactivatePlatformUser}>
+          <input name="platformUserId" type="hidden" value={user.id} />
+          <SubmitButton pendingLabel="Desactivando…" size="small" variant="danger">
+            Desactivar
+          </SubmitButton>
+        </form>
+      )}
+      {user.status === "deactivated" && (
+        <form action={reactivatePlatformUser}>
+          <input name="platformUserId" type="hidden" value={user.id} />
+          <SubmitButton pendingLabel="Reactivando…" size="small" variant="secondary">
+            Reactivar
+          </SubmitButton>
+        </form>
+      )}
+    </div>
+  );
+}
 
 async function AccountDirectory({ actor }: { actor: PlatformUser }) {
   const users = await listAccountsForAdministration();
@@ -72,63 +113,32 @@ async function AccountDirectory({ actor }: { actor: PlatformUser }) {
                 </td>
                 <td>{roleLabels[user.role]}</td>
                 <td>
-                  <StatusBadge
-                    tone={
-                      user.status === "active"
-                        ? "success"
-                        : user.status === "invited"
-                          ? "info"
-                          : "danger"
-                    }
-                  >
-                    {statusLabels[user.status]}
-                  </StatusBadge>
+                  <AccountStatus status={user.status} />
                 </td>
                 <td>
-                  <div className={styles.actions}>
-                    {user.status === "invited" && (
-                      <form action={resendPlatformInvitation}>
-                        <input name="platformUserId" type="hidden" value={user.id} />
-                        <SubmitButton
-                          pendingLabel="Reenviando…"
-                          size="small"
-                          variant="secondary"
-                        >
-                          Reenviar
-                        </SubmitButton>
-                      </form>
-                    )}
-                    {user.status !== "deactivated" && user.id !== actor.id && (
-                      <form action={deactivatePlatformUser}>
-                        <input name="platformUserId" type="hidden" value={user.id} />
-                        <SubmitButton
-                          pendingLabel="Desactivando…"
-                          size="small"
-                          variant="danger"
-                        >
-                          Desactivar
-                        </SubmitButton>
-                      </form>
-                    )}
-                    {user.status === "deactivated" && (
-                      <form action={reactivatePlatformUser}>
-                        <input name="platformUserId" type="hidden" value={user.id} />
-                        <SubmitButton
-                          pendingLabel="Reactivando…"
-                          size="small"
-                          variant="secondary"
-                        >
-                          Reactivar
-                        </SubmitButton>
-                      </form>
-                    )}
-                  </div>
+                  <AccountActions actor={actor} user={user} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <ul aria-label="Directorio de cuentas" className={styles.mobileList}>
+        {users.map((user) => (
+          <li className={styles.mobileItem} key={user.id}>
+            <div className={styles.mobileIdentity}>
+              <strong>{user.displayName}</strong>
+              <span>{user.normalizedEmail}</span>
+            </div>
+            <div className={styles.mobileDetails}>
+              <span>{roleLabels[user.role]}</span>
+              <AccountStatus status={user.status} />
+            </div>
+            <AccountActions actor={actor} user={user} />
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }
@@ -137,57 +147,52 @@ export default async function AccountsPage() {
   const actor = await getAccountAdministrationActor();
 
   return (
-    <section className={styles.shell}>
-      <PageSectionHeader
-        eyebrow="Administración"
-        icon={ShieldCheck}
-        title="Cuentas y acceso"
-        action={
-          <ButtonLink href="/admin" variant="quiet">
-            Volver a administración
-          </ButtonLink>
-        }
-      />
+    <Container>
+      <section className={styles.page}>
+        <header className={styles.header}>
+          <PageSectionHeader icon={ShieldCheck} title="Cuentas y acceso" />
+        </header>
 
-      <div className={styles.grid}>
-        <Card>
-          <CardHeader
-            description="Clerk enviará un enlace de registro válido por 14 días."
-            title="Invitar una persona"
-          />
-          <CardBody>
-            <form action={invitePlatformUser} className={styles.form}>
-              <TextField
-                autoComplete="name"
-                id="display-name"
-                label="Nombre completo"
-                name="displayName"
-                required
-              />
-              <TextField
-                autoComplete="email"
-                id="email"
-                label="Correo electrónico personal"
-                name="email"
-                required
-                type="email"
-              />
-              <SelectField id="role" label="Rol" name="role" required>
-                <option value="collaborator">Colaborador</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="administrator">Administrador</option>
-              </SelectField>
-              <SubmitButton pendingLabel="Enviando invitación…">
-                Enviar invitación
-              </SubmitButton>
-            </form>
-          </CardBody>
-        </Card>
+        <div className={styles.grid}>
+          <Card>
+            <CardHeader
+              description="Enviaremos un enlace de registro válido por 14 días."
+              title="Invitar una persona"
+            />
+            <CardBody>
+              <form action={invitePlatformUser} className={styles.form}>
+                <TextField
+                  autoComplete="name"
+                  id="display-name"
+                  label="Nombre completo"
+                  name="displayName"
+                  required
+                />
+                <TextField
+                  autoComplete="email"
+                  id="email"
+                  label="Correo electrónico personal"
+                  name="email"
+                  required
+                  type="email"
+                />
+                <SelectField id="role" label="Rol" name="role" required>
+                  <option value="collaborator">Colaborador</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="administrator">Administrador</option>
+                </SelectField>
+                <SubmitButton pendingLabel="Enviando invitación…">
+                  Enviar invitación
+                </SubmitButton>
+              </form>
+            </CardBody>
+          </Card>
 
-        <Suspense fallback={<AccountDirectorySkeleton />}>
-          <AccountDirectory actor={actor} />
-        </Suspense>
-      </div>
-    </section>
+          <Suspense fallback={<AccountDirectorySkeleton />}>
+            <AccountDirectory actor={actor} />
+          </Suspense>
+        </div>
+      </section>
+    </Container>
   );
 }

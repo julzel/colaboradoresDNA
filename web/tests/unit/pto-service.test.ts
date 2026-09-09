@@ -115,7 +115,7 @@ function expectedSubmittedDuration({
     calculation: {
       ...calculation,
       calculatedAt: expect.any(Date),
-      calculationPolicyVersion: 1,
+      calculationPolicyVersion: 2,
     },
     units,
   };
@@ -409,7 +409,7 @@ describe("PTO submission routing", () => {
         durationCalculation: {
           ...defaultScheduleCalculation,
           calculatedAt: expect.any(Date),
-          calculationPolicyVersion: 1,
+          calculationPolicyVersion: 2,
         },
         durationUnits: 2,
       },
@@ -475,7 +475,7 @@ describe("PTO submission routing", () => {
         durationCalculation: {
           ...calculation,
           calculatedAt: expect.any(Date),
-          calculationPolicyVersion: 1,
+          calculationPolicyVersion: 2,
         },
         durationUnits: 4,
         endDate: "2026-08-12",
@@ -594,7 +594,7 @@ describe("PTO submission routing", () => {
         durationCalculation: {
           ...calculation,
           calculatedAt: expect.any(Date),
-          calculationPolicyVersion: 1,
+          calculationPolicyVersion: 2,
         },
         durationUnits: 6,
         endDate: "2026-08-15",
@@ -701,7 +701,7 @@ describe("PTO submission routing", () => {
         calculation: {
           ...refreshedCalculation,
           calculatedAt: now,
-          calculationPolicyVersion: 1,
+          calculationPolicyVersion: 2,
         },
         units: 4,
       },

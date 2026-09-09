@@ -485,7 +485,14 @@ describe("calendar service authorization and aggregation", () => {
   it("notifies an employee about upcoming approved leave created by an administrator", async () => {
     mocks.listUpcomingAbsenceNotifications.mockResolvedValue([
       {
-        categoryLabel: "Vacaciones",
+        title: "Vacaciones",
+        allDay: true,
+        eventType: null,
+        key: "leave:leave-request:1:approved",
+        kind: "pto",
+        href: "/ausencias/leave-request",
+        label: "Ausencia aprobada",
+        startsAt: "2026-08-10T12:00:00.000Z",
         endDate: "2026-08-12",
         id: "leave-request",
         startDate: "2026-08-11",
@@ -526,5 +533,35 @@ describe("calendar service authorization and aggregation", () => {
       platformUserId: "507f1f77bcf86cd799439011",
     });
     expect(href).toBe(`/calendario/eventos/${eventId}`);
+  });
+
+  it("excludes persisted read notifications and returns more than five unread items", async () => {
+    mocks.listUpcomingAbsenceNotifications.mockResolvedValue(
+      Array.from({ length: 8 }, (_, index) => ({
+        id: `request-${index}`,
+        key: `leave:request-${index}:1:approved`,
+        kind: "pto",
+        title: "Vacaciones",
+        label: "Ausencia aprobada",
+        allDay: true,
+        eventType: null,
+        startDate: "2026-10-01",
+        endDate: "2026-10-01",
+        startsAt: "2026-09-09T12:00:00Z",
+        href: `/ausencias/request-${index}`,
+      })),
+    );
+    mocks.listReadNotificationKeys.mockResolvedValue(
+      new Set(["leave:request-0:1:approved"]),
+    );
+    const result = await getCalendarDashboardNotifications();
+    expect(result.notifications).toHaveLength(7);
+    expect(result.notifications.every((notification) => notification.isUnread)).toBe(
+      true,
+    );
+    expect(
+      result.notifications.some((notification) => notification.id === "request-0"),
+    ).toBe(false);
+    expect(result.unreadCount).toBe(7);
   });
 });

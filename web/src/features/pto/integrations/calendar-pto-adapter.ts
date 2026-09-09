@@ -1,4 +1,5 @@
 import "server-only";
+import { listLeaveNotifications } from "../server/leave-notifications";
 
 import type { CalendarPtoIntegration } from "@/features/calendar/integrations/calendar-pto-port";
 import {
@@ -8,7 +9,6 @@ import {
 } from "@/features/pto/domain/pto";
 import {
   getPtoRequestDetail,
-  listUpcomingProxyPtoNotifications,
   listVisibleApprovedPtoForCalendar,
 } from "@/features/pto/server/pto-service";
 
@@ -30,13 +30,7 @@ export const calendarPtoIntegration: CalendarPtoIntegration = {
   },
 
   async listUpcomingAbsenceNotifications(platformUserId, limit) {
-    const requests = await listUpcomingProxyPtoNotifications(platformUserId, limit);
-    return requests.map((request) => ({
-      categoryLabel: ptoCategoryLabels[request.category],
-      endDate: request.endDate,
-      id: request.id,
-      startDate: request.startDate,
-    }));
+    return listLeaveNotifications(platformUserId, limit);
   },
 
   async listVisibleApprovedAbsences(input) {

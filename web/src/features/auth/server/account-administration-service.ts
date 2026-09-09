@@ -1,6 +1,6 @@
 import "server-only";
 
-import { clerkClient } from "@clerk/nextjs/server";
+import { revokeIdentitySessions } from "@/features/auth/server/auth-provider";
 
 import type { InvitePlatformUserInput } from "@/features/auth/domain/platform-user";
 import { recordAuthAudit } from "@/features/auth/server/auth-audit-repository";
@@ -12,7 +12,7 @@ import {
   findPlatformUserById,
   markPlatformUserInvitationFailed,
   reactivatePlatformUserRecord,
-  setPlatformUserClerkSyncStatus,
+  setPlatformUserAuthSyncStatus,
 } from "@/features/auth/server/platform-user-repository";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 
@@ -49,7 +49,7 @@ export async function inviteAccountForAdministration(input: InvitePlatformUserIn
     });
     await recordAuthAudit({
       action: "invitation_created",
-      actorClerkUserId: actor.clerkUserId,
+      actorAuthUserId: actor.authUserId,
       actorPlatformUserId: actor.platformUser.id,
       metadata: { role: target.role },
       targetPlatformUserId: target.id,
@@ -59,7 +59,7 @@ export async function inviteAccountForAdministration(input: InvitePlatformUserIn
       await markPlatformUserInvitationFailed(target.id);
       await recordAuthAudit({
         action: "invitation_failed",
-        actorClerkUserId: actor.clerkUserId,
+        actorAuthUserId: actor.authUserId,
         actorPlatformUserId: actor.platformUser.id,
         metadata: { role: target.role },
         targetPlatformUserId: target.id,
@@ -78,15 +78,6 @@ export async function resendAccountInvitationForAdministration(platformUserId: s
     throw new AccountAdministrationError("invitation_not_pending");
   }
 
-  if (target.invitation.clerkInvitationId) {
-    try {
-      const client = await clerkClient();
-      await client.invitations.revokeInvitation(target.invitation.clerkInvitationId);
-    } catch {
-      // Expired, accepted, or already revoked invitations cannot be reused.
-    }
-  }
-
   try {
     await sendPlatformInvitation({
       email: target.normalizedEmail,
@@ -94,7 +85,7 @@ export async function resendAccountInvitationForAdministration(platformUserId: s
     });
     await recordAuthAudit({
       action: "invitation_resent",
-      actorClerkUserId: actor.clerkUserId,
+      actorAuthUserId: actor.authUserId,
       actorPlatformUserId: actor.platformUser.id,
       targetPlatformUserId: target.id,
     });
@@ -119,36 +110,35 @@ export async function deactivateAccountForAdministration(platformUserId: string)
       : await deactivatePlatformUserRecord(existing.id);
   if (!target) throw new AccountAdministrationError("deactivation_failed");
 
-  let clerkSyncFailed = false;
+  let authSyncFailed = false;
 
-  if (target.clerkUserId) {
+  if (target.authUserId) {
     try {
-      const client = await clerkClient();
-      await client.users.banUser(target.clerkUserId);
-      await setPlatformUserClerkSyncStatus({ id: target.id, status: "synced" });
+      await revokeIdentitySessions(target.authUserId);
+      await setPlatformUserAuthSyncStatus({ id: target.id, status: "synced" });
     } catch {
-      clerkSyncFailed = true;
+      authSyncFailed = true;
       await recordAuthAudit({
         action: "session_revocation_failed",
-        actorClerkUserId: actor.clerkUserId,
+        actorAuthUserId: actor.authUserId,
         actorPlatformUserId: actor.platformUser.id,
         metadata: { operation: "deactivate" },
         targetPlatformUserId: target.id,
       });
     }
   } else {
-    await setPlatformUserClerkSyncStatus({ id: target.id, status: "synced" });
+    await setPlatformUserAuthSyncStatus({ id: target.id, status: "synced" });
   }
 
   await recordAuthAudit({
     action: "account_deactivated",
-    actorClerkUserId: actor.clerkUserId,
+    actorAuthUserId: actor.authUserId,
     actorPlatformUserId: actor.platformUser.id,
-    metadata: { clerkSyncFailed },
+    metadata: { authSyncFailed },
     targetPlatformUserId: target.id,
   });
 
-  return { clerkSyncFailed };
+  return { authSyncFailed };
 }
 
 export async function reactivateAccountForAdministration(platformUserId: string) {
@@ -159,14 +149,13 @@ export async function reactivateAccountForAdministration(platformUserId: string)
     throw new AccountAdministrationError("reactivation_failed");
   }
 
-  if (target.clerkUserId) {
+  if (target.authUserId) {
     try {
-      await setPlatformUserClerkSyncStatus({
+      await setPlatformUserAuthSyncStatus({
         id: target.id,
         status: "pending_reactivation",
       });
-      const client = await clerkClient();
-      await client.users.unbanUser(target.clerkUserId);
+      await revokeIdentitySessions(target.authUserId);
     } catch {
       throw new AccountAdministrationError("reactivation_sync_failed");
     }
@@ -174,7 +163,7 @@ export async function reactivateAccountForAdministration(platformUserId: string)
 
   const reactivated = await reactivatePlatformUserRecord({
     id: target.id,
-    status: target.clerkUserId ? "active" : "invited",
+    status: target.authUserId ? "active" : "invited",
   });
   if (!reactivated) {
     throw new AccountAdministrationError("reactivation_failed");
@@ -182,7 +171,7 @@ export async function reactivateAccountForAdministration(platformUserId: string)
 
   await recordAuthAudit({
     action: "account_reactivated",
-    actorClerkUserId: actor.clerkUserId,
+    actorAuthUserId: actor.authUserId,
     actorPlatformUserId: actor.platformUser.id,
     metadata: { status: reactivated.status },
     targetPlatformUserId: target.id,

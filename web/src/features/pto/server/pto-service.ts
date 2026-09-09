@@ -1,4 +1,8 @@
 import "server-only";
+import { findLeaveConflicts } from "./leave-conflicts";
+import { LeaveConflictError } from "../domain/leave-conflict";
+import { CalendarHolidayIntegrationError } from "@/features/calendar/integrations/nager-date-calendar-adapter";
+import { canCancelLeave } from "../domain/leave-policy";
 
 import type { PlatformRole, PlatformUser } from "@/features/auth/domain/platform-user";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
@@ -60,6 +64,8 @@ async function calculateDraftDuration(
       startDate: request.startDate,
     });
   } catch (error) {
+    if (error instanceof CalendarHolidayIntegrationError)
+      throw new PtoDomainError("holidays_unavailable");
     if (error instanceof PtoScheduleCalculationError) {
       throw new PtoDomainError("schedule_incomplete");
     }
@@ -85,6 +91,36 @@ async function calculateDraftDuration(
     durationUnits:
       request.requestedPortion === "half" ? 1 : calculation.workingDates.length * 2,
   });
+}
+
+export async function previewLeaveDuration(
+  input: PtoDraftCommand,
+  employeeId?: string,
+  requestId?: string,
+) {
+  const request = ptoDraftCommandSchema.parse(input);
+  if (requestId) objectIdStringSchema.parse(requestId);
+  async function check(id: string) {
+    if (requestId) {
+      const existing = await findPtoRequestById(requestId);
+      if (!existing || existing.requesterEmployeeId !== id)
+        throw new PtoDomainError("forbidden");
+    }
+    const conflicts = await findLeaveConflicts(id, request, requestId);
+    if (conflicts.length) throw new LeaveConflictError(conflicts);
+  }
+  if (employeeId) {
+    await requirePlatformUser({ roles: ["administrator"] });
+    objectIdStringSchema.parse(employeeId);
+    const employee = await findEmployeeById(employeeId);
+    if (!employee || employee.employmentStatus !== "active")
+      throw new PtoDomainError("employee_missing");
+    await check(employeeId);
+    return (await calculateDraftDuration(employeeId, request)).durationUnits;
+  }
+  const { employee } = await requirePtoEmployee();
+  await check(employee.id);
+  return (await calculateDraftDuration(employee.id, request)).durationUnits;
 }
 
 async function requirePtoEmployee() {
@@ -302,8 +338,13 @@ export async function getPtoRequestDetail(requestId: string) {
       }));
   return {
     canCancel:
-      (isRequester || isAdministratorProxy) &&
-      ["draft", "pending"].includes(request.status),
+      (isRequester || platformUser.role === "administrator") &&
+      canCancelLeave({
+        ...request,
+        today: getTodayInCostaRica(),
+        administrator: platformUser.role === "administrator" && !isRequester,
+      }),
+    cancellationNoteRequired: platformUser.role === "administrator" && !isRequester,
     canDecide:
       request.status === "pending" &&
       !isRequester &&
@@ -460,7 +501,7 @@ export async function submitPtoRequestWithConfirmation({
   const detail = await getPtoRequestDetail(requestId);
   if (!detail) throw new PtoDomainError("request_missing");
 
-  const hasWarnings = detail.warnings.hasOverlap || detail.warnings.wouldBeNegative;
+  const hasWarnings = detail.warnings.wouldBeNegative;
   if (hasWarnings && !confirmWarnings) {
     return {
       proxyEmployeeId: detail.proxyEmployeeId,
@@ -475,20 +516,19 @@ export async function submitPtoRequestWithConfirmation({
   };
 }
 
-export async function cancelOwnPtoRequest(requestId: string) {
+export async function cancelOwnPtoRequest(requestId: string, note?: string) {
   const { platformUser } = await requirePlatformUser();
   const request = await findPtoRequestById(requestId);
   if (!request) throw new PtoDomainError("request_missing");
   const isRequester = request.requesterPlatformUserId === platformUser.id;
-  const isAdministratorProxy =
-    platformUser.role === "administrator" &&
-    request.createdByPlatformUserId !== request.requesterPlatformUserId;
+  const isAdministratorProxy = platformUser.role === "administrator" && !isRequester;
   if (!isRequester && !isAdministratorProxy) {
     throw new PtoDomainError("forbidden");
   }
   return cancelPtoRequest({
     actorPlatformUserId: platformUser.id,
     administratorOverride: isAdministratorProxy,
+    note,
     requestId,
   });
 }
@@ -519,7 +559,7 @@ export async function decidePtoRequestWithConfirmation(
   const detail = await getPtoRequestDetail(input.requestId);
   if (!detail) throw new PtoDomainError("request_missing");
 
-  const hasWarnings = detail.warnings.hasOverlap || detail.warnings.wouldBeNegative;
+  const hasWarnings = detail.warnings.wouldBeNegative;
   if (input.decision === "approved" && hasWarnings && !input.confirmWarnings) {
     return { requiresConfirmation: true };
   }
@@ -570,9 +610,10 @@ export async function getEmployeePtoAdministration(employeeId: string) {
     employeeName: formatEmployeePreferredDisplayName(employee),
     ledger: await Promise.all(
       ledger.map(async (entry) => ({
-        actorName:
-          (await getPlatformUserName(entry.actorPlatformUserId.toHexString())) ??
-          "Usuario",
+        actorName: entry.actorPlatformUserId
+          ? ((await getPlatformUserName(entry.actorPlatformUserId.toHexString())) ??
+            "Usuario")
+          : "Sistema",
         balanceAfterUnits: entry.balanceAfterUnits,
         balanceBeforeUnits: entry.balanceBeforeUnits,
         createdAt: entry.createdAt,

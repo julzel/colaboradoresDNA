@@ -71,7 +71,7 @@ export type EmployeeSelfServiceProfileDetail = {
 
 export type EmployeeDetail = {
   access: {
-    clerkUserId: string | null;
+    authUserId: string | null;
     email: string;
     hasInvitationBeenSent: boolean;
     invitationStatus: "pending" | "accepted" | "failed";

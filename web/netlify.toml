@@ -6,8 +6,8 @@
   NODE_VERSION = "24"
   NETLIFY_NEXT_SKEW_PROTECTION = "true"
 
-# The configured production branch hosts the persistent development site.
-# The build guard enforces development-only credentials in that context.
+# APP_ENVIRONMENT defaults to development. Set production explicitly in the
+# production site's environment settings; previews must remain development.
 [context.branch-deploy]
   ignore = "exit 0"
 
@@ -19,3 +19,12 @@
 # raw .next directory as a static site.
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Netlify serves public files directly, outside Next.js response headers.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'"
+    X-Content-Type-Options = "nosniff"

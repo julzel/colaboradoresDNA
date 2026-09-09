@@ -1,4 +1,5 @@
 import type { PlatformRole } from "@/features/auth/domain/platform-user";
+import type { DashboardNotification } from "@/features/dashboard/domain/dashboard-notification";
 import type { CalendarPtoQuickDetail } from "@/features/calendar/view-models/calendar-pto-view";
 
 export type CalendarPtoEntry = {
@@ -9,12 +10,7 @@ export type CalendarPtoEntry = {
   startDate: string;
 };
 
-export type CalendarPtoNotification = {
-  categoryLabel: string;
-  endDate: string;
-  id: string;
-  startDate: string;
-};
+export type CalendarPtoNotification = Omit<DashboardNotification, "isUnread">;
 
 export interface CalendarPtoIntegration {
   getVisibleApprovedAbsenceDetail(

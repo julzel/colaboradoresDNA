@@ -3,7 +3,7 @@ import {
   ChartNoAxesColumnIncreasing,
   ChevronRight,
   ClipboardCheck,
-  ListOrdered,
+  // ListOrdered,
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
@@ -12,7 +12,7 @@ import Link from "next/link";
 import styles from "./administrator-module-links.module.css";
 
 const administratorModules = [
-  { href: "/admin/prioridades", icon: ListOrdered, label: "Mis prioridades" },
+  // { href: "/admin/prioridades", icon: ListOrdered, label: "Mis prioridades" },
   {
     href: "/admin/colaboradores",
     icon: UsersRound,

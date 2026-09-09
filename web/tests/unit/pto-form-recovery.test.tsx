@@ -5,6 +5,7 @@ import { PtoRequestForm } from "@/features/pto/components/pto-request-form";
 import { PtoDecisionForm } from "@/features/pto/components/pto-transition-forms";
 
 vi.mock("@/features/pto/actions/pto-actions", () => ({
+  previewLeaveDurationAction: vi.fn().mockResolvedValue({ units: 2, message: null }),
   savePtoDraftAction: vi.fn(async () => ({
     status: "error",
     message: "Falta un horario asignado.",

@@ -1,4 +1,4 @@
-import { SignOutButton } from "@clerk/nextjs";
+import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button/button";

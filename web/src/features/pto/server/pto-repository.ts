@@ -1,4 +1,7 @@
 import "server-only";
+import { assertNoLeaveConflict } from "./leave-conflicts";
+import { canCancelLeave } from "../domain/leave-policy";
+import { getTodayInCostaRica } from "@/features/calendar/domain/calendar-utils";
 
 import { MongoServerError, ObjectId, type ClientSession, type Filter } from "mongodb";
 
@@ -254,6 +257,7 @@ export async function createPtoDraft(input: {
         submittedAt: null,
         updatedAt: now,
       };
+      await assertNoLeaveConflict(input.employeeId, request, session);
       await requests.insertOne(created, { session });
       await recordPtoAudit({
         action: "request_created",
@@ -303,6 +307,7 @@ export async function createApprovedPtoRequestAsAdministrator(input: {
       const actorPlatformUserId = new ObjectId(input.actorPlatformUserId);
       const employeeId = new ObjectId(input.employeeId);
       const requesterPlatformUserId = new ObjectId(input.requesterPlatformUserId);
+      await assertNoLeaveConflict(input.employeeId, request, session);
       let balanceBeforeUnits: number | null = null;
       let balanceAfterUnits: number | null = null;
       let balanceDeltaUnits: number | null = null;
@@ -468,6 +473,12 @@ export async function updatePtoDraft(input: {
         { returnDocument: "after", session },
       );
       if (!updated) throw new PtoDomainError("stale_status");
+      await assertNoLeaveConflict(
+        updated.requesterEmployeeId.toHexString(),
+        request,
+        session,
+        input.requestId,
+      );
       await recordPtoAudit({
         action: "request_updated",
         actorPlatformUserId: input.actorPlatformUserId,
@@ -538,6 +549,12 @@ export async function submitPtoDraft(input: {
         throw new PtoDomainError("self_approval");
       }
       const now = new Date();
+      await assertNoLeaveConflict(
+        existing.requesterEmployeeId.toHexString(),
+        existing,
+        session,
+        input.requestId,
+      );
       updated = await requests.findOneAndUpdate(
         { _id: existing._id, status: "draft", updatedAt: input.expectedUpdatedAt },
         {
@@ -590,11 +607,12 @@ export async function cancelPtoRequest(input: {
   actorPlatformUserId: string;
   administratorOverride?: boolean;
   requestId: string;
+  note?: string | undefined;
 }) {
   objectIdStringSchema.parse(input.requestId);
   await ensurePtoIndexes();
   const client = await getMongoClient();
-  const { requests } = await getPtoCollections();
+  const { requests, balances, ledger } = await getPtoCollections();
   return client.withSession(async (session) => {
     let updated: PtoRequestDocument | null = null;
     await session.withTransaction(async () => {
@@ -604,17 +622,70 @@ export async function cancelPtoRequest(input: {
           ...(!input.administratorOverride && {
             requesterPlatformUserId: new ObjectId(input.actorPlatformUserId),
           }),
-          status: { $in: ["draft", "pending"] },
+          status: { $in: ["draft", "pending", "approved"] },
         },
         { session },
       );
       if (!existing) throw new PtoDomainError("stale_status");
       const now = new Date();
+      if (
+        !canCancelLeave({
+          ...existing,
+          today: getTodayInCostaRica(),
+          administrator: Boolean(input.administratorOverride),
+        })
+      ) {
+        throw new PtoDomainError("cancellation_cutoff");
+      }
+      const note = input.note?.trim() || null;
+      if (
+        input.administratorOverride &&
+        (!note || note.length < 3 || note.length > 1000)
+      ) {
+        throw new PtoDomainError("cancellation_note_required");
+      }
+      if (
+        existing.status === "approved" &&
+        existing.balanceDeltaUnits !== null &&
+        existing.balanceDeltaUnits < 0
+      ) {
+        const balance = await balances.findOne(
+          { employeeId: existing.requesterEmployeeId },
+          { session },
+        );
+        if (!balance) throw new PtoDomainError("balance_missing");
+        const deltaUnits = -existing.balanceDeltaUnits;
+        const result = await balances.updateOne(
+          { _id: balance._id, version: balance.version },
+          {
+            $inc: { currentBalanceUnits: deltaUnits, version: 1 },
+            $set: { updatedAt: now },
+          },
+          { session },
+        );
+        if (result.modifiedCount !== 1) throw new PtoDomainError("stale_status");
+        await ledger.insertOne(
+          {
+            _id: new ObjectId(),
+            actorPlatformUserId: new ObjectId(input.actorPlatformUserId),
+            employeeId: existing.requesterEmployeeId,
+            requestId: existing._id,
+            kind: "cancelled_request",
+            reason: note,
+            createdAt: now,
+            deltaUnits,
+            balanceBeforeUnits: balance.currentBalanceUnits,
+            balanceAfterUnits: balance.currentBalanceUnits + deltaUnits,
+          },
+          { session },
+        );
+      }
       updated = await requests.findOneAndUpdate(
         { _id: existing._id, status: existing.status },
         {
           $set: {
             cancelledAt: now,
+            cancellationNote: note,
             status: "cancelled",
             statusHistory: [
               ...existing.statusHistory,
@@ -674,6 +745,14 @@ export async function decidePtoRequest(input: {
       if (existing.requesterPlatformUserId.equals(input.actorPlatformUserId)) {
         throw new PtoDomainError("self_approval");
       }
+
+      if (decision.decision === "approved")
+        await assertNoLeaveConflict(
+          existing.requesterEmployeeId.toHexString(),
+          existing,
+          session,
+          input.requestId,
+        );
 
       let balanceBeforeUnits: number | null = null;
       let balanceAfterUnits: number | null = null;
@@ -942,7 +1021,7 @@ export async function getPtoRequestWarnings(request: PtoRequest) {
   const filter: Filter<PtoRequestDocument> = {
     _id: { $ne: new ObjectId(request.id) },
     requesterEmployeeId: new ObjectId(request.requesterEmployeeId),
-    status: { $in: ["pending", "approved"] },
+    status: { $in: ["draft", "pending", "approved"] },
     startDate: { $lte: request.endDate },
     endDate: { $gte: request.startDate },
   };

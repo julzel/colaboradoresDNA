@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { PwaInstallButton } from "@/components/pwa/pwa-install-button";
+import { PwaInstallProvider } from "@/components/pwa/pwa-install-provider";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: vi.fn() }),
@@ -20,11 +21,23 @@ describe("PWA installation", () => {
       },
     });
 
-    render(<PwaInstallButton />);
+    const view = render(
+      <PwaInstallProvider>
+        <span>Sign in</span>
+      </PwaInstallProvider>,
+    );
 
     act(() => {
       window.dispatchEvent(installEvent);
     });
+
+    // The browser event arrives before the authenticated header mounts.
+    view.rerender(
+      <PwaInstallProvider>
+        <PwaInstallButton />
+      </PwaInstallProvider>,
+    );
+    expect(installEvent.defaultPrevented).toBe(true);
 
     const installButton = screen.getByRole("button", {
       name: "Instalar aplicación",
@@ -48,7 +61,11 @@ describe("PWA installation", () => {
     });
 
     try {
-      render(<PwaInstallButton />);
+      render(
+        <PwaInstallProvider>
+          <PwaInstallButton />
+        </PwaInstallProvider>,
+      );
 
       await user.click(
         await screen.findByRole("button", { name: "Instalar aplicación" }),

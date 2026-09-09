@@ -1,40 +1,14 @@
-import { SignUp } from "@clerk/nextjs";
-import Link from "next/link";
-
-import styles from "@/app/auth.module.css";
-import { Logo } from "@/components/brand/logo/logo";
-
-export default function SignUpPage() {
+import { SignUpFlow } from "@/features/auth/components/sign-up-flow";
+import { AuthPageShell } from "@/features/auth/components/auth-page-shell";
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ invitation?: string; email?: string }>;
+}) {
+  const query = await searchParams;
   return (
-    <main className={styles.shell} id="main-content">
-      <section className={styles.brandPanel}>
-        <Link
-          className={styles.brand}
-          href="/"
-          aria-label="Ir al inicio de Colaboradores DNA"
-        >
-          <Logo priority />
-          <span>Colaboradores</span>
-        </Link>
-        <div className={styles.brandCopy}>
-          <p className={styles.eyebrow}>Acceso por invitación</p>
-          <h1>Activa tu espacio de trabajo.</h1>
-          <p>
-            Completa el registro con el correo que recibió la invitación de tu
-            administrador.
-          </p>
-        </div>
-        <span className={styles.support}>Tu acceso está protegido por Clerk.</span>
-      </section>
-      <section className={styles.formPanel} aria-labelledby="sign-up-title">
-        <div className={styles.formContent}>
-          <header className={styles.formIntro}>
-            <h2 id="sign-up-title">Crea tu cuenta</h2>
-            <p>Usa la invitación enviada por el equipo administrador.</p>
-          </header>
-          <SignUp />
-        </div>
-      </section>
-    </main>
+    <AuthPageShell>
+      <SignUpFlow invitation={query.invitation} invitedEmail={query.email} />
+    </AuthPageShell>
   );
 }

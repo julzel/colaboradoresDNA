@@ -9,7 +9,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@clerk/nextjs/server", () => ({ clerkClient: vi.fn() }));
+vi.mock("@/features/auth/server/identity-administration", () => ({
+  getIdentityImageUrls: vi.fn().mockResolvedValue(new Map()),
+}));
 vi.mock("@/features/auth/server/auth-audit-repository", () => ({
   recordAuthAudit: mocks.recordAuthAudit,
 }));
@@ -51,7 +53,7 @@ describe("employee creation invitation choice", () => {
     vi.clearAllMocks();
     mocks.createEmployeeWithAccess.mockResolvedValue({
       actor: {
-        clerkUserId: "clerk_admin",
+        authUserId: "clerk_admin",
         id: "507f1f77bcf86cd799439011",
       },
       employee: { id: "507f1f77bcf86cd799439013" },

@@ -72,7 +72,7 @@ export async function deactivatePlatformUser(formData: FormData) {
 
   revalidatePath(accountsPath);
   redirect(
-    result.clerkSyncFailed
+    result.authSyncFailed
       ? createFeedbackUrl(accountsPath, "error", "deactivated_sync_pending")
       : createFeedbackUrl(accountsPath, "notice", "account_deactivated"),
   );

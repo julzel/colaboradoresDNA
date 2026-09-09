@@ -1,0 +1,125 @@
+.form {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  width: 100%;
+}
+
+.form button,
+.form a,
+.success a {
+  min-width: 0;
+  white-space: normal;
+  line-height: var(--line-body);
+}
+
+.message {
+  margin: 0;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  line-height: var(--line-body);
+  font-size: var(--text-sm);
+}
+
+.message:empty {
+  display: none;
+}
+
+.intro,
+.success {
+  display: grid;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.intro h2,
+.intro p,
+.success h2,
+.success p {
+  margin: 0;
+}
+
+.success {
+  justify-items: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+}
+
+.intro h2,
+.success h2 {
+  color: var(--color-text);
+  font-size: var(--text-xl);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.intro p {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+}
+
+.successIcon {
+  display: grid;
+  width: 4rem;
+  height: 4rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.eyebrow {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.steps {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-2) 0;
+  padding-left: var(--space-6);
+  text-align: left;
+}
+
+.hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.panel {
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.qr {
+  width: min(100%, 16rem);
+  height: auto;
+}
+
+.codes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.sessions {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  list-style: none;
+}

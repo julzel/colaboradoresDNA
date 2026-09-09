@@ -69,6 +69,49 @@
   padding-right: var(--space-8);
 }
 
+.passwordControl {
+  position: relative;
+  min-width: 0;
+}
+
+.passwordInput {
+  padding-inline-end: 3rem;
+}
+
+.passwordInput::-ms-reveal {
+  display: none;
+}
+
+.passwordToggle {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: grid;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.passwordToggle:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -3px;
+}
+
+.passwordToggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.passwordToggle:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
 .textarea {
   min-height: 6rem;
   padding-block: var(--space-3);

@@ -23,6 +23,13 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: "/:path(sign-in|sign-up|reset-password|account)/:rest*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "private, no-store" },
+        ],
+      },
+      {
         source: "/admin/prioridades/:path*",
         headers: [
           {

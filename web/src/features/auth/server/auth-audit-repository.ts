@@ -18,7 +18,7 @@ export type AuthAuditAction =
 type AuthAuditDocument = {
   _id: ObjectId;
   action: AuthAuditAction;
-  actorClerkUserId: string;
+  actorAuthUserId: string;
   actorPlatformUserId: ObjectId | null;
   createdAt: Date;
   metadata: Record<string, boolean | number | string | null>;
@@ -42,14 +42,14 @@ async function getAuthAuditCollection(): Promise<Collection<AuthAuditDocument>> 
 
 export async function recordAuthAudit({
   action,
-  actorClerkUserId,
+  actorAuthUserId,
   actorPlatformUserId,
   metadata = {},
   targetPlatformUserId,
 }: {
   action: AuthAuditAction;
-  actorClerkUserId: string;
-  actorPlatformUserId: string;
+  actorAuthUserId: string;
+  actorPlatformUserId: string | null;
   metadata?: Record<string, boolean | number | string | null>;
   targetPlatformUserId: string;
 }) {
@@ -58,8 +58,8 @@ export async function recordAuthAudit({
   await collection.insertOne({
     _id: new ObjectId(),
     action,
-    actorClerkUserId,
-    actorPlatformUserId: new ObjectId(actorPlatformUserId),
+    actorAuthUserId,
+    actorPlatformUserId: actorPlatformUserId ? new ObjectId(actorPlatformUserId) : null,
     createdAt: new Date(),
     metadata,
     targetPlatformUserId: new ObjectId(targetPlatformUserId),

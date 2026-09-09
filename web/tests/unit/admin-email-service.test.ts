@@ -6,7 +6,7 @@ import {
 } from "@/features/auth/server/admin-email-service";
 
 const mocks = vi.hoisted(() => ({
-  clerkClient: vi.fn(),
+  updateManagedIdentityEmail: vi.fn(),
   createEmailAddress: vi.fn(),
   deleteEmailAddress: vi.fn(),
   findEmployeeById: vi.fn(),
@@ -24,8 +24,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 
-vi.mock("@clerk/nextjs/server", () => ({
-  clerkClient: mocks.clerkClient,
+vi.mock("@/features/auth/server/identity-administration", () => ({
+  updateManagedIdentityEmail: mocks.updateManagedIdentityEmail,
 }));
 
 vi.mock("@/features/auth/server/auth-audit-repository", () => ({
@@ -56,9 +56,9 @@ const employeeId = "507f1f77bcf86cd799439013";
 
 function activeTarget() {
   return {
-    clerkUserId: "user_target",
+    authUserId: "user_target",
     id: targetId,
-    invitation: { clerkInvitationId: null },
+    invitation: { invitationId: null },
     normalizedEmail: "old@example.com",
     status: "active",
   };
@@ -68,7 +68,7 @@ describe("administrator email updates", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requirePlatformUser.mockResolvedValue({
-      clerkUserId: "user_admin",
+      authUserId: "user_admin",
       platformUser: { id: actorId, role: "administrator" },
     });
     mocks.findEmployeeById.mockResolvedValue({
@@ -83,18 +83,10 @@ describe("administrator email updates", () => {
     });
     mocks.createEmailAddress.mockResolvedValue({ id: "idn_new" });
     mocks.updatePlatformUserEmail.mockResolvedValue(activeTarget());
-    mocks.clerkClient.mockResolvedValue({
-      emailAddresses: {
-        createEmailAddress: mocks.createEmailAddress,
-        deleteEmailAddress: mocks.deleteEmailAddress,
-        updateEmailAddress: mocks.updateEmailAddress,
-      },
-      invitations: { revokeInvitation: mocks.revokeInvitation },
-      users: { getUser: mocks.getUser, updateUser: mocks.updateUser },
-    });
+    mocks.updateManagedIdentityEmail.mockResolvedValue(undefined);
   });
 
-  it("requires an administrator and synchronizes the active Clerk identity", async () => {
+  it("requires an administrator and synchronizes the active identity transactionally", async () => {
     await expect(
       updateEmployeeEmailAsAdministrator({
         email: "New@Example.com",
@@ -105,22 +97,14 @@ describe("administrator email updates", () => {
     expect(mocks.requirePlatformUser).toHaveBeenCalledWith({
       roles: ["administrator"],
     });
-    expect(mocks.createEmailAddress).toHaveBeenCalledWith({
-      emailAddress: "new@example.com",
-      userId: "user_target",
-      verified: true,
-    });
-    expect(mocks.updateUser).toHaveBeenCalledWith("user_target", {
-      notifyPrimaryEmailAddressChanged: true,
-      primaryEmailAddressID: "idn_new",
-    });
-    expect(mocks.updatePlatformUserEmail).toHaveBeenCalledWith({
-      email: "new@example.com",
-      id: targetId,
-    });
+    expect(mocks.updateManagedIdentityEmail).toHaveBeenCalledWith(
+      "user_target",
+      targetId,
+      "new@example.com",
+    );
     expect(mocks.recordAuthAudit).toHaveBeenCalledWith({
       action: "email_updated",
-      actorClerkUserId: "user_admin",
+      actorAuthUserId: "user_admin",
       actorPlatformUserId: actorId,
       metadata: {
         invitationDeferred: false,
@@ -131,7 +115,7 @@ describe("administrator email updates", () => {
     });
   });
 
-  it("rejects an email owned by another platform account before touching Clerk", async () => {
+  it("rejects an email owned by another platform account before changing identity", async () => {
     mocks.findPlatformUserByEmail.mockResolvedValue({ id: "other_account" });
 
     await expect(
@@ -140,12 +124,14 @@ describe("administrator email updates", () => {
         employeeId,
       }),
     ).rejects.toEqual(new AdminEmailUpdateError("email_exists"));
-    expect(mocks.clerkClient).not.toHaveBeenCalled();
+    expect(mocks.updateManagedIdentityEmail).not.toHaveBeenCalled();
     expect(mocks.updatePlatformUserEmail).not.toHaveBeenCalled();
   });
 
-  it("restores the previous Clerk primary email if the platform write fails", async () => {
-    mocks.updatePlatformUserEmail.mockRejectedValue(new Error("database unavailable"));
+  it("reports identity sync failure without recording a successful audit", async () => {
+    mocks.updateManagedIdentityEmail.mockRejectedValue(
+      new Error("database unavailable"),
+    );
 
     await expect(
       updateEmployeeEmailAsAdministrator({
@@ -154,14 +140,6 @@ describe("administrator email updates", () => {
       }),
     ).rejects.toEqual(new AdminEmailUpdateError("identity_sync_failed"));
 
-    expect(mocks.updateUser).toHaveBeenNthCalledWith(1, "user_target", {
-      notifyPrimaryEmailAddressChanged: true,
-      primaryEmailAddressID: "idn_new",
-    });
-    expect(mocks.updateUser).toHaveBeenNthCalledWith(2, "user_target", {
-      primaryEmailAddressID: "idn_old",
-    });
-    expect(mocks.deleteEmailAddress).toHaveBeenCalledWith("idn_new");
     expect(mocks.recordAuthAudit).not.toHaveBeenCalled();
   });
 
@@ -175,14 +153,14 @@ describe("administrator email updates", () => {
       }),
     ).rejects.toThrow("forbidden");
     expect(mocks.findEmployeeById).not.toHaveBeenCalled();
-    expect(mocks.clerkClient).not.toHaveBeenCalled();
+    expect(mocks.updateManagedIdentityEmail).not.toHaveBeenCalled();
   });
 
   it("updates an invited account and replaces its invitation", async () => {
     mocks.findPlatformUserById.mockResolvedValue({
       ...activeTarget(),
-      clerkUserId: null,
-      invitation: { clerkInvitationId: "inv_old" },
+      authUserId: null,
+      invitation: { invitationId: "inv_old" },
       status: "invited",
     });
     mocks.safelySendPlatformInvitation.mockResolvedValue(true);
@@ -194,7 +172,6 @@ describe("administrator email updates", () => {
       }),
     ).resolves.toEqual({ changed: true, invitationSent: true });
 
-    expect(mocks.revokeInvitation).toHaveBeenCalledWith("inv_old");
     expect(mocks.safelySendPlatformInvitation).toHaveBeenCalledWith({
       email: "invited@example.com",
       platformUserId: targetId,
@@ -204,9 +181,9 @@ describe("administrator email updates", () => {
   it("updates a deferred account without sending an invitation", async () => {
     mocks.findPlatformUserById.mockResolvedValue({
       ...activeTarget(),
-      clerkUserId: null,
+      authUserId: null,
       invitation: {
-        clerkInvitationId: null,
+        invitationId: null,
         lastSentAt: null,
       },
       status: "invited",

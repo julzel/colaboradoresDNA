@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { ArrowLeft, Bell, UserRound } from "lucide-react";
+import { ArrowLeft, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,6 +13,7 @@ import { Breadcrumbs } from "@/components/ui/navigation/breadcrumbs";
 import { getWorkspaceBreadcrumbs } from "@/features/navigation/workspace-navigation";
 
 import styles from "./workspace-header.module.css";
+import { NotificationDrawer } from "@/features/dashboard/components/notification-drawer";
 
 type WorkspaceHeaderProps = {
   displayName: string;
@@ -56,25 +57,13 @@ export function WorkspaceHeader({
         <Breadcrumbs items={breadcrumbs} />
       </div>
       <div className={styles.tools}>
-        <Link
-          aria-label={
-            unreadNotificationCount > 0
-              ? `${unreadNotificationCount} notificaciones sin leer`
-              : "Notificaciones"
-          }
-          className={styles.notificationButton}
-          href="/#notifications"
-        >
-          <Bell aria-hidden="true" size={20} />
-          {unreadNotificationCount > 0 && (
-            <span className={styles.notificationBadge}>
-              {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
-            </span>
-          )}
-        </Link>
+        <NotificationDrawer unreadCount={unreadNotificationCount} />
         <PwaInstallButton />
         <span className={styles.desktopAccount}>
-          <AuthControls displayName={displayName} />
+          <AuthControls
+            displayName={displayName}
+            profileImageUrl={profileImageUrl}
+          />
         </span>
         <Link aria-label="Mi perfil" className={styles.mobileProfile} href="/perfil">
           {profileImageUrl ? (

@@ -13,6 +13,7 @@ import {
 import { initialPtoActionState } from "@/features/pto/domain/pto-action-state";
 
 import styles from "./pto.module.css";
+import { LeaveConflictWarning } from "./leave-conflict-warning";
 
 type AdministratorOption = { displayName: string; id: string };
 
@@ -40,6 +41,7 @@ export function PtoSubmitForm({ requestId }: { requestId: string }) {
         <input name="confirmWarnings" type="hidden" value="true" />
       )}
       <Feedback message={state.message} warning={state.status === "warning"} />
+      <LeaveConflictWarning conflicts={state.conflicts ?? []} />
       <SubmitButton pendingLabel="Enviando…">
         {state.requiresConfirmation ? "Enviar de todos modos" : "Enviar solicitud"}
       </SubmitButton>
@@ -47,12 +49,29 @@ export function PtoSubmitForm({ requestId }: { requestId: string }) {
   );
 }
 
-export function PtoCancelForm({ requestId }: { requestId: string }) {
+export function PtoCancelForm({
+  requestId,
+  noteRequired = false,
+}: {
+  requestId: string;
+  noteRequired?: boolean;
+}) {
   const [state, action] = useActionState(cancelPtoRequestAction, initialPtoActionState);
   return (
     <form action={action} className={`${styles.actions} ${styles.cancelPtoForm}`}>
       <input name="requestId" type="hidden" value={requestId} />
       <Feedback message={state.message} />
+      {noteRequired && (
+        <TextAreaField
+          id="cancellationNote"
+          name="cancellationNote"
+          label="Motivo de cancelación"
+          description="El colaborador recibirá una notificación."
+          required
+          minLength={3}
+          maxLength={1000}
+        />
+      )}
       <SubmitButton pendingLabel="Cancelando…" variant="danger">
         Cancelar solicitud
       </SubmitButton>
@@ -80,6 +99,7 @@ export function PtoDecisionForm({ requestId }: { requestId: string }) {
         rows={4}
       />
       <Feedback message={state.message} warning={state.status === "warning"} />
+      <LeaveConflictWarning conflicts={state.conflicts ?? []} />
       <div className={styles.actions}>
         <SubmitButton name="decision" pendingLabel="Guardando…" value="approved">
           {state.requiresConfirmation ? "Aprobar de todos modos" : "Aprobar"}

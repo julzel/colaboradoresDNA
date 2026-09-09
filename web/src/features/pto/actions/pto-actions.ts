@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { LeaveConflictError } from "../domain/leave-conflict";
 
 import { objectIdStringSchema } from "@/features/employees/domain/shared";
 import {
@@ -15,6 +16,7 @@ import {
 import type { PtoActionState } from "@/features/pto/domain/pto-action-state";
 import {
   adjustEmployeePtoBalance,
+  previewLeaveDuration,
   cancelOwnPtoRequest,
   createAndApproveEmployeePtoRequestAsAdministrator,
   createOwnPtoDraft,
@@ -31,6 +33,30 @@ function getText(formData: FormData, name: string) {
   return typeof value === "string" ? value : "";
 }
 
+export async function previewLeaveDurationAction(
+  input: unknown,
+  employeeId?: string,
+  requestId?: string,
+) {
+  try {
+    return {
+      units: await previewLeaveDuration(
+        ptoDraftCommandSchema.parse(input),
+        employeeId,
+        requestId,
+      ),
+      message: null,
+      conflicts: [],
+    };
+  } catch (error) {
+    return {
+      units: null,
+      conflicts: error instanceof LeaveConflictError ? error.conflicts : [],
+      message: ptoErrorState(error).message ?? "No se pudo calcular la duración.",
+    };
+  }
+}
+
 function zodState(error: z.ZodError): PtoActionState {
   const errors: Record<string, string> = {};
   for (const issue of error.issues) {
@@ -45,16 +71,23 @@ function zodState(error: z.ZodError): PtoActionState {
 }
 
 function ptoErrorState(error: unknown): PtoActionState {
+  if (error instanceof LeaveConflictError)
+    return { status: "error", message: error.message, conflicts: error.conflicts };
   if (error instanceof z.ZodError) return zodState(error);
   if (error instanceof PtoDomainError) {
     const messages: Record<PtoDomainError["code"], string> = {
       approver_ineligible:
         "No hay una persona aprobadora elegible. Revisá la jefatura asignada.",
       balance_exists: "Este colaborador ya tiene un saldo de vacaciones.",
+      cancellation_cutoff: "Ya pasó el plazo para cancelar esta ausencia.",
+      cancellation_note_required:
+        "Indicá el motivo de cancelación (entre 3 y 1000 caracteres).",
       balance_missing:
         "No hay un saldo inicial de vacaciones. Administración debe configurarlo primero.",
       employee_missing: "No encontramos un colaborador activo asociado a esta cuenta.",
       forbidden: "No tenés permiso para realizar esta acción.",
+      holidays_unavailable:
+        "No se pudieron verificar los feriados. Intentá de nuevo; no se guardó una duración incompleta.",
       no_scheduled_workdays:
         "El rango seleccionado no contiene días laborales según el horario asignado.",
       partial_day_range: "Un medio día debe corresponder a una sola fecha laboral.",
@@ -168,13 +201,15 @@ export async function cancelPtoRequestAction(
 ): Promise<PtoActionState> {
   const requestId = getText(formData, "requestId");
   try {
-    await cancelOwnPtoRequest(requestId);
+    await cancelOwnPtoRequest(requestId, getText(formData, "cancellationNote"));
   } catch (error) {
     return ptoErrorState(error);
   }
   revalidatePath("/ausencias");
   revalidatePath("/admin/ausencias");
   revalidatePath(`/ausencias/${requestId}`);
+  revalidatePath("/calendario");
+  revalidatePath("/", "layout");
   redirect(`/ausencias/${requestId}`);
 }
 

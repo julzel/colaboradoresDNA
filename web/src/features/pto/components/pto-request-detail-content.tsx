@@ -173,7 +173,10 @@ export function PtoRequestDetailContent({
           <strong>Revisá estas advertencias:</strong>
           <ul>
             {warnings.hasOverlap && (
-              <li>Esta solicitud coincide con otra ausencia pendiente o aprobada.</li>
+              <li>
+                Esta solicitud coincide con otra ausencia. Corregí las fechas o cancelá
+                la otra solicitud antes de continuar.
+              </li>
             )}
             {warnings.wouldBeNegative && warnings.projectedBalanceUnits !== null && (
               <li>
@@ -182,7 +185,9 @@ export function PtoRequestDetailContent({
               </li>
             )}
           </ul>
-          Estas advertencias no bloquean el envío ni la aprobación.
+          {warnings.hasOverlap
+            ? "La coincidencia bloquea el envío y la aprobación."
+            : "El saldo negativo requiere confirmación."}
         </div>
       )}
 
@@ -213,6 +218,9 @@ export function PtoRequestDetailContent({
               label="Nota"
               value={request.collaboratorNote ?? "Sin nota"}
             />
+            {request.cancellationNote && (
+              <p>Motivo de cancelación: {request.cancellationNote}</p>
+            )}
             {request.decisionNote && (
               <DetailFact
                 icon={MessageSquareText}
@@ -239,7 +247,12 @@ export function PtoRequestDetailContent({
                 Editar borrador
               </ButtonLink>
             )}
-            {detail.canCancel && <PtoCancelForm requestId={request.id} />}
+            {detail.canCancel && (
+              <PtoCancelForm
+                requestId={request.id}
+                noteRequired={detail.cancellationNoteRequired ?? false}
+              />
+            )}
           </div>
         </ElevatedSurface>
 

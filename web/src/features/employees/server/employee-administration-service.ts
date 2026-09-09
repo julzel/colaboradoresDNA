@@ -1,6 +1,6 @@
 import "server-only";
 
-import { clerkClient } from "@clerk/nextjs/server";
+import { revokeIdentitySessions } from "@/features/auth/server/auth-provider";
 
 import { recordAuthAudit } from "@/features/auth/server/auth-audit-repository";
 import {
@@ -10,7 +10,7 @@ import {
 import {
   findPlatformUserById,
   markPlatformUserInvitationFailed,
-  setPlatformUserClerkSyncStatus,
+  setPlatformUserAuthSyncStatus,
   updatePlatformUserRole,
 } from "@/features/auth/server/platform-user-repository";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
@@ -63,7 +63,7 @@ export async function createEmployeeForAdministration(
         : invitationDisposition === "deferred"
           ? "invitation_deferred"
           : "invitation_failed",
-    actorClerkUserId: result.actor.clerkUserId ?? "system",
+    actorAuthUserId: result.actor.authUserId ?? "system",
     actorPlatformUserId: result.actor.id,
     metadata: { role: result.platformUser.role },
     targetPlatformUserId: result.platformUser.id,
@@ -118,7 +118,7 @@ export async function updateEmployeeRoleForAdministration({
 
   await recordAuthAudit({
     action: "role_updated",
-    actorClerkUserId: actor.clerkUserId,
+    actorAuthUserId: actor.authUserId,
     actorPlatformUserId: actor.platformUser.id,
     metadata: { role: updated.role },
     targetPlatformUserId: updated.id,
@@ -135,21 +135,13 @@ export async function resendEmployeeInvitationForAdministration(employeeId: stri
   }
 
   try {
-    if (target.invitation.clerkInvitationId) {
-      try {
-        const client = await clerkClient();
-        await client.invitations.revokeInvitation(target.invitation.clerkInvitationId);
-      } catch {
-        // An expired or previously revoked invitation is safe to replace.
-      }
-    }
     await sendPlatformInvitation({
       email: target.normalizedEmail,
       platformUserId: target.id,
     });
     await recordAuthAudit({
       action: "invitation_resent",
-      actorClerkUserId: actor.clerkUserId,
+      actorAuthUserId: actor.authUserId,
       actorPlatformUserId: actor.platformUser.id,
       targetPlatformUserId: target.id,
     });
@@ -178,32 +170,31 @@ export async function endEmployeeEmploymentForAdministration({
     employeeId,
     endedOn,
   });
-  let clerkSyncFailed = false;
+  let authSyncFailed = false;
 
   if (platformUserId) {
     const target = await findPlatformUserById(platformUserId);
-    if (target?.clerkUserId) {
+    if (target?.authUserId) {
       try {
-        const client = await clerkClient();
-        await client.users.banUser(target.clerkUserId);
-        await setPlatformUserClerkSyncStatus({ id: target.id, status: "synced" });
+        await revokeIdentitySessions(target.authUserId);
+        await setPlatformUserAuthSyncStatus({ id: target.id, status: "synced" });
       } catch {
-        clerkSyncFailed = true;
+        authSyncFailed = true;
       }
     } else if (target) {
-      await setPlatformUserClerkSyncStatus({ id: target.id, status: "synced" });
+      await setPlatformUserAuthSyncStatus({ id: target.id, status: "synced" });
     }
 
     await recordAuthAudit({
       action: "account_deactivated",
-      actorClerkUserId: actor.clerkUserId,
+      actorAuthUserId: actor.authUserId,
       actorPlatformUserId: actor.platformUser.id,
-      metadata: { clerkSyncFailed, operation: "employment_end" },
+      metadata: { authSyncFailed, operation: "employment_end" },
       targetPlatformUserId: platformUserId,
     });
   }
 
-  return { clerkSyncFailed };
+  return { authSyncFailed };
 }
 
 export async function revealEmployeeIdentificationForAdministration(

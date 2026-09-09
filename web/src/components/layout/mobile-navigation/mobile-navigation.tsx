@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { SignOutButton } from "@clerk/nextjs";
+import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import {
   LogOut,
   MoreHorizontal,

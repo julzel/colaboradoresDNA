@@ -474,8 +474,8 @@ export async function endEmployeeEmploymentAction(
   redirect(
     createFeedbackUrl(
       `/admin/colaboradores/${parsed.data.employeeId}`,
-      result.clerkSyncFailed ? "error" : "notice",
-      result.clerkSyncFailed ? "employee_ended_sync_pending" : "employee_ended",
+      result.authSyncFailed ? "error" : "notice",
+      result.authSyncFailed ? "employee_ended_sync_pending" : "employee_ended",
     ),
   );
 }

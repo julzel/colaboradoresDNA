@@ -67,7 +67,7 @@ export async function requireDevelopmentAdministrator(operation: DevelopmentOper
   const actor = await requirePlatformUser({ roles: ["administrator"] });
   const decision = getDevelopmentAccessDecision({
     actorEmployeeId: null,
-    actorMfaEnabled: actor.clerkTwoFactorEnabled,
+    actorMfaEnabled: actor.twoFactorEnabled,
     actorRole: actor.platformUser.role,
     actorStatus: actor.platformUser.status,
     operation,
@@ -91,7 +91,7 @@ export async function requireOwnDevelopmentSubject() {
 
   const decision = getDevelopmentAccessDecision({
     actorEmployeeId: employee.id,
-    actorMfaEnabled: actor.clerkTwoFactorEnabled,
+    actorMfaEnabled: actor.twoFactorEnabled,
     actorRole: actor.platformUser.role,
     actorStatus: actor.platformUser.status,
     operation: "read_shared",

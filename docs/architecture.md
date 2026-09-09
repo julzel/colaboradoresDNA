@@ -3,7 +3,7 @@
 ## Overview
 
 Colaboradores DNA is a single full-stack Next.js application. It uses the App
-Router and React Server Components by default, with Clerk as the identity and
+Router and React Server Components by default, with Better Auth as the identity and
 session provider, MongoDB Atlas as the document database, and Netlify as the
 hosting platform.
 
@@ -12,7 +12,7 @@ Browser
   │
   ▼
 Next.js App Router
-  ├── Clerk proxy and provider: identity and session lifecycle
+  ├── /api/auth/* and auth feature adapters: identity and session lifecycle
   ├── Server Components: read and render data
   ├── Server Actions: first-party mutations
   └── Route Handlers: public HTTP and webhook endpoints
@@ -30,7 +30,7 @@ All executable application code and configuration live under `web/`.
 
 ```text
 web/
-├── config/clerk/           Versioned non-secret instance and email configuration
+├── config/clerk/           Archived pre-migration configuration (not loaded)
 ├── scripts/                Controlled bootstrap and maintenance operations
 ├── src/app/                 Routes, layouts, error states, and Route Handlers
 ├── src/components/ui/       Reusable, domain-neutral UI primitives
@@ -90,9 +90,9 @@ Every Server Action and Route Handler must:
 3. Authorize the requested action.
 4. Return only data appropriate for that caller.
 
-Clerk owns identity and session lifecycle. MongoDB owns application roles,
+Better Auth owns identity and session lifecycle in separate auth collections. MongoDB owns application roles,
 employment status, departments, and business data. Authorization must run on
-the server and use the stable Clerk user identifier to resolve the corresponding
+the server and use the stable auth user identifier to resolve the corresponding
 MongoDB user; client-visible metadata is not an authorization boundary.
 
 `requirePlatformUser()` is the shared server boundary for private resources. It
@@ -107,7 +107,7 @@ migration under `web/scripts/` when existing data needs to change.
 
 Authentication and employee data use separate records:
 
-- `platform_users` owns login email, Clerk linkage, platform role, invitation,
+- `platform_users` owns login email, auth identity linkage, platform role, invitation,
   and access status.
 - `employees` owns legal/personal names, birthday day and month, identification,
   optional phone number, and employment lifecycle.

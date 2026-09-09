@@ -5,7 +5,6 @@
 import { Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { useUser } from "@clerk/nextjs";
 
 import { updateOwnProfileImageAction } from "@/features/employees/actions/profile-actions";
 
@@ -136,7 +135,6 @@ export function ProfileImageForm({
   const [busy, setBusy] = useState(false);
   const objectUrlRef = useRef<string | null>(null);
   const router = useRouter();
-  const { user } = useUser();
 
   useEffect(
     () => () => {
@@ -169,7 +167,7 @@ export function ProfileImageForm({
 
       if (result.status === "success") {
         setHasImage(true);
-        await refreshClerkUser();
+        router.refresh();
       } else {
         replaceObjectUrl(null);
       }
@@ -180,11 +178,6 @@ export function ProfileImageForm({
       event.target.value = "";
       setBusy(false);
     }
-  }
-
-  async function refreshClerkUser() {
-    await user?.reload();
-    router.refresh();
   }
 
   return (

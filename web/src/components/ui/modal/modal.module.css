@@ -89,6 +89,38 @@
   min-width: 0;
 }
 
+.backdrop[data-variant="drawer"] {
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 0;
+}
+
+.backdrop[data-variant="drawer"] .dialog {
+  width: min(100%, 28rem);
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  border-radius: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: drawer-enter 200ms ease-out;
+}
+
+@keyframes drawer-enter {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop[data-variant="drawer"] .dialog {
+    animation: none;
+  }
+}
+
 @media (width >= 40rem) {
   .backdrop {
     align-items: center;

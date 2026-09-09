@@ -1,52 +1,18 @@
 # Colaboradores DNA web
 
-Full-stack Next.js application for Colaboradores DNA with Clerk authentication and
-MongoDB Atlas persistence.
+Next.js App Router application with React, TypeScript, Better Auth, and MongoDB.
 
-## Start locally
+See the [main README](../README.md) for local setup, first-administrator bootstrap,
+quality checks, and deployment. Authentication requires MongoDB, an independent
+`BETTER_AUTH_SECRET`, a canonical `APP_BASE_URL`, and SMTP email delivery. There are no
+Clerk runtime dependencies or required Clerk keys.
 
-```bash
-pnpm install
-pnpm dev
-```
+- [Authentication implementation](../docs/authentication.md)
+- [Existing-database migration and rollback](../docs/better-auth-migration.md)
+- [Deployment checklist](../docs/deployment.md)
+- [Leave rules, notifications and monthly PTO setup](../docs/leave-request-flow.md)
+- [Environment template](./.env.example)
 
-Open [http://localhost:3000](http://localhost:3000).
-
-Clerk development credentials are required. The Clerk CLI can link this repository and
-populate `.env.local` without exposing the values:
-
-```bash
-clerk auth login
-clerk init --app app_3H9dgW0N38YwjuOrBRUcLfe2mzL
-clerk doctor
-```
-
-Do not commit `.env.local`. Configure equivalent development credentials in Netlify
-through its environment-variable settings.
-
-MongoDB is optional for the current homepage. To enable database-backed features, add
-the MongoDB Atlas values documented in `.env.example` to `.env.local`.
-
-The administrator Desarrollo dashboard is available without an encryption key. Use
-synthetic data only. Before creating or reading encrypted 1:1 narratives, configure the
-server-only keyring from `.env.example` and run `pnpm bootstrap:development-model` with
-migration-capable database credentials.
-
-## Quality checks
-
-```bash
-pnpm verify
-pnpm test:e2e
-```
-
-## Netlify
-
-Select `web` as the site/package and base directory. The checked-in Netlify
-configuration uses Netlify's `production` context as the persistent development site for
-`mvp/main`. Pull-request Deploy Previews are supported and other branch deploys are
-blocked.
-
-Configure Clerk development credentials and an isolated non-production MongoDB database
-as Netlify environment variables for both Production and Deploy Previews, with Builds
-and Functions scopes. Live Clerk credentials are rejected by the build. See the
-[deployment guide](../docs/deployment.md) for the complete setup checklist.
+Run commands from this directory. `pnpm verify` checks formatting, lint, styles, types,
+default tests and build. Live MongoDB tests and browser tests are opt-in; see the main
+README. Never copy production secrets into a preview environment.

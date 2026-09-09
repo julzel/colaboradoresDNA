@@ -387,20 +387,16 @@ const getDashboardNotificationState = cache(async (platformUserId: string) => {
       startsAt: event.startsAt,
       title: event.title,
     })),
-    ...ptoRequests.map((request) => ({
-      allDay: true,
-      endDate: request.endDate,
-      eventType: null,
-      href: `/ausencias/${request.id}`,
-      id: request.id,
-      key: `pto:${request.id}`,
-      kind: "pto" as const,
-      label: "Ausencia aprobada",
-      startDate: request.startDate,
-      startsAt: calendarDateToUtc(request.startDate).toISOString(),
-      title: request.categoryLabel,
-    })),
-  ].sort((left, right) => left.startsAt.localeCompare(right.startsAt));
+    ...ptoRequests,
+  ].sort((left, right) =>
+    left.kind !== right.kind
+      ? left.kind === "pto"
+        ? -1
+        : 1
+      : left.kind === "pto"
+        ? right.startsAt.localeCompare(left.startsAt)
+        : left.startsAt.localeCompare(right.startsAt),
+  );
   const readKeys = await listReadNotificationKeys({
     notificationKeys: notificationSources.map((notification) => notification.key),
     platformUserId,
@@ -424,7 +420,7 @@ export async function getCalendarDashboardNotifications() {
 
   return {
     displayName: platformUser.displayName,
-    notifications: state.notifications.slice(0, 5),
+    notifications: state.notifications.filter((notification) => notification.isUnread),
     role: platformUser.role,
     unreadCount: state.unreadCount,
   };
