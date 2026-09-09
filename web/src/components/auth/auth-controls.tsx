@@ -1,4 +1,7 @@
 "use client";
+
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { ChevronDown, LogOut, Moon, ShieldCheck, UserRound } from "lucide-react";
@@ -6,7 +9,15 @@ import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { toggleTheme } from "@/components/ui/theme-toggle/theme-toggle";
 import styles from "./auth-controls.module.css";
 
-export function AuthControls({ displayName }: { displayName: string }) {
+type AuthControlsProps = {
+  displayName: string;
+  profileImageUrl?: string | null;
+};
+
+export function AuthControls({
+  displayName,
+  profileImageUrl = null,
+}: AuthControlsProps) {
   const menu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     function dismiss(event: PointerEvent) {
@@ -39,7 +50,11 @@ export function AuthControls({ displayName }: { displayName: string }) {
       <details ref={menu}>
         <summary className={styles.trigger}>
           <span className={styles.avatar} aria-hidden="true">
-            <UserRound size={18} />
+            {profileImageUrl ? (
+              <img alt="" src={profileImageUrl} />
+            ) : (
+              <UserRound size={18} />
+            )}
           </span>
           <span className={styles.name}>{displayName}</span>
           <ChevronDown className={styles.chevron} size={16} aria-hidden="true" />

@@ -60,7 +60,10 @@ export function WorkspaceHeader({
         <NotificationDrawer unreadCount={unreadNotificationCount} />
         <PwaInstallButton />
         <span className={styles.desktopAccount}>
-          <AuthControls displayName={displayName} />
+          <AuthControls
+            displayName={displayName}
+            profileImageUrl={profileImageUrl}
+          />
         </span>
         <Link aria-label="Mi perfil" className={styles.mobileProfile} href="/perfil">
           {profileImageUrl ? (
