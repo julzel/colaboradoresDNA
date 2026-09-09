@@ -20,6 +20,7 @@
 }
 
 .cancelPtoForm {
+  display: grid;
   width: 100%;
   justify-content: flex-end;
   margin-top: var(--space-3);

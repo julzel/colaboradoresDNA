@@ -1,12 +1,16 @@
 // @vitest-environment node
 import { randomUUID } from "node:crypto";
 import { ObjectId, type Db } from "mongodb";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlatformUserDocument } from "@/features/auth/domain/platform-user";
 import type { EmployeeDocument } from "@/features/employees/domain/employee";
 
 const identity = vi.hoisted(() => ({ id: "" }));
 vi.mock("server-only", () => ({}));
+vi.mock("@/features/calendar/integrations/nager-date-calendar-adapter", () => ({
+  CalendarHolidayIntegrationError: class extends Error {},
+  calendarHolidayIntegration: { listPublicHolidays: vi.fn().mockResolvedValue([]) },
+}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({
   redirect: (path: string) => {
@@ -28,6 +32,13 @@ vi.mock("@/features/auth/server/require-platform-user", () => ({
 }));
 
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
+import { listLeaveNotifications } from "@/features/pto/server/leave-notifications";
+import { accrueMonthlyPto } from "@/features/pto/server/pto-accrual";
+import { LeaveConflictError } from "@/features/pto/domain/leave-conflict";
+import {
+  addCalendarDays,
+  getTodayInCostaRica,
+} from "@/features/calendar/domain/calendar-utils";
 import { ptoCategories, type PtoCategory } from "@/features/pto/domain/pto";
 import { initialPtoActionState } from "@/features/pto/domain/pto-action-state";
 import {
@@ -38,6 +49,7 @@ import {
 } from "@/features/pto/actions/pto-actions";
 import {
   cancelOwnPtoRequest,
+  adjustEmployeePtoBalance,
   createOwnPtoDraft,
   getPtoRequestDetail,
   openEmployeePtoBalance,
@@ -96,6 +108,11 @@ async function redirectedRequestId(action: Promise<unknown>) {
 describe.skipIf(!runLive)(
   "PTO real MongoDB workflow in an isolated disposable database",
   () => {
+    let scenario = 0;
+    beforeEach(() => {
+      draftFields.startDate = addCalendarDays("2026-10-05", scenario++ * 7);
+      draftFields.endDate = draftFields.startDate;
+    });
     beforeAll(async () => {
       if (!process.env.MONGODB_URI)
         throw new Error("Configure MONGODB_URI for the opt-in integration test");
@@ -255,6 +272,14 @@ describe.skipIf(!runLive)(
         savePtoDraftAction(initialPtoActionState, form(draftFields)),
       );
       await submitOwnPtoDraft({ requestId: deniedId });
+      expect(await listLeaveNotifications(users.administrator.toHexString())).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: deniedId,
+            label: "Nueva solicitud de ausencia",
+          }),
+        ]),
+      );
       identity.id = users.administrator.toHexString();
       await redirectedRequestId(
         decidePtoRequestAction(
@@ -263,6 +288,11 @@ describe.skipIf(!runLive)(
         ),
       );
       expect((await findPtoRequestById(deniedId))?.status).toBe("denied");
+      expect(await listLeaveNotifications(users.collaborator.toHexString())).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: deniedId, label: "Ausencia denegada" }),
+        ]),
+      );
       identity.id = users.collaborator.toHexString();
       const cancelledId = await redirectedRequestId(
         savePtoDraftAction(initialPtoActionState, form(draftFields)),
@@ -386,6 +416,14 @@ describe.skipIf(!runLive)(
             form({
               ...draftFields,
               category,
+              startDate: addCalendarDays(
+                draftFields.startDate,
+                (ptoCategories.indexOf(category) + 1) * 7,
+              ),
+              endDate: addCalendarDays(
+                draftFields.startDate,
+                (ptoCategories.indexOf(category) + 1) * 7,
+              ),
               employeeId: employees.outsider.toHexString(),
               confirmImmediateApproval: "true",
             }),
@@ -418,6 +456,220 @@ describe.skipIf(!runLive)(
           endDate: "2019-01-01",
         }),
       ).rejects.toMatchObject({ code: "schedule_incomplete" });
+    }, 60000);
+    it("cancels collaborator-authored approved leave with a required note and exactly one refund", async () => {
+      identity.id = users.collaborator.toHexString();
+      const before = (await findPtoBalance(employees.collaborator.toHexString()))!
+        .currentBalanceUnits;
+      const request = await createOwnPtoDraft({
+        ...draftFields,
+        category: "vacation",
+        requestedPortion: "full",
+      });
+      await submitOwnPtoDraft({ requestId: request.id });
+      identity.id = users.administrator.toHexString();
+      await redirectedRequestId(
+        decidePtoRequestAction(
+          initialPtoActionState,
+          form({
+            requestId: request.id,
+            decision: "approved",
+            confirmWarnings: "true",
+          }),
+        ),
+      );
+      expect(
+        (await findPtoBalance(employees.collaborator.toHexString()))!
+          .currentBalanceUnits,
+      ).toBe(before - 2);
+      expect((await getPtoRequestDetail(request.id))?.cancellationNoteRequired).toBe(
+        true,
+      );
+      await expect(cancelOwnPtoRequest(request.id)).rejects.toMatchObject({
+        code: "cancellation_note_required",
+      });
+      await cancelOwnPtoRequest(request.id, "Cambio acordado con el colaborador");
+      expect(
+        (await findPtoBalance(employees.collaborator.toHexString()))!
+          .currentBalanceUnits,
+      ).toBe(before);
+      await expect(
+        cancelOwnPtoRequest(request.id, "Intento duplicado"),
+      ).rejects.toMatchObject({ code: "stale_status" });
+      expect(
+        await database.collection("pto_balance_ledger").countDocuments({
+          requestId: new ObjectId(request.id),
+          kind: "cancelled_request",
+        }),
+      ).toBe(1);
+      const notifications = await listLeaveNotifications(
+        users.collaborator.toHexString(),
+      );
+      expect(notifications).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: request.id, label: "Ausencia aprobada" }),
+          expect.objectContaining({ id: request.id, label: "Ausencia cancelada" }),
+        ]),
+      );
+      expect(
+        new Set(
+          notifications
+            .filter((entry) => entry.id === request.id)
+            .map((entry) => entry.key),
+        ).size,
+      ).toBe(2);
+    }, 60000);
+
+    it("applies cancellation cutoffs to non-vacation leave without touching the balance", async () => {
+      identity.id = users.administrator.toHexString();
+      const before = (await findPtoBalance(employees.collaborator.toHexString()))!
+        .currentBalanceUnits;
+      const requestId = await redirectedRequestId(
+        saveEmployeePtoDraftAction(
+          initialPtoActionState,
+          form({
+            ...draftFields,
+            category: "other",
+            employeeId: employees.collaborator.toHexString(),
+            confirmImmediateApproval: "true",
+          }),
+        ),
+      );
+      const today = getTodayInCostaRica();
+      await database
+        .collection("pto_requests")
+        .updateOne(
+          { _id: new ObjectId(requestId) },
+          { $set: { startDate: today, endDate: today } },
+        );
+      await expect(
+        cancelOwnPtoRequest(requestId, "Periodo iniciado"),
+      ).rejects.toMatchObject({ code: "cancellation_cutoff" });
+      await database.collection("pto_requests").updateOne(
+        { _id: new ObjectId(requestId) },
+        {
+          $set: {
+            startDate: addCalendarDays(today, 1),
+            endDate: addCalendarDays(today, 1),
+          },
+        },
+      );
+      identity.id = users.collaborator.toHexString();
+      await expect(cancelOwnPtoRequest(requestId)).rejects.toMatchObject({
+        code: "cancellation_cutoff",
+      });
+      identity.id = users.outsider.toHexString();
+      await expect(cancelOwnPtoRequest(requestId)).rejects.toMatchObject({
+        code: "forbidden",
+      });
+      identity.id = users.administrator.toHexString();
+      await cancelOwnPtoRequest(requestId, "Cancelación antes del inicio");
+      expect(
+        (await findPtoBalance(employees.collaborator.toHexString()))!
+          .currentBalanceUnits,
+      ).toBe(before);
+      expect((await findPtoRequestById(requestId))?.cancellationNote).toBe(
+        "Cancelación antes del inicio",
+      );
+    }, 60000);
+
+    it("blocks overlapping leave across categories and allows cancelled ranges to be reused", async () => {
+      identity.id = users.collaborator.toHexString();
+      const input = {
+        ...draftFields,
+        category: "other" as const,
+        requestedPortion: "full" as const,
+      };
+      const original = await createOwnPtoDraft(input);
+      for (const status of ["draft", "pending", "approved"]) {
+        await database
+          .collection("pto_requests")
+          .updateOne({ _id: new ObjectId(original.id) }, { $set: { status } });
+        await expect(
+          createOwnPtoDraft({ ...input, category: "incapacity" }),
+        ).rejects.toBeInstanceOf(LeaveConflictError);
+      }
+      identity.id = users.administrator.toHexString();
+      const before = (await findPtoBalance(employees.collaborator.toHexString()))!
+        .currentBalanceUnits;
+      const result = await saveEmployeePtoDraftAction(
+        initialPtoActionState,
+        form({
+          ...draftFields,
+          employeeId: employees.collaborator.toHexString(),
+          confirmImmediateApproval: "true",
+        }),
+      );
+      expect(result.status).toBe("error");
+      expect(result.conflicts).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: original.id })]),
+      );
+      expect(
+        (await findPtoBalance(employees.collaborator.toHexString()))!
+          .currentBalanceUnits,
+      ).toBe(before);
+      identity.id = users.collaborator.toHexString();
+      await cancelOwnPtoRequest(original.id);
+      await expect(createOwnPtoDraft(input)).resolves.toMatchObject({
+        status: "draft",
+      });
+      identity.id = users.administrator.toHexString();
+      await expect(createOwnPtoDraft(input)).resolves.toMatchObject({
+        status: "draft",
+      });
+    }, 60000);
+
+    it("allows exactly one of two simultaneous overlapping creations", async () => {
+      identity.id = users.collaborator.toHexString();
+      const input = {
+        ...draftFields,
+        category: "other" as const,
+        requestedPortion: "full" as const,
+      };
+      const results = await Promise.allSettled([
+        createOwnPtoDraft(input),
+        createOwnPtoDraft(input),
+      ]);
+      expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+      const rejected = results.find((result) => result.status === "rejected");
+      expect(
+        rejected?.status === "rejected" &&
+          rejected.reason instanceof LeaveConflictError,
+      ).toBe(true);
+    }, 60000);
+
+    it("credits one day per employee per month, including concurrent retries, and preserves manual adjustments", async () => {
+      vi.stubEnv("PTO_ACCRUAL_START_MONTH", "2026-10");
+      const before = (await findPtoBalance(employees.collaborator.toHexString()))!
+        .currentBalanceUnits;
+      await Promise.all([
+        accrueMonthlyPto(new Date("2026-10-01T06:00:00Z")),
+        accrueMonthlyPto(new Date("2026-10-01T06:00:00Z")),
+      ]);
+      await Promise.all([
+        accrueMonthlyPto(new Date("2026-10-02T06:00:00Z")),
+        accrueMonthlyPto(new Date("2026-10-02T06:00:00Z")),
+      ]);
+      expect(
+        (await findPtoBalance(employees.collaborator.toHexString()))!
+          .currentBalanceUnits,
+      ).toBe(before + 2);
+      expect(
+        await database
+          .collection("pto_balance_ledger")
+          .countDocuments({ kind: "monthly_accrual", accrualMonth: "2026-10" }),
+      ).toBe(4);
+      identity.id = users.administrator.toHexString();
+      await adjustEmployeePtoBalance({
+        employeeId: employees.collaborator.toHexString(),
+        deltaUnits: 4,
+        reason: "Ajuste manual de prueba",
+      });
+      await accrueMonthlyPto(new Date("2026-10-03T06:00:00Z"));
+      expect(
+        (await findPtoBalance(employees.collaborator.toHexString()))!
+          .currentBalanceUnits,
+      ).toBe(before + 6);
     }, 60000);
   },
 );

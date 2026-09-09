@@ -9,6 +9,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/features/pto/actions/pto-actions", () => ({
+  previewLeaveDurationAction: vi.fn().mockResolvedValue({ units: 2, message: null }),
   saveEmployeePtoDraftAction: vi.fn(),
   savePtoDraftAction: vi.fn(),
 }));

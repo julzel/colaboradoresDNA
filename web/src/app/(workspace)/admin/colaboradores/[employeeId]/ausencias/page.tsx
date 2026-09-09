@@ -19,6 +19,8 @@ const ledgerLabels = {
   adjustment: "Ajuste",
   approved_request: "Solicitud aprobada",
   opening: "Saldo inicial",
+  cancelled_request: "Devolución por cancelación",
+  monthly_accrual: "Acumulación mensual",
 } as const;
 
 export default async function EmployeePtoAdministrationPage({

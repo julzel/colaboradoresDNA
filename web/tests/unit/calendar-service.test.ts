@@ -485,7 +485,14 @@ describe("calendar service authorization and aggregation", () => {
   it("notifies an employee about upcoming approved leave created by an administrator", async () => {
     mocks.listUpcomingAbsenceNotifications.mockResolvedValue([
       {
-        categoryLabel: "Vacaciones",
+        title: "Vacaciones",
+        allDay: true,
+        eventType: null,
+        key: "leave:leave-request:1:approved",
+        kind: "pto",
+        href: "/ausencias/leave-request",
+        label: "Ausencia aprobada",
+        startsAt: "2026-08-10T12:00:00.000Z",
         endDate: "2026-08-12",
         id: "leave-request",
         startDate: "2026-08-11",

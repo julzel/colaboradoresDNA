@@ -10,6 +10,7 @@ Clerk runtime dependencies or required Clerk keys.
 - [Authentication implementation](../docs/authentication.md)
 - [Existing-database migration and rollback](../docs/better-auth-migration.md)
 - [Deployment checklist](../docs/deployment.md)
+- [Leave rules, notifications and monthly PTO setup](../docs/leave-request-flow.md)
 - [Environment template](./.env.example)
 
 Run commands from this directory. `pnpm verify` checks formatting, lint, styles, types,

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { NotificationRefresh } from "@/features/dashboard/components/notification-refresh";
 
 import { WorkspaceShell } from "@/components/layout/workspace-shell/workspace-shell";
 import { getWorkspaceShellData } from "@/features/dashboard/server/workspace-query-service";
@@ -11,6 +12,7 @@ export default async function WorkspaceLayout({
 
   return (
     <>
+      <NotificationRefresh />
       <WorkspaceShell
         displayName={workspace.displayName}
         profileImageUrl={workspace.profileImageUrl}

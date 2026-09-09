@@ -23,6 +23,18 @@ const ptoIndexes: Readonly<Record<string, readonly IndexDescription[]>> = {
   ],
   pto_balance_ledger: [
     {
+      key: { employeeId: 1, accrualMonth: 1 },
+      name: "pto_monthly_accrual_unique",
+      partialFilterExpression: { kind: "monthly_accrual" },
+      unique: true,
+    },
+    {
+      key: { requestId: 1, kind: 1 },
+      name: "pto_cancelled_request_unique",
+      partialFilterExpression: { kind: "cancelled_request" },
+      unique: true,
+    },
+    {
       key: { employeeId: 1, createdAt: -1 },
       name: "pto_ledger_employee_timeline",
     },

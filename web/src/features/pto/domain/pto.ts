@@ -69,7 +69,7 @@ export const ptoCategoryConsumesBalance: Record<PtoCategory, boolean> = {
 export const ptoUnitsSchema = z.number().int();
 export const ptoDurationUnitsSchema = ptoUnitsSchema.min(1);
 export const ptoRequestedPortionSchema = z.enum(["full", "half"]);
-export const PTO_SCHEDULE_DURATION_POLICY_VERSION = 1;
+export const PTO_SCHEDULE_DURATION_POLICY_VERSION = 2;
 
 export const ptoDurationCalculationSchema = z.object({
   calculatedAt: z.date(),
@@ -114,6 +114,13 @@ function validatePtoDraftRange(
   request: { endDate: string; startDate: string },
   context: z.RefinementCtx,
 ) {
+  if (inclusiveCalendarDays(request.startDate, request.endDate) > 366) {
+    context.addIssue({
+      code: "custom",
+      message: "El rango no puede superar 366 días.",
+      path: ["endDate"],
+    });
+  }
   if (request.endDate < request.startDate) {
     context.addIssue({
       code: "custom",
@@ -171,6 +178,7 @@ export type PtoRequestDocument = {
   balanceBeforeUnits: number | null;
   balanceDeltaUnits: number | null;
   cancelledAt: Date | null;
+  cancellationNote?: string | null;
   category: PtoCategory;
   collaboratorNote: string | null;
   createdAt: Date;
@@ -226,17 +234,23 @@ export type PtoBalanceDocument = {
   version: number;
 };
 
-export type PtoBalanceLedgerKind = "opening" | "adjustment" | "approved_request";
+export type PtoBalanceLedgerKind =
+  | "opening"
+  | "adjustment"
+  | "approved_request"
+  | "cancelled_request"
+  | "monthly_accrual";
 
 export type PtoBalanceLedgerDocument = {
   _id: ObjectId;
-  actorPlatformUserId: ObjectId;
+  actorPlatformUserId: ObjectId | null;
   balanceAfterUnits: number;
   balanceBeforeUnits: number;
   createdAt: Date;
   deltaUnits: number;
   employeeId: ObjectId;
   kind: PtoBalanceLedgerKind;
+  accrualMonth?: string;
   reason: string | null;
   requestId: ObjectId | null;
 };
@@ -247,8 +261,11 @@ export class PtoDomainError extends Error {
       | "approver_ineligible"
       | "balance_exists"
       | "balance_missing"
+      | "cancellation_cutoff"
+      | "cancellation_note_required"
       | "employee_missing"
       | "forbidden"
+      | "holidays_unavailable"
       | "no_scheduled_workdays"
       | "partial_day_range"
       | "request_missing"
@@ -312,6 +329,8 @@ export function ptoRangesOverlap(
 export function canTransitionPtoStatus(from: PtoStatus, to: PtoStatus) {
   return (
     (from === "draft" && (to === "pending" || to === "cancelled")) ||
-    (from === "pending" && (to === "approved" || to === "denied" || to === "cancelled"))
+    (from === "pending" &&
+      (to === "approved" || to === "denied" || to === "cancelled")) ||
+    (from === "approved" && to === "cancelled")
   );
 }

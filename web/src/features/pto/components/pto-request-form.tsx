@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useState, useEffect } from "react";
 
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/form-field/form-field";
 import {
   saveEmployeePtoDraftAction,
+  previewLeaveDurationAction,
   savePtoDraftAction,
 } from "@/features/pto/actions/pto-actions";
 import { ptoCategoryLabels, type PtoCategory } from "@/features/pto/domain/pto";
 import { initialPtoActionState } from "@/features/pto/domain/pto-action-state";
 
 import styles from "./pto.module.css";
+import { LeaveConflictWarning } from "./leave-conflict-warning";
+import type { LeaveConflict } from "../domain/leave-conflict";
 
 type EditablePtoRequest = {
   category: PtoCategory;
@@ -71,6 +74,82 @@ export function PtoRequestForm({
     : request
       ? `/ausencias/${request.id}`
       : "/ausencias";
+  const previewKey = JSON.stringify([
+    fields.startDate,
+    fields.endDate,
+    fields.requestedPortion,
+    fields.category,
+    fields.employeeId,
+    isAdministratorRequest,
+    request?.id,
+  ]);
+  const [preview, setPreview] = useState<{
+    key: string;
+    message: string;
+    conflicts: LeaveConflict[];
+  } | null>(null);
+  const [submittedKey, setSubmittedKey] = useState("");
+  const conflicts =
+    submittedKey === previewKey && state.conflicts?.length
+      ? state.conflicts
+      : preview?.key === previewKey
+        ? preview.conflicts
+        : [];
+  useEffect(() => {
+    if (
+      !fields.startDate ||
+      !fields.endDate ||
+      fields.endDate < fields.startDate ||
+      (isAdministratorRequest && !fields.employeeId)
+    )
+      return;
+    let active = true;
+    const timer = setTimeout(() => {
+      void previewLeaveDurationAction(
+        {
+          startDate: fields.startDate,
+          endDate: fields.endDate,
+          requestedPortion: fields.requestedPortion,
+          category: fields.category,
+          collaboratorNote: null,
+        },
+        isAdministratorRequest ? fields.employeeId : undefined,
+        request?.id,
+      )
+        .then((result) => {
+          if (active)
+            setPreview({
+              key: previewKey,
+              conflicts: result.conflicts ?? [],
+              message:
+                result.units === null
+                  ? (result.message ?? "No se pudo calcular.")
+                  : `Total solicitado: ${result.units / 2} días laborales. Se excluyen feriados y días libres según el horario asignado y sus alternancias.`,
+            });
+        })
+        .catch(() => {
+          if (active)
+            setPreview({
+              key: previewKey,
+              message: "No se pudo calcular la duración. Intentá de nuevo.",
+              conflicts: [],
+            });
+        });
+    }, 300);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [
+    fields.startDate,
+    fields.endDate,
+    fields.requestedPortion,
+    fields.category,
+    fields.employeeId,
+    isAdministratorRequest,
+    previewKey,
+    request?.id,
+  ]);
 
   return (
     <ElevatedSurface
@@ -83,17 +162,19 @@ export function PtoRequestForm({
       onSubmit={(event) => {
         event.preventDefault();
         if (pending) return;
+        setSubmittedKey(previewKey);
         const formData = new FormData(event.currentTarget as HTMLFormElement);
         startTransition(() => action(formData));
       }}
     >
       {employeeId && <input name="employeeId" type="hidden" value={employeeId} />}
       {request && <input name="requestId" type="hidden" value={request.id} />}
-      {state.message && (
+      {state.message && !state.conflicts?.length && (
         <p className={styles.error} role="alert">
           {state.message}
         </p>
       )}
+      <LeaveConflictWarning conflicts={conflicts} />
       <div className={styles.formGrid}>
         {collaborators && (
           <div className={styles.fullWidth}>
@@ -212,8 +293,17 @@ export function PtoRequestForm({
           value="true"
         />
       )}
+      {fields.startDate && fields.endDate && fields.endDate >= fields.startDate && (
+        <p role="status">
+          {preview?.key === previewKey ? preview.message : "Calculando días laborales…"}
+        </p>
+      )}
       <div className={styles.actions}>
-        <SubmitButton pending={pending} pendingLabel="Guardando…">
+        <SubmitButton
+          disabled={conflicts.length > 0}
+          pending={pending}
+          pendingLabel="Guardando…"
+        >
           {isAdministratorCreation ? "Crear y aprobar" : "Guardar borrador"}
         </SubmitButton>
         {onCancel ? (

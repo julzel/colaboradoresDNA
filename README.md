@@ -122,6 +122,7 @@ Missing and zero balances are intentionally different.
 - [Design system](./docs/design-system.md)
 - [Employee model](./docs/employee-model.md)
 - [Collaborator scheduling](./docs/scheduling.md)
+- [Leave requests, notifications and monthly PTO accrual](./docs/leave-request-flow.md)
 - [Production tasks](./docs/production-tasks.md)
 - [Collaborator development security](./docs/collaborator-development-security.md)
 - [Management prioritization prototype](./docs/management-prioritization-prototype.md)
