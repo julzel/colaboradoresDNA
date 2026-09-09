@@ -37,7 +37,7 @@ const missingVariables = requiredVariables.filter((name) => !process.env[name]?.
 
 if (missingVariables.length > 0) {
   throw new Error(
-    `Missing Netlify development environment variables: ${missingVariables.join(", ")}.`,
+    `Missing Netlify ${environment} environment variables: ${missingVariables.join(", ")}.`,
   );
 }
 
