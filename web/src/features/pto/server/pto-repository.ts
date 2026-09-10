@@ -1011,7 +1011,7 @@ export async function listPtoBalanceLedger(employeeId: string) {
   const { ledger } = await getPtoCollections();
   return ledger
     .find({ employeeId: new ObjectId(employeeId) })
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .toArray();
 }
 

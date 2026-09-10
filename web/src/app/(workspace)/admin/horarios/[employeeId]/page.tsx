@@ -24,7 +24,7 @@ export default async function EmployeeSchedulePage({
   if (!detail) notFound();
 
   return (
-    <Container>
+    <Container className={styles.fullWidthContainer}>
       <div className={styles.page}>
         <header className={styles.header}>
           <PageSectionHeader

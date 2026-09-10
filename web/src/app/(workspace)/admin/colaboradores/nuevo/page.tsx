@@ -13,7 +13,7 @@ export default async function NewEmployeePage() {
   const { departments, managers } = await getEmployeeCreationPageData();
 
   return (
-    <Container>
+    <Container className={styles.fullWidthContainer}>
       <div className={styles.page}>
         <header className={styles.header}>
           <PageSectionHeader icon={UserRoundPlus} title="Nuevo colaborador" />

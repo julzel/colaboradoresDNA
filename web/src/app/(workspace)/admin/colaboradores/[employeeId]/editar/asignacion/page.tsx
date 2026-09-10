@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { Building2 } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container/container";
-import { BackLink } from "@/components/ui/navigation/back-link";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { AssignmentForm } from "@/features/employees/components/assignment-form";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeeAssignmentPageData } from "@/features/employees/server/employee-query-service";
@@ -20,16 +21,10 @@ export default async function EditAssignmentPage({
   if (!detail) notFound();
 
   return (
-    <Container>
+    <Container className={styles.fullWidthContainer}>
       <div className={styles.page}>
-        <BackLink href={`/admin/colaboradores/${employeeId}`}>
-          Volver al detalle
-        </BackLink>
         <header className={styles.header}>
-          <div>
-            <p className="eyebrow">Colaborador</p>
-            <h1>Cambiar asignación</h1>
-          </div>
+          <PageSectionHeader icon={Building2} title="Cambiar asignación" />
         </header>
         <AssignmentForm
           current={detail.currentAssignment}

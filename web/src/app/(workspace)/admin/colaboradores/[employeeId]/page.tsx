@@ -90,48 +90,52 @@ export default async function EmployeeDetailPage({
           as="section"
           className={`${styles.section} ${styles.detailHeader}`}
         >
-          <span aria-hidden="true" className={styles.avatar}>
-            {profileImageUrl ? (
-              <img alt="" src={profileImageUrl} />
-            ) : (
-              detail.employee.initials
-            )}
-          </span>
-          <div>
-            <p className={`eyebrow ${styles.detailEyebrow}`}>Colaborador</p>
-            <h2 className={styles.detailName} id="employee-name">
-              {displayName}
-            </h2>
-            <div className={styles.statusRow}>
-              <StatusBadge
-                tone={
-                  detail.employee.employmentStatus === "active" ? "success" : "neutral"
-                }
-              >
-                {detail.employee.employmentStatus === "active"
-                  ? "Laboral: activo"
-                  : "Laboral: inactivo"}
-              </StatusBadge>
-              <StatusBadge
-                tone={
-                  detail.access.status === "active"
-                    ? "success"
+          <div className={styles.detailIdentity}>
+            <span aria-hidden="true" className={styles.avatar}>
+              {profileImageUrl ? (
+                <img alt="" src={profileImageUrl} />
+              ) : (
+                detail.employee.initials
+              )}
+            </span>
+            <div className={styles.detailIdentityContent}>
+              <h2 className={styles.detailName} id="employee-name">
+                {displayName}
+              </h2>
+              <div className={styles.statusRow}>
+                <StatusBadge
+                  tone={
+                    detail.employee.employmentStatus === "active"
+                      ? "success"
+                      : "neutral"
+                  }
+                >
+                  {detail.employee.employmentStatus === "active"
+                    ? "Laboral: activo"
+                    : "Laboral: inactivo"}
+                </StatusBadge>
+                <StatusBadge
+                  tone={
+                    detail.access.status === "active"
+                      ? "success"
+                      : detail.access.status === "invited"
+                        ? "warning"
+                        : "danger"
+                  }
+                >
+                  {detail.access.status === "active"
+                    ? "Acceso activo"
                     : detail.access.status === "invited"
-                      ? "warning"
-                      : "danger"
-                }
-              >
-                {detail.access.status === "active"
-                  ? "Acceso activo"
-                  : detail.access.status === "invited"
-                    ? detail.access.hasInvitationBeenSent
-                      ? "Invitación pendiente"
-                      : "Sin invitación"
-                    : "Acceso desactivado"}
-              </StatusBadge>
+                      ? detail.access.hasInvitationBeenSent
+                        ? "Invitación pendiente"
+                        : "Sin invitación"
+                      : "Acceso desactivado"}
+                </StatusBadge>
+              </div>
             </div>
           </div>
           <ButtonLink
+            className={styles.detailHeaderAction}
             href={`/admin/colaboradores/${employeeId}/editar/informacion-personal`}
             variant="secondary"
           >
@@ -155,7 +159,11 @@ export default async function EmployeeDetailPage({
                 ahora o dejarlo pendiente para más adelante.
               </p>
             </div>
-            <ButtonLink href={`/admin/horarios/${employeeId}`} variant="secondary">
+            <ButtonLink
+              className={styles.setupNoticeAction}
+              href={`/admin/horarios/${employeeId}`}
+              variant="secondary"
+            >
               Configurar horario
             </ButtonLink>
           </ElevatedSurface>
@@ -320,7 +328,7 @@ export default async function EmployeeDetailPage({
             title="Acceso a la plataforma"
           >
             <dl className={styles.detailItemGrid}>
-              <EmployeeDetailItem icon={Mail} label="Correo personal">
+              <EmployeeDetailItem icon={Mail} label="Correo personal" truncate>
                 {detail.access.email}
               </EmployeeDetailItem>
               <EmployeeDetailItem icon={KeyRound} label="Rol">

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { ShieldCheck } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container/container";
-import { BackLink } from "@/components/ui/navigation/back-link";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { AccessManagementForm } from "@/features/employees/components/access-management-form";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeeAccessPageData } from "@/features/employees/server/employee-query-service";
@@ -19,16 +20,13 @@ export default async function EditAccessPage({
   if (!detail) notFound();
 
   return (
-    <Container>
+    <Container className={styles.fullWidthContainer}>
       <div className={styles.page}>
-        <BackLink href={`/admin/colaboradores/${employeeId}`}>
-          Volver al detalle
-        </BackLink>
         <header className={styles.header}>
-          <div>
-            <p className="eyebrow">Colaborador</p>
-            <h1>Gestionar acceso y relación laboral</h1>
-          </div>
+          <PageSectionHeader
+            icon={ShieldCheck}
+            title="Gestionar acceso y relación laboral"
+          />
         </header>
         <AccessManagementForm
           accessStatus={detail.access.status}

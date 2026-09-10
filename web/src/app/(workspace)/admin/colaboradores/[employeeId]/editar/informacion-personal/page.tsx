@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { UserRoundPen } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container/container";
-import { BackLink } from "@/components/ui/navigation/back-link";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { PersonalInformationForm } from "@/features/employees/components/personal-information-form";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeePersonalInformationPageData } from "@/features/employees/server/employee-query-service";
@@ -19,16 +20,10 @@ export default async function EditPersonalInformationPage({
   if (!employee) notFound();
 
   return (
-    <Container>
+    <Container className={styles.fullWidthContainer}>
       <div className={styles.page}>
-        <BackLink href={`/admin/colaboradores/${employeeId}`}>
-          Volver al detalle
-        </BackLink>
         <header className={styles.header}>
-          <div>
-            <p className="eyebrow">Colaborador</p>
-            <h1>Editar información personal</h1>
-          </div>
+          <PageSectionHeader icon={UserRoundPen} title="Editar información personal" />
         </header>
         <PersonalInformationForm employee={employee} />
       </div>

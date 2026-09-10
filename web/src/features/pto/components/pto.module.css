@@ -19,6 +19,15 @@
   justify-content: space-between;
 }
 
+.newRequestButton {
+  width: var(--control-height-md);
+  padding-inline: 0;
+}
+
+.newRequestButtonLabel {
+  display: none;
+}
+
 .cancelPtoForm {
   display: grid;
   width: 100%;
@@ -39,6 +48,17 @@
   margin: var(--space-2) 0 0;
   color: var(--color-text-muted);
   line-height: var(--line-body);
+}
+
+@media (width >= 40rem) {
+  .newRequestButton {
+    width: auto;
+    padding-inline: var(--space-4);
+  }
+
+  .newRequestButtonLabel {
+    display: inline;
+  }
 }
 
 .summaryGrid,
@@ -384,6 +404,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.twoColumns {
+  align-items: start;
+}
+
 .requestSection {
   display: grid;
   min-width: 0;
@@ -488,6 +512,7 @@
 .card,
 .formCard {
   display: grid;
+  align-content: start;
   gap: var(--space-4);
   min-width: 0;
   padding: var(--space-5);
@@ -679,9 +704,11 @@
 
 .metric {
   margin: 0;
-  font-size: var(--text-2xl);
+  color: var(--color-accent);
+  font-size: clamp(2rem, 4vw, 2.75rem);
   font-weight: 800;
   letter-spacing: -0.04em;
+  line-height: var(--line-tight);
 }
 
 .adminRequestPanel {
