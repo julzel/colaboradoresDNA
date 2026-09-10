@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { CalendarPlus, TreePalm } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
-import { BackLink } from "@/components/ui/navigation/back-link";
+import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import {
   PtoBalanceAdjustmentForm,
   PtoOpeningBalanceForm,
@@ -34,17 +35,21 @@ export default async function EmployeePtoAdministrationPage({
   return (
     <Container>
       <div className={styles.page}>
-        <BackLink href={`/admin/colaboradores/${employeeId}`}>
-          Volver al colaborador
-        </BackLink>
         <header className={styles.header}>
-          <div>
-            <p className="eyebrow">Administración</p>
-            <h1>Saldo de vacaciones</h1>
-          </div>
-          <ButtonLink href={`/admin/colaboradores/${employeeId}/ausencias/nueva`}>
-            Nueva solicitud
-          </ButtonLink>
+          <PageSectionHeader
+            action={
+              <ButtonLink
+                aria-label="Nueva solicitud"
+                className={styles.newRequestButton}
+                href={`/admin/colaboradores/${employeeId}/ausencias/nueva`}
+              >
+                <CalendarPlus aria-hidden="true" size={20} />
+                <span className={styles.newRequestButtonLabel}>Nueva solicitud</span>
+              </ButtonLink>
+            }
+            icon={TreePalm}
+            title="Saldo de vacaciones"
+          />
         </header>
 
         <div className={styles.twoColumns}>
@@ -75,8 +80,8 @@ export default async function EmployeePtoAdministrationPage({
                     <div>
                       <strong>{ledgerLabels[entry.kind]}</strong>
                       <p className={styles.muted}>
-                        {entry.reason ?? "Sin motivo adicional"} · {entry.actorName} ·{" "}
-                        {entry.createdAt.toLocaleString("es-CR")}
+                        {entry.reason ?? "Sin motivo adicional"} · Aplicado por{" "}
+                        {entry.actorName} · {entry.createdAt.toLocaleString("es-CR")}
                       </p>
                     </div>
                     <strong>

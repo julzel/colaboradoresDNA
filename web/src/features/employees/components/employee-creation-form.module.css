@@ -1,7 +1,9 @@
 .formCard {
   display: grid;
   width: 100%;
+  max-width: none;
   min-width: 0;
+  justify-self: stretch;
   gap: var(--space-6);
   padding: var(--space-4);
 }
@@ -101,9 +103,16 @@
 .formGrid,
 .summary {
   display: grid;
+  width: 100%;
+  min-width: 0;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: var(--space-5) var(--space-4);
+}
+
+.formGrid > * {
+  width: 100%;
+  min-width: 0;
 }
 
 .fullWidth {

@@ -17,7 +17,7 @@ import {
   type IdentificationType,
 } from "@/features/employees/domain/employee";
 
-import styles from "./employee-management.module.css";
+import styles from "./employee-creation-form.module.css";
 import { FormErrorSummary } from "./form-error-summary";
 import { IdentificationFields } from "./identification-fields";
 import { useGuardedForm } from "./use-guarded-form";
@@ -87,34 +87,32 @@ export function PersonalInformationForm({ employee }: PersonalInformationFormPro
           name="secondSurname"
           optional
         />
-        <div className={styles.formGrid}>
-          <TextField
-            defaultValue={employee.birthDay}
-            error={state.errors?.birthDay}
-            id="birthDay"
-            inputMode="numeric"
-            label="Día de cumpleaños"
-            max={31}
-            min={1}
-            name="birthDay"
-            required
-            type="number"
-          />
-          <SelectField
-            defaultValue={employee.birthMonth}
-            error={state.errors?.birthMonth}
-            id="birthMonth"
-            label="Mes"
-            name="birthMonth"
-            required
-          >
-            {birthdayMonthOptions.map((month) => (
-              <option key={month.value} value={month.value}>
-                {month.label}
-              </option>
-            ))}
-          </SelectField>
-        </div>
+        <TextField
+          defaultValue={employee.birthDay}
+          error={state.errors?.birthDay}
+          id="birthDay"
+          inputMode="numeric"
+          label="Día de cumpleaños"
+          max={31}
+          min={1}
+          name="birthDay"
+          required
+          type="number"
+        />
+        <SelectField
+          defaultValue={employee.birthMonth}
+          error={state.errors?.birthMonth}
+          id="birthMonth"
+          label="Mes de cumpleaños"
+          name="birthMonth"
+          required
+        >
+          {birthdayMonthOptions.map((month) => (
+            <option key={month.value} value={month.value}>
+              {month.label}
+            </option>
+          ))}
+        </SelectField>
         <TextField
           defaultValue={employee.phoneDisplayValue ?? ""}
           error={state.errors?.phoneNumber}
@@ -140,11 +138,13 @@ export function PersonalInformationForm({ employee }: PersonalInformationFormPro
           />
         </div>
       </div>
-      <div className={styles.actions}>
-        <SubmitButton pendingLabel="Guardando cambios…">Guardar cambios</SubmitButton>
+      <div className={styles.footer}>
         <Button onClick={handleCancel} variant="quiet">
           Cancelar
         </Button>
+        <div className={styles.navigation}>
+          <SubmitButton pendingLabel="Guardando cambios…">Guardar cambios</SubmitButton>
+        </div>
       </div>
     </ElevatedSurface>
   );

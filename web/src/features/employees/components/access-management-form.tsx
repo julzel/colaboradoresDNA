@@ -21,6 +21,7 @@ import type {
 } from "@/features/auth/domain/platform-user";
 import { initialEmployeeActionState } from "@/features/employees/domain/employee-action-state";
 
+import formStyles from "./employee-creation-form.module.css";
 import styles from "./employee-management.module.css";
 import { FormErrorSummary } from "./form-error-summary";
 import { useGuardedForm } from "./use-guarded-form";
@@ -73,21 +74,23 @@ export function AccessManagementForm({
   } = useGuardedForm(cancelHref);
 
   return (
-    <>
+    <div className={styles.accessFormsGrid}>
       <ElevatedSurface
         action={emailAction}
         as="form"
-        className={styles.formCard}
+        className={formStyles.formCard}
         onChange={handleEmailChange}
         onSubmit={handleEmailSubmit}
         ref={emailFormRef}
       >
         <input name="employeeId" type="hidden" value={employeeId} />
-        <h2>Correo de acceso</h2>
-        <p className={styles.muted}>
-          Solo administración puede cambiar este correo. Se actualizará también en el
-          proveedor de acceso y el cambio quedará auditado.
-        </p>
+        <header className={formStyles.sectionHeading}>
+          <h2>Correo de acceso</h2>
+          <p>
+            Solo administración puede cambiar este correo. Se actualizará también en el
+            proveedor de acceso.
+          </p>
+        </header>
         <FormErrorSummary state={emailState} />
         <TextField
           autoComplete="email"
@@ -101,13 +104,15 @@ export function AccessManagementForm({
           type="email"
         />
         {accessStatus !== "deactivated" && (
-          <div className={styles.actions}>
-            <SubmitButton pendingLabel="Actualizando correo…">
-              Actualizar correo
-            </SubmitButton>
+          <div className={formStyles.footer}>
             <Button onClick={handleEmailCancel} variant="quiet">
               Cancelar
             </Button>
+            <div className={formStyles.navigation}>
+              <SubmitButton pendingLabel="Actualizando correo…">
+                Actualizar correo
+              </SubmitButton>
+            </div>
           </div>
         )}
       </ElevatedSurface>
@@ -115,28 +120,34 @@ export function AccessManagementForm({
       <ElevatedSurface
         action={accessAction}
         as="form"
-        className={styles.formCard}
+        className={formStyles.formCard}
         onChange={handleAccessChange}
         onSubmit={handleAccessSubmit}
         ref={accessFormRef}
       >
         <input name="employeeId" type="hidden" value={employeeId} />
-        <h2>Rol de plataforma</h2>
-        <p className={styles.muted}>
-          Administración y supervisión requieren MFA. El rol no se infiere del puesto ni
-          del departamento.
-        </p>
+        <header className={formStyles.sectionHeading}>
+          <h2>Rol de plataforma</h2>
+          <p>
+            Administración y supervisión requieren MFA. El rol no se infiere del puesto
+            ni del departamento.
+          </p>
+        </header>
         <FormErrorSummary state={accessState} />
         <SelectField defaultValue={role} id="role" label="Rol" name="role">
           <option value="administrator">Administrador</option>
           <option value="supervisor">Supervisor</option>
           <option value="collaborator">Colaborador</option>
         </SelectField>
-        <div className={styles.actions}>
-          <SubmitButton pendingLabel="Guardando acceso…">Guardar cambios</SubmitButton>
+        <div className={formStyles.footer}>
           <Button onClick={handleAccessCancel} variant="quiet">
             Cancelar
           </Button>
+          <div className={formStyles.navigation}>
+            <SubmitButton pendingLabel="Guardando acceso…">
+              Guardar cambios
+            </SubmitButton>
+          </div>
         </div>
       </ElevatedSurface>
 
@@ -144,18 +155,20 @@ export function AccessManagementForm({
         <ElevatedSurface
           action={employmentAction}
           as="form"
-          className={`${styles.formCard} ${styles.dangerZone}`}
+          className={`${formStyles.formCard} ${styles.dangerZone}`}
           data-confirmation="¿Finalizar la relación laboral? El acceso se desactivará y las sesiones activas se revocarán. Los registros históricos se conservarán."
           onChange={handleEmploymentChange}
           onSubmit={handleEmploymentSubmit}
           ref={employmentFormRef}
         >
           <input name="employeeId" type="hidden" value={employeeId} />
-          <h2>Finalizar relación laboral</h2>
-          <p className={styles.muted}>
-            Esta acción conserva el historial, marca a la persona como inactiva, cierra
-            sus períodos vigentes y bloquea su acceso.
-          </p>
+          <header className={formStyles.sectionHeading}>
+            <h2>Finalizar relación laboral</h2>
+            <p>
+              Esta acción conserva el historial, marca a la persona como inactiva,
+              cierra sus períodos vigentes y bloquea su acceso.
+            </p>
+          </header>
           <FormErrorSummary state={employmentState} />
           <TextField
             error={employmentState.errors?.endedOn}
@@ -172,16 +185,18 @@ export function AccessManagementForm({
             name="confirmation"
             required
           />
-          <div className={styles.actions}>
-            <SubmitButton pendingLabel="Finalizando relación…" variant="danger">
-              Finalizar relación laboral
-            </SubmitButton>
+          <div className={formStyles.footer}>
             <Button onClick={handleEmploymentCancel} variant="quiet">
               Cancelar
             </Button>
+            <div className={formStyles.navigation}>
+              <SubmitButton pendingLabel="Finalizando relación…" variant="danger">
+                Finalizar relación laboral
+              </SubmitButton>
+            </div>
           </div>
         </ElevatedSurface>
       )}
-    </>
+    </div>
   );
 }
