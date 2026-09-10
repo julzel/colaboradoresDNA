@@ -63,17 +63,38 @@ describe("application-owned authentication forms", () => {
       target: { value: "A-long-password-723!" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Iniciar sesión" }));
-    await screen.findByLabelText("Código de tu aplicación de autenticación");
+    const authenticatorCode = await screen.findByLabelText("Código de 6 dígitos");
+    expect(authenticatorCode).toHaveValue("");
     fireEvent.click(
-      screen.getByRole("button", { name: "Usar código de recuperación" }),
+      screen.getByRole("button", { name: "Usar un código de recuperación" }),
     );
-    fireEvent.change(screen.getByLabelText("Código de recuperación"), {
+    const recoveryCode = screen.getByLabelText("Código de recuperación");
+    expect(recoveryCode).toHaveValue("");
+    fireEvent.change(recoveryCode, {
       target: { value: "used-code" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Verificar código" }));
     await screen.findByText(/El código no es válido/);
     expect(api.backup).toHaveBeenCalledWith({ code: "used-code" });
     expect(api.totp).not.toHaveBeenCalled();
+  });
+  it("accepts a pasted six-digit authenticator code without retaining the email", async () => {
+    api.signIn.mockResolvedValue({ data: { twoFactorRedirect: true } });
+    api.totp.mockResolvedValue({ data: { status: true } });
+    render(<AuthForm />);
+    fireEvent.change(screen.getByLabelText("Correo electrónico"), {
+      target: { value: "admin@example.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Contraseña"), {
+      target: { value: "A-long-password-723!" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+    const code = await screen.findByLabelText("Código de 6 dígitos");
+    expect(code).toHaveValue("");
+    fireEvent.change(code, { target: { value: "12a34567" } });
+    expect(code).toHaveValue("123456");
+    fireEvent.click(screen.getByRole("button", { name: "Verificar código" }));
+    await waitFor(() => expect(api.totp).toHaveBeenCalledWith({ code: "123456" }));
   });
   it("keeps password recovery feedback generic", async () => {
     api.recover.mockResolvedValue({ data: { status: true } });

@@ -197,7 +197,7 @@ describe("identification normalization", () => {
     ).toBe(false);
   });
 
-  it.each(["12345678901", "123456789012", "123 4567 8901"])(
+  it.each(["12345678901", "123456789012"])(
     "normalizes a valid DIMEX from %s",
     (value) => {
       const identification = identificationInputSchema.parse({
@@ -215,6 +215,18 @@ describe("identification normalization", () => {
       identificationInputSchema.safeParse({
         type: "residence_id",
         value: "1234567890",
+      }).success,
+    ).toBe(false);
+    expect(
+      identificationInputSchema.safeParse({
+        type: "residence_id",
+        value: "123 4567 8901",
+      }).success,
+    ).toBe(false);
+    expect(
+      identificationInputSchema.safeParse({
+        type: "residence_id",
+        value: "01234567890",
       }).success,
     ).toBe(false);
   });

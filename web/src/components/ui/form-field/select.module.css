@@ -1,0 +1,87 @@
+/* Picker and option states intentionally follow their base rules. */
+/* stylelint-disable no-descending-specificity */
+.select {
+  min-width: 0;
+  min-height: 2.75rem;
+  padding-inline-end: var(--space-4);
+  cursor: pointer;
+}
+
+@supports (appearance: base-select) {
+  .select:not([multiple], [size]),
+  .select:not([multiple], [size])::picker(select) {
+    /* Supported progressively; the installed CSS validator predates this value. */
+    appearance: base-select; /* stylelint-disable-line declaration-property-value-no-unknown */
+  }
+
+  .select:not([multiple], [size]) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .select::picker(select) {
+    max-inline-size: calc(100vw - 2rem);
+    max-block-size: min(22rem, 50dvh);
+    margin-block: var(--space-2);
+    padding: var(--space-1);
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    box-shadow: none;
+    font: inherit;
+  }
+
+  .select::picker-icon {
+    margin-inline-start: auto;
+    color: var(--color-text-muted);
+  }
+
+  .select:open::picker-icon {
+    rotate: 180deg;
+  }
+
+  .select option {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: var(--text-sm);
+    line-height: var(--line-body);
+    cursor: pointer;
+  }
+
+  .select option:checked {
+    background: var(--color-brand-soft);
+    color: var(--color-brand-text);
+    font-weight: 700;
+  }
+
+  .select option:hover:not(:disabled) {
+    background: var(--color-surface-muted);
+  }
+
+  .select option:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: -2px;
+    box-shadow: none;
+  }
+
+  .select option:disabled {
+    color: var(--color-text-subtle);
+    cursor: default;
+  }
+
+  .select option::checkmark {
+    order: 1;
+    margin-inline-start: auto;
+    color: var(--color-brand-text);
+  }
+}
