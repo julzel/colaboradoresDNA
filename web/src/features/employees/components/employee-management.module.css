@@ -4,6 +4,34 @@
   padding-block: var(--space-6) var(--space-12);
 }
 
+.fullWidthContainer.fullWidthContainer {
+  width: 100%;
+  min-width: 0;
+}
+
+.accessFormsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.accessFormsGrid > * {
+  min-width: 0;
+}
+
+@media (width >= 48rem) {
+  .accessFormsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width >= 75rem) {
+  .accessFormsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .header {
   display: flex;
   align-items: flex-start;
@@ -281,50 +309,51 @@
   object-fit: cover;
 }
 
-.detailHeader {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--space-2) var(--space-4);
+.section.detailHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-4);
 }
 
-.detailHeader > div {
-  display: contents;
+.detailIdentity {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-4);
 }
 
-.detailEyebrow {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.detailHeader > .avatar {
-  grid-column: 1;
-  grid-row: 2;
-  align-self: center;
+.detailIdentityContent {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  text-align: left;
 }
 
 .detailName {
-  grid-column: 2;
-  grid-row: 2;
-  align-self: center;
+  align-self: flex-start;
   margin: 0;
+  text-align: left;
 }
 
-.detailHeader > div > .muted {
-  grid-column: 2;
-  grid-row: 3;
-  margin: 0;
-}
-
-.detailHeader > div > .statusRow {
-  grid-column: 2;
-  grid-row: 4;
+.detailIdentityContent > .statusRow {
+  align-self: flex-start;
+  justify-content: flex-start;
   gap: var(--space-2);
 }
 
 .detailHeader > :last-child {
-  grid-column: 3;
-  grid-row: 1 / -1;
-  align-self: center;
+  align-self: start;
+}
+
+.detailHeaderAction.detailHeaderAction {
+  flex: 0 0 auto;
+  box-shadow: none;
 }
 
 .detailGrid {
@@ -339,7 +368,7 @@
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-5);
-  background: var(--color-brand-soft);
+  background: var(--color-accent-soft);
 }
 
 .setupNoticeIcon {
@@ -347,8 +376,20 @@
   width: 3rem;
   height: 3rem;
   border-radius: var(--radius-lg);
-  color: var(--color-brand-text);
+  color: var(--color-accent);
   place-items: center;
+}
+
+.setupNoticeAction {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--neutral-0);
+}
+
+.setupNoticeAction:hover:not(:disabled) {
+  border-color: var(--color-accent-hover);
+  background: var(--color-accent-hover);
+  color: var(--neutral-0);
 }
 
 .setupNoticeContent h2,
@@ -381,6 +422,8 @@
 }
 
 .detailCard {
+  --detail-card-inset: var(--space-6);
+
   overflow: hidden;
 }
 
@@ -389,7 +432,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-5) var(--space-6);
+  margin-inline: var(--detail-card-inset);
+  padding-block: var(--space-5);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -421,31 +465,49 @@
 }
 
 .detailCardBody {
-  padding: var(--space-4);
+  padding: var(--space-4) var(--detail-card-inset);
 }
 
 .detailItemGrid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0;
 }
 
 .detailItem {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   column-gap: var(--space-3);
   align-items: center;
   min-width: 0;
   padding: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.detailItem:nth-child(odd) {
-  border-right: 1px solid var(--color-border);
+.detailItem::after {
+  position: absolute;
+  right: var(--space-2);
+  bottom: 0;
+  left: var(--space-2);
+  height: 1px;
+  background: var(--color-border);
+  content: "";
 }
 
-.detailItem:nth-last-child(-n + 2) {
-  border-bottom: 0;
+.detailItemGrid::before {
+  position: absolute;
+  top: var(--space-2);
+  left: 50%;
+  bottom: var(--space-2);
+  width: 1px;
+  background: var(--color-border);
+  content: "";
+}
+
+.detailItem:last-child::after,
+.detailItem:nth-last-child(2):nth-child(odd)::after {
+  display: none;
 }
 
 .detailItem dt {
@@ -472,6 +534,12 @@
   color: var(--color-text);
   font-size: var(--text-sm);
   font-weight: 750;
+}
+
+.detailItemValueTruncated {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scheduleSummaryGrid {
@@ -712,11 +780,6 @@
     gap: var(--space-2);
   }
 
-  .header,
-  .detailHeader {
-    grid-template-columns: auto 1fr;
-  }
-
   .header {
     display: grid;
     grid-template-columns: 1fr;
@@ -731,47 +794,19 @@
     justify-self: stretch;
   }
 
-  .detailHeader > :last-child {
-    grid-column: 1 / -1;
-    grid-row: 5;
-  }
-
-  .detailHeader {
-    grid-template-columns: auto minmax(0, 1fr);
+  .section.detailHeader {
+    flex-direction: column;
     gap: var(--space-3);
   }
 
-  .detailHeader > div > .detailEyebrow {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    justify-self: start;
-  }
-
-  .detailHeader > .avatar {
-    grid-column: 1;
-    grid-row: 2;
-    align-self: center;
-  }
-
-  .detailName {
-    grid-column: 2;
-    grid-row: 2;
-    align-self: center;
-    margin: 0;
-  }
-
-  .detailHeader > div > .muted {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    margin-top: var(--space-1);
-    text-align: left;
-  }
-
-  .detailHeader > div > .statusRow {
-    grid-column: 1 / -1;
-    grid-row: 4;
-    flex-wrap: nowrap;
+  .detailIdentityContent > .statusRow {
+    flex-wrap: wrap;
     gap: var(--space-2);
+  }
+
+  .detailHeader > :last-child {
+    width: 100%;
+    justify-self: stretch;
   }
 
   .detailGrid,
@@ -806,26 +841,27 @@
   }
 
   .detailCardHeader {
-    padding: var(--space-4);
+    padding-block: var(--space-4);
   }
 
-  .detailCardBody {
-    padding: 0;
+  .detailCard {
+    --detail-card-inset: var(--space-4);
   }
 
   .detailCardTitle h2 {
     font-size: var(--text-lg);
   }
 
-  .detailItem,
-  .detailItem:nth-child(odd),
-  .detailItem:nth-last-child(-n + 2) {
-    border-right: 0;
-    border-bottom: 1px solid var(--color-border);
+  .detailItemGrid::before {
+    display: none;
   }
 
-  .detailItem:last-child {
-    border-bottom: 0;
+  .detailItem:nth-last-child(2):nth-child(odd)::after {
+    display: block;
+  }
+
+  .detailItem:last-child:nth-child(n)::after {
+    display: none;
   }
 
   .stepList {

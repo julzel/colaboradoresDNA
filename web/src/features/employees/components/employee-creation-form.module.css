@@ -1,0 +1,240 @@
+.formCard {
+  display: grid;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  justify-self: stretch;
+  gap: var(--space-6);
+  padding: var(--space-4);
+}
+
+.formCard fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.stepList {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 0 var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  list-style: none;
+}
+
+.stepList li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  line-height: var(--line-body);
+}
+
+.stepNumber {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-muted);
+  font-weight: 700;
+  place-items: center;
+}
+
+.stepList li[aria-current="step"] {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.stepList li[aria-current="step"] .stepNumber {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.stepList li[data-completed="true"] {
+  color: var(--color-brand-text);
+}
+
+.stepList li[data-completed="true"] .stepNumber {
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+}
+
+.stepLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.sectionHeading {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.sectionHeading h2,
+.sectionHeading p {
+  margin: 0;
+}
+
+.sectionHeading h2 {
+  font-size: var(--text-xl);
+  letter-spacing: -0.025em;
+  line-height: var(--line-tight);
+}
+
+.sectionHeading p {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+}
+
+.sectionHeading .stepCount {
+  color: var(--color-brand-text);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.formGrid,
+.summary {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-5) var(--space-4);
+}
+
+.formGrid > * {
+  width: 100%;
+  min-width: 0;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+}
+
+.note svg {
+  flex-shrink: 0;
+}
+
+.summary {
+  margin: 0;
+}
+
+.summary div {
+  position: relative;
+  min-width: 0;
+  padding-inline-start: calc(1.25rem + var(--space-3));
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.summary dt {
+  position: relative;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.summaryIcon {
+  position: absolute;
+  top: 0.05rem;
+  inset-inline-start: calc(-1 * (1.25rem + var(--space-3)));
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-brand);
+  stroke-width: 1.8;
+}
+
+.summary dd {
+  margin: var(--space-1) 0 0;
+  overflow-wrap: anywhere;
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-8);
+}
+
+.reviewAction {
+  color: var(--color-brand-text);
+}
+
+.reviewAction:hover:not(:disabled) {
+  color: var(--color-brand-text);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.navigation > button {
+  flex: 1;
+}
+
+.formCard button {
+  min-height: 2.75rem;
+  white-space: normal;
+}
+
+@media (width >= 40rem) {
+  .formCard {
+    padding: var(--space-6);
+  }
+
+  .stepLabel {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .formGrid,
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .navigation > button {
+    flex: initial;
+  }
+}

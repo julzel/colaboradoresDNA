@@ -90,7 +90,8 @@
 
 .select:focus-visible {
   border-color: var(--color-accent);
-  box-shadow: var(--focus-ring);
+  outline: none;
+  box-shadow: none;
 }
 
 .desktopTable {

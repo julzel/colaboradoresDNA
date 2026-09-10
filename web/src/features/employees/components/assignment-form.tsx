@@ -11,7 +11,7 @@ import { initialEmployeeActionState } from "@/features/employees/domain/employee
 import type { Department } from "@/features/employees/domain/department";
 import type { EmployeeManagerOption } from "@/features/employees/view-models/employee-view";
 
-import styles from "./employee-management.module.css";
+import styles from "./employee-creation-form.module.css";
 import { FormErrorSummary } from "./form-error-summary";
 import { useGuardedForm } from "./use-guarded-form";
 
@@ -102,13 +102,15 @@ export function AssignmentForm({
           type="date"
         />
       </div>
-      <div className={styles.actions}>
-        <SubmitButton pendingLabel="Guardando asignación…">
-          Guardar cambios
-        </SubmitButton>
+      <div className={styles.footer}>
         <Button onClick={handleCancel} variant="quiet">
           Cancelar
         </Button>
+        <div className={styles.navigation}>
+          <SubmitButton pendingLabel="Guardando asignación…">
+            Guardar cambios
+          </SubmitButton>
+        </div>
       </div>
     </ElevatedSurface>
   );

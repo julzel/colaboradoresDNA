@@ -48,6 +48,26 @@ textarea {
   box-shadow: var(--focus-ring);
 }
 
+input,
+select,
+textarea {
+  box-shadow: none;
+}
+
+input:not([type="checkbox"], [type="radio"], [type="range"]):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: none;
+}
+
+input:not([type="checkbox"], [type="radio"], [type="range"]):hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
 .skip-link {
   position: fixed;
   z-index: 100;

@@ -143,13 +143,13 @@ export const identificationInputSchema = z
     }
 
     if (identification.type === "residence_id") {
-      const acceptedDisplay = /^[\d\s]+$/.test(displayValue);
-      const normalizedValue = displayValue.replace(/\s/g, "");
+      const acceptedDisplay = /^\d+$/.test(displayValue);
+      const normalizedValue = displayValue;
 
       if (!acceptedDisplay || !/^[1-9]\d{10,11}$/.test(normalizedValue)) {
         context.addIssue({
           code: "custom",
-          message: "Ingresá un DIMEX de 11 o 12 dígitos.",
+          message: "Ingresá un DIMEX de 11 o 12 dígitos, sin separadores.",
         });
 
         return z.NEVER;
