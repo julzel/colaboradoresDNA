@@ -19,6 +19,7 @@ import {
 
 import styles from "./employee-management.module.css";
 import { FormErrorSummary } from "./form-error-summary";
+import { IdentificationFields } from "./identification-fields";
 import { useGuardedForm } from "./use-guarded-form";
 
 type PersonalInformationFormProps = {
@@ -123,25 +124,11 @@ export function PersonalInformationForm({ employee }: PersonalInformationFormPro
           optional
           type="tel"
         />
-        <SelectField
-          defaultValue={employee.identification.type}
-          error={state.errors?.["identification.type"]}
-          id="identificationType"
-          label="Tipo de identificación"
-          name="identificationType"
-          required
-        >
-          <option value="national_id">Cédula</option>
-          <option value="residence_id">DIMEX</option>
-          <option value="other">Otro</option>
-        </SelectField>
-        <TextField
+        <IdentificationFields
+          defaultType={employee.identification.type}
           defaultValue={employee.identification.value}
-          error={state.errors?.identification}
-          id="identificationValue"
-          label="Identificación"
-          name="identificationValue"
-          required
+          identificationError={state.errors?.identification}
+          typeError={state.errors?.["identification.type"]}
         />
         <div className={styles.fullWidth}>
           <CheckboxField

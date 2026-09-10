@@ -1,6 +1,21 @@
 "use client";
 
 import { useActionState, useState, type MouseEvent } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BriefcaseBusiness,
+  Building2,
+  CalendarDays,
+  Check,
+  KeyRound,
+  Mail,
+  Palmtree,
+  ShieldCheck,
+  UserRound,
+  UserRoundCog,
+  Info,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
@@ -16,8 +31,9 @@ import { birthdayMonthOptions } from "@/features/employees/domain/employee";
 import { initialEmployeeActionState } from "@/features/employees/domain/employee-action-state";
 import type { EmployeeManagerOption } from "@/features/employees/view-models/employee-view";
 
-import styles from "./employee-management.module.css";
+import styles from "./employee-creation-form.module.css";
 import { FormErrorSummary } from "./form-error-summary";
+import { IdentificationFields } from "./identification-fields";
 import { useGuardedForm } from "./use-guarded-form";
 
 const steps = [
@@ -83,12 +99,25 @@ export function EmployeeCreationForm({
     >
       <ol aria-label="Progreso del registro" className={styles.stepList}>
         {steps.map((label, index) => (
-          <li aria-current={step === index ? "step" : undefined} key={label}>
-            {index + 1}. {label}
+          <li
+            aria-current={step === index ? "step" : undefined}
+            data-completed={index < step || undefined}
+            key={label}
+          >
+            <span className={styles.stepNumber} aria-hidden="true">
+              {index < step ? <Check size={16} /> : index + 1}
+            </span>
+            <span className={styles.stepLabel}>{label}</span>
           </li>
         ))}
       </ol>
       <FormErrorSummary state={state} />
+      <header className={styles.sectionHeading}>
+        <p className={styles.stepCount}>
+          Paso {step + 1} de {steps.length}
+        </p>
+        {/* <h2>{steps[step]}</h2> */}
+      </header>
 
       <fieldset data-step-section="0" hidden={step !== 0}>
         <div className={styles.formGrid}>
@@ -125,6 +154,7 @@ export function EmployeeCreationForm({
             id="birthMonth"
             label="Mes de cumpleaños"
             name="birthMonth"
+            defaultValue=""
             required
           >
             <option disabled value="">
@@ -136,20 +166,9 @@ export function EmployeeCreationForm({
               </option>
             ))}
           </SelectField>
-          <SelectField
-            id="identificationType"
-            label="Tipo de identificación"
-            name="identificationType"
-          >
-            <option value="national_id">Cédula</option>
-            <option value="residence_id">DIMEX</option>
-            <option value="other">Otro</option>
-          </SelectField>
-          <TextField
-            id="identificationValue"
-            label="Identificación"
-            name="identificationValue"
-            required
+          <IdentificationFields
+            identificationError={state.errors?.identification}
+            typeError={state.errors?.["identification.type"]}
           />
           <div className={styles.fullWidth}>
             <CheckboxField
@@ -176,6 +195,10 @@ export function EmployeeCreationForm({
             <option value="supervisor">Supervisor</option>
             <option value="administrator">Administrador</option>
           </SelectField>
+          <p className={`${styles.note} ${styles.fullWidth}`}>
+            <Info size={18} aria-hidden="true" />
+            Administración y supervisión requieren verificación en dos pasos.
+          </p>
           <div className={styles.fullWidth}>
             <CheckboxField
               description="Si lo dejás pendiente, podrás enviar la invitación después desde el detalle del colaborador."
@@ -209,6 +232,7 @@ export function EmployeeCreationForm({
             id="departmentId"
             label="Departamento"
             name="departmentId"
+            defaultValue=""
             required
           >
             <option disabled value="">
@@ -220,6 +244,12 @@ export function EmployeeCreationForm({
               </option>
             ))}
           </SelectField>
+          {departments.length === 0 && (
+            <p className={`${styles.note} ${styles.fullWidth}`} role="status">
+              No hay departamentos disponibles. Creá uno en Departamentos antes de
+              completar el registro.
+            </p>
+          )}
           <TextField id="positionTitle" label="Puesto" name="positionTitle" required />
           <SelectField
             id="managerEmployeeId"
@@ -238,10 +268,12 @@ export function EmployeeCreationForm({
       </fieldset>
 
       <section data-step-section="3" hidden={step !== 3}>
-        <h2>Revisar y crear</h2>
         <dl className={styles.summary}>
           <div>
-            <dt>Nombre</dt>
+            <dt>
+              <UserRound aria-hidden="true" className={styles.summaryIcon} />
+              Nombre
+            </dt>
             <dd>
               {[review.givenNames, review.firstSurname, review.secondSurname]
                 .filter(Boolean)
@@ -249,11 +281,17 @@ export function EmployeeCreationForm({
             </dd>
           </div>
           <div>
-            <dt>Correo personal</dt>
+            <dt>
+              <Mail aria-hidden="true" className={styles.summaryIcon} />
+              Correo personal
+            </dt>
             <dd>{review.email}</dd>
           </div>
           <div>
-            <dt>Invitación de acceso</dt>
+            <dt>
+              <KeyRound aria-hidden="true" className={styles.summaryIcon} />
+              Invitación de acceso
+            </dt>
             <dd>
               {review.sendInvitation === "on"
                 ? "Se enviará al crear"
@@ -261,49 +299,110 @@ export function EmployeeCreationForm({
             </dd>
           </div>
           <div>
-            <dt>Puesto</dt>
+            <dt>
+              <ShieldCheck aria-hidden="true" className={styles.summaryIcon} />
+              Rol de plataforma
+            </dt>
+            <dd>
+              {review.role === "administrator"
+                ? "Administrador"
+                : review.role === "supervisor"
+                  ? "Supervisor"
+                  : "Colaborador"}
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <Building2 aria-hidden="true" className={styles.summaryIcon} />
+              Departamento
+            </dt>
+            <dd>
+              {
+                departments.find((department) => department.id === review.departmentId)
+                  ?.name
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <UserRoundCog aria-hidden="true" className={styles.summaryIcon} />
+              Jefatura directa
+            </dt>
+            <dd>
+              {managers.find((manager) => manager.id === review.managerEmployeeId)
+                ?.displayName ?? "Sin asignar"}
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <BriefcaseBusiness aria-hidden="true" className={styles.summaryIcon} />
+              Puesto
+            </dt>
             <dd>{review.positionTitle}</dd>
           </div>
           <div>
-            <dt>Fecha de ingreso</dt>
+            <dt>
+              <CalendarDays aria-hidden="true" className={styles.summaryIcon} />
+              Fecha de ingreso
+            </dt>
             <dd>{review.employmentStartedOn}</dd>
           </div>
           <div>
-            <dt>Saldo inicial de vacaciones</dt>
+            <dt>
+              <Palmtree aria-hidden="true" className={styles.summaryIcon} />
+              Saldo inicial de vacaciones
+            </dt>
             <dd>{review.initialPtoBalanceDays} días</dd>
           </div>
         </dl>
         <div className={styles.actions}>
-          <Button data-step="0" onClick={handleStepChange} variant="quiet">
+          <Button
+            className={styles.reviewAction}
+            data-step="0"
+            onClick={handleStepChange}
+            variant="quiet"
+          >
             Cambiar información personal
           </Button>
-          <Button data-step="1" onClick={handleStepChange} variant="quiet">
+          <Button
+            className={styles.reviewAction}
+            data-step="1"
+            onClick={handleStepChange}
+            variant="quiet"
+          >
             Cambiar acceso
           </Button>
-          <Button data-step="2" onClick={handleStepChange} variant="quiet">
+          <Button
+            className={styles.reviewAction}
+            data-step="2"
+            onClick={handleStepChange}
+            variant="quiet"
+          >
             Cambiar asignación
           </Button>
         </div>
       </section>
 
-      <div className={styles.actions}>
-        {step > 0 && (
-          <Button data-step={step - 1} onClick={handleStepChange} variant="secondary">
-            Anterior
-          </Button>
-        )}
-        {step < 3 ? (
-          <Button data-step={step + 1} onClick={handleStepChange}>
-            Continuar
-          </Button>
-        ) : (
-          <SubmitButton pendingLabel="Creando colaborador…">
-            Crear colaborador
-          </SubmitButton>
-        )}
+      <div className={styles.footer}>
         <Button onClick={handleCancel} variant="quiet">
           Cancelar
         </Button>
+        <div className={styles.navigation}>
+          {step > 0 && (
+            <Button data-step={step - 1} onClick={handleStepChange} variant="secondary">
+              <ArrowLeft size={18} aria-hidden="true" /> Anterior
+            </Button>
+          )}
+          {step < 3 ? (
+            <Button data-step={step + 1} onClick={handleStepChange}>
+              Continuar <ArrowRight size={18} aria-hidden="true" />
+            </Button>
+          ) : (
+            <SubmitButton pendingLabel="Creando colaborador…">
+              Crear colaborador
+            </SubmitButton>
+          )}
+        </div>
       </div>
     </ElevatedSurface>
   );

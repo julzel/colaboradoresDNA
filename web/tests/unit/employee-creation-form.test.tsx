@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { EmployeeCreationForm } from "@/features/employees/components/employee-creation-form";
@@ -32,10 +32,29 @@ describe("employee creation form", () => {
     const progress = screen.getByRole("list", { name: "Progreso del registro" });
     expect(within(progress).getAllByRole("listitem")).toHaveLength(4);
     expect(progress).not.toHaveTextContent("Horario");
-    expect(progress).toHaveTextContent("4. Revisar y crear");
+    expect(progress).toHaveTextContent("4Revisar y crear");
 
     const invitation = document.querySelector<HTMLInputElement>("#sendInvitation");
     expect(invitation).not.toBeNull();
     expect(invitation).not.toBeChecked();
+  });
+
+  it("applies the format for the selected Costa Rican identification type", () => {
+    render(<EmployeeCreationForm departments={[]} managers={[]} />);
+
+    const type = screen.getByLabelText("Tipo de identificación");
+    const identification = screen.getByLabelText("Identificación");
+
+    expect(identification).toHaveAttribute("placeholder", "1-2345-6789");
+    fireEvent.change(identification, { target: { value: "1-2345-6789" } });
+    expect(identification).toBeValid();
+
+    fireEvent.change(type, { target: { value: "residence_id" } });
+    expect(identification).toHaveAttribute("placeholder", "12345678901");
+    expect(identification).toHaveAttribute("maxlength", "12");
+    fireEvent.change(identification, { target: { value: "123 4567 8901" } });
+    expect(identification).toBeInvalid();
+    fireEvent.change(identification, { target: { value: "12345678901" } });
+    expect(identification).toBeValid();
   });
 });

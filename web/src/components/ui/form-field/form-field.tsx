@@ -7,6 +7,7 @@ import type {
 
 import styles from "./form-field.module.css";
 import { PasswordInput } from "./password-input";
+import { Select } from "./select";
 
 type FieldChromeProps = {
   children: ReactNode;
@@ -126,15 +127,15 @@ export function SelectField({
       label={label}
       optional={optional}
     >
-      <select
+      <Select
         aria-describedby={getDescribedBy(id, description, error)}
         aria-invalid={Boolean(error)}
-        className={`${styles.control} ${styles.select} ${className}`.trim()}
+        className={className}
         id={id}
         {...props}
       >
         {children}
-      </select>
+      </Select>
     </FieldChrome>
   );
 }

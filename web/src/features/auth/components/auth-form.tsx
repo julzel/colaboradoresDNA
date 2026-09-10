@@ -6,6 +6,7 @@ import { authClient } from "../client/auth-client";
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { TextField } from "@/components/ui/form-field/form-field";
 import styles from "./auth-form.module.css";
+import { OneTimeCodeField } from "./one-time-code-field";
 
 export function AuthForm({
   mode = "sign-in",
@@ -25,6 +26,7 @@ export function AuthForm({
   const [recover, setRecover] = useState(false);
   const [challenge, setChallenge] = useState(false);
   const [backup, setBackup] = useState(false);
+  const [challengeCode, setChallengeCode] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -34,7 +36,7 @@ export function AuthForm({
     const password = String(fields.get("password") ?? "");
     try {
       if (challenge) {
-        const code = String(fields.get("code"));
+        const code = challengeCode;
         const result = backup
           ? await authClient.twoFactor.verifyBackupCode({ code })
           : await authClient.twoFactor.verifyTotp({ code });
@@ -82,9 +84,10 @@ export function AuthForm({
           result.data &&
           "twoFactorRedirect" in result.data &&
           result.data.twoFactorRedirect
-        )
+        ) {
+          setChallengeCode("");
           setChallenge(true);
-        else window.location.assign("/");
+        } else window.location.assign("/");
       }
     } catch {
       setMessage("No pudimos conectar. Intentá de nuevo.");
@@ -111,7 +114,9 @@ export function AuthForm({
           </h2>
           <p>
             {challenge
-              ? "Ingresá el código para completar el inicio de sesión."
+              ? backup
+                ? "Ingresá uno de los códigos de recuperación que guardaste al configurar la seguridad de tu cuenta."
+                : "Confirmá el inicio de sesión con tu aplicación de autenticación."
               : recover
                 ? "Te enviaremos un enlace para crear una contraseña nueva."
                 : mode === "reset"
@@ -122,22 +127,25 @@ export function AuthForm({
       )}
       {challenge ? (
         <>
-          <TextField
-            id="auth-code"
-            name="code"
-            label={
-              backup
-                ? "Código de recuperación"
-                : "Código de tu aplicación de autenticación"
-            }
-            autoComplete="one-time-code"
-            required
-          />
-          <Button variant="quiet" onClick={() => setBackup(!backup)}>
-            {backup
-              ? "Usar aplicación de autenticación"
-              : "Usar código de recuperación"}
-          </Button>
+          {backup ? (
+            <TextField
+              autoComplete="off"
+              id="auth-recovery-code"
+              key="recovery-code"
+              label="Código de recuperación"
+              name="code"
+              onChange={(event) => setChallengeCode(event.currentTarget.value)}
+              value={challengeCode}
+              required
+            />
+          ) : (
+            <OneTimeCodeField
+              disabled={busy}
+              key="authenticator-code"
+              onChange={setChallengeCode}
+              value={challengeCode}
+            />
+          )}
         </>
       ) : (
         <>
@@ -196,6 +204,27 @@ export function AuthForm({
                   ? "Guardar contraseña"
                   : "Iniciar sesión"}
       </Button>
+      {challenge && (
+        <div className={styles.alternateMethod}>
+          <p>
+            {backup
+              ? "¿Volviste a tener acceso a tu aplicación?"
+              : "¿No tenés acceso a tu aplicación de autenticación?"}
+          </p>
+          <Button
+            disabled={busy}
+            fullWidth
+            variant="secondary"
+            onClick={() => {
+              setBackup(!backup);
+              setChallengeCode("");
+              setMessage("");
+            }}
+          >
+            {backup ? "Usar código de la aplicación" : "Usar un código de recuperación"}
+          </Button>
+        </div>
+      )}
       {mode === "sign-up" && (
         <p className={styles.message}>
           Después de crear tu cuenta, recibirás otro correo para verificar tu dirección.
