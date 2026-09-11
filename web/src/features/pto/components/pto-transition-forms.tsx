@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { SubmitButton } from "@/components/ui/feedback/submit-button";
 import { SelectField, TextAreaField } from "@/components/ui/form-field/form-field";
 import {
+  addPtoCommentAction,
   cancelPtoRequestAction,
   decidePtoRequestAction,
   reassignPtoApproverAction,
@@ -16,6 +17,28 @@ import styles from "./pto.module.css";
 import { LeaveConflictWarning } from "./leave-conflict-warning";
 
 type AdministratorOption = { displayName: string; id: string };
+
+export function PtoCommentForm({ requestId }: { requestId: string }) {
+  const [state, action] = useActionState(addPtoCommentAction, initialPtoActionState);
+  return (
+    <form action={action} className={styles.formCard}>
+      <input name="requestId" type="hidden" value={requestId} />
+      <TextAreaField
+        id="leave-comment"
+        name="body"
+        label="Agregar comentario"
+        required
+        maxLength={2000}
+        error={state.errors?.body}
+        description="Visible para el colaborador, la jefatura asignada y administración."
+      />
+      {state.message && (
+        <p role={state.status === "error" ? "alert" : "status"}>{state.message}</p>
+      )}
+      <SubmitButton pendingLabel="Publicando…">Publicar comentario</SubmitButton>
+    </form>
+  );
+}
 
 function Feedback({
   message,

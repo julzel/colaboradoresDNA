@@ -48,6 +48,8 @@ import {
   saveEmployeePtoDraftAction,
 } from "@/features/pto/actions/pto-actions";
 import {
+  addPtoRequestComment,
+  getApprovedPtoCalendarDetail,
   cancelOwnPtoRequest,
   adjustEmployeePtoBalance,
   createOwnPtoDraft,
@@ -241,6 +243,22 @@ describe.skipIf(!runLive)(
       });
       identity.id = users.supervisor.toHexString();
       const decision = form({ requestId, decision: "approved", decisionNote: "" });
+      expect((await getPtoRequestDetail(requestId))?.canDecide).toBe(false);
+      expect(
+        (await decidePtoRequestAction(initialPtoActionState, decision)).status,
+      ).toBe("error");
+      await addPtoRequestComment({
+        requestId,
+        body: "El equipo puede cubrir estos días.",
+      });
+      identity.id = users.collaborator.toHexString();
+      expect((await getPtoRequestDetail(requestId))?.request.comments?.[0]?.body).toBe(
+        "El equipo puede cubrir estos días.",
+      );
+      identity.id = users.administrator.toHexString();
+      expect((await getPtoRequestDetail(requestId))?.request.comments?.[0]?.body).toBe(
+        "El equipo puede cubrir estos días.",
+      );
       await redirectedRequestId(
         decidePtoRequestAction(initialPtoActionState, decision),
       );
@@ -288,6 +306,11 @@ describe.skipIf(!runLive)(
         ),
       );
       expect((await findPtoRequestById(deniedId))?.status).toBe("denied");
+      expect(await listLeaveNotifications(users.supervisor.toHexString())).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: deniedId, label: "Ausencia denegada" }),
+        ]),
+      );
       expect(await listLeaveNotifications(users.collaborator.toHexString())).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ id: deniedId, label: "Ausencia denegada" }),
@@ -340,7 +363,7 @@ describe.skipIf(!runLive)(
       expect(self.message).toMatch(/propia solicitud/);
     }, 60000);
 
-    it("serializes competing approvals and revokes a demoted supervisor's calendar access", async () => {
+    it("shares approved calendar absences while preserving private request access", async () => {
       identity.id = users.collaborator.toHexString();
       const draft = await createOwnPtoDraft({
         ...draftFields,
@@ -390,6 +413,23 @@ describe.skipIf(!runLive)(
           (request) => request.id === draft.id,
         ),
       ).toBe(true);
+      identity.id = users.outsider.toHexString();
+      const calendarDetail = await getApprovedPtoCalendarDetail(draft.id);
+      expect(calendarDetail).toMatchObject({ id: draft.id, canViewRequest: false });
+      expect(calendarDetail).not.toHaveProperty("comments");
+      expect(calendarDetail).not.toHaveProperty("collaboratorNote");
+      expect(
+        (
+          await listApprovedPtoInRange({
+            ...range,
+            platformUserId: identity.id,
+            role: "collaborator",
+          })
+        ).some((request) => request.id === draft.id),
+      ).toBe(true);
+      await expect(getPtoRequestDetail(draft.id)).rejects.toMatchObject({
+        code: "forbidden",
+      });
       await database
         .collection("platform_users")
         .updateOne({ _id: users.supervisor }, { $set: { role: "collaborator" } });
@@ -398,8 +438,10 @@ describe.skipIf(!runLive)(
         code: "forbidden",
       });
       expect(
-        await listApprovedPtoInRange({ ...range, role: "collaborator" }),
-      ).toHaveLength(0);
+        (await listApprovedPtoInRange({ ...range, role: "collaborator" })).some(
+          (request) => request.id === draft.id,
+        ),
+      ).toBe(true);
       await database
         .collection("platform_users")
         .updateOne({ _id: users.supervisor }, { $set: { role: "supervisor" } });

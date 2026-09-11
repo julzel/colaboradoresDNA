@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { findLeaveConflicts } from "./leave-conflicts";
 import { LeaveConflictError } from "../domain/leave-conflict";
 import { CalendarHolidayIntegrationError } from "@/features/calendar/integrations/nager-date-calendar-adapter";
@@ -29,6 +30,7 @@ import {
 } from "@/features/pto/domain/pto";
 import { PtoScheduleCalculationError } from "@/features/pto/integrations/pto-scheduling-port";
 import {
+  appendPtoComment,
   adjustPtoBalance,
   cancelPtoRequest,
   createApprovedPtoRequestAsAdministrator,
@@ -193,32 +195,27 @@ async function resolveSubmissionApprover({
   platformUser: PlatformUser;
   requesterEmployeeId: string;
 }) {
-  if (platformUser.role === "collaborator") {
-    const assignment = await findEffectiveEmployeeAssignment({
-      employeeId: requesterEmployeeId,
-      onDate: getTodayInCostaRica(),
-    });
-    if (!assignment?.managerEmployeeId) {
-      throw new PtoDomainError("approver_ineligible");
-    }
-    const manager = await findEmployeeById(assignment.managerEmployeeId);
-    const approver = manager
-      ? await findPlatformUserById(manager.platformUserId)
-      : null;
-    if (
-      !manager ||
-      manager.employmentStatus !== "active" ||
-      !approver ||
-      approver.status !== "active" ||
-      !["administrator", "supervisor"].includes(approver.role) ||
-      approver.id === platformUser.id
-    ) {
-      throw new PtoDomainError("approver_ineligible");
-    }
-    return approver.id;
+  const assignment = await findEffectiveEmployeeAssignment({
+    employeeId: requesterEmployeeId,
+    onDate: getTodayInCostaRica(),
+  });
+  if (!assignment?.managerEmployeeId) {
+    if (platformUser.role !== "collaborator") return null;
+    throw new PtoDomainError("approver_ineligible");
   }
-
-  return null;
+  const manager = await findEmployeeById(assignment.managerEmployeeId);
+  const approver = manager ? await findPlatformUserById(manager.platformUserId) : null;
+  if (
+    !manager ||
+    manager.employmentStatus !== "active" ||
+    !approver ||
+    approver.status !== "active" ||
+    !["administrator", "supervisor"].includes(approver.role) ||
+    approver.id === platformUser.id
+  ) {
+    throw new PtoDomainError("approver_ineligible");
+  }
+  return approver.id;
 }
 
 export async function getPtoDashboard() {
@@ -292,6 +289,7 @@ export async function getPtoRequestDetail(requestId: string) {
   const isRequester = request.requesterPlatformUserId === platformUser.id;
   const isApprover =
     platformUser.role !== "collaborator" &&
+    request.status !== "draft" &&
     request.assignedApproverPlatformUserId === platformUser.id;
   const isAdministratorProxy =
     platformUser.role === "administrator" &&
@@ -337,6 +335,7 @@ export async function getPtoRequestDetail(requestId: string) {
         wouldBeNegative: false,
       }));
   return {
+    canComment: request.status !== "draft",
     canCancel:
       (isRequester || platformUser.role === "administrator") &&
       canCancelLeave({
@@ -348,7 +347,7 @@ export async function getPtoRequestDetail(requestId: string) {
     canDecide:
       request.status === "pending" &&
       !isRequester &&
-      (isApprover || platformUser.role === "administrator"),
+      platformUser.role === "administrator",
     canEdit: (isRequester || isAdministratorProxy) && request.status === "draft",
     canReassign,
     canSubmit: (isRequester || isAdministratorProxy) && request.status === "draft",
@@ -365,6 +364,27 @@ export async function getPtoRequestDetail(requestId: string) {
     proxyEmployeeId: isAdministratorProxy ? request.requesterEmployeeId : null,
     warnings,
   };
+}
+
+export async function addPtoRequestComment(input: { requestId: string; body: string }) {
+  const parsed = z
+    .object({
+      requestId: objectIdStringSchema,
+      body: z
+        .string()
+        .trim()
+        .min(1, "Escribí un comentario.")
+        .max(2000, "Usá hasta 2000 caracteres."),
+    })
+    .parse(input);
+  const { platformUser } = await requirePlatformUser();
+  const detail = await getPtoRequestDetail(parsed.requestId);
+  if (!detail?.canComment) throw new PtoDomainError("forbidden");
+  await appendPtoComment({
+    ...parsed,
+    authorPlatformUserId: platformUser.id,
+    authorName: platformUser.displayName,
+  });
 }
 
 export async function createOwnPtoDraft(request: PtoDraftCommand) {
@@ -539,9 +559,9 @@ export async function decideAssignedPtoRequest(input: {
   requestId: string;
 }) {
   const { platformUser } = await requirePlatformUser({
-    roles: ["administrator", "supervisor"],
+    roles: ["administrator"],
   });
-  if (platformUser.role === "collaborator") throw new PtoDomainError("forbidden");
+  if (platformUser.role !== "administrator") throw new PtoDomainError("forbidden");
   return decidePtoRequest({
     actorPlatformUserId: platformUser.id,
     administratorOverride: platformUser.role === "administrator",
@@ -558,6 +578,7 @@ export async function decidePtoRequestWithConfirmation(
 ) {
   const detail = await getPtoRequestDetail(input.requestId);
   if (!detail) throw new PtoDomainError("request_missing");
+  if (!detail.canDecide) throw new PtoDomainError("forbidden");
 
   const hasWarnings = detail.warnings.wouldBeNegative;
   if (input.decision === "approved" && hasWarnings && !input.confirmWarnings) {
@@ -649,6 +670,29 @@ export async function adjustEmployeePtoBalance(input: {
 }) {
   const { platformUser } = await requirePlatformUser({ roles: ["administrator"] });
   return adjustPtoBalance({ actorPlatformUserId: platformUser.id, ...input });
+}
+
+export async function getApprovedPtoCalendarDetail(requestId: string) {
+  const { platformUser } = await requirePlatformUser();
+  if (!objectIdStringSchema.safeParse(requestId).success) return null;
+  const request = await findPtoRequestById(requestId);
+  if (!request || request.status !== "approved") return null;
+  const employee = await findEmployeeById(request.requesterEmployeeId);
+  return {
+    canViewRequest:
+      platformUser.role === "administrator" ||
+      request.requesterPlatformUserId === platformUser.id ||
+      (platformUser.role === "supervisor" &&
+        request.assignedApproverPlatformUserId === platformUser.id),
+    id: request.id,
+    category: request.category,
+    durationUnits: request.durationUnits,
+    startDate: request.startDate,
+    endDate: request.endDate,
+    requesterName: employee
+      ? formatEmployeePreferredDisplayName(employee)
+      : "Colaborador",
+  };
 }
 
 export async function listVisibleApprovedPtoForCalendar({

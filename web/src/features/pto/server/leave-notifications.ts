@@ -45,7 +45,9 @@ export async function listLeaveNotifications(
           (user.role === "administrator" ||
             request.assignedApproverPlatformUserId?.equals(id));
         const update =
-          own &&
+          (own ||
+            (user.role !== "collaborator" &&
+              request.assignedApproverPlatformUserId?.equals(id))) &&
           !entry.actorPlatformUserId.equals(id) &&
           ["approved", "denied", "cancelled"].includes(entry.to);
         if (!submission && !update) return [];

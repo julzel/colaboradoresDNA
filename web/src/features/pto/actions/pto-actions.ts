@@ -15,6 +15,7 @@ import {
 } from "@/features/pto/domain/pto";
 import type { PtoActionState } from "@/features/pto/domain/pto-action-state";
 import {
+  addPtoRequestComment,
   adjustEmployeePtoBalance,
   previewLeaveDuration,
   cancelOwnPtoRequest,
@@ -31,6 +32,20 @@ import {
 function getText(formData: FormData, name: string) {
   const value = formData.get(name);
   return typeof value === "string" ? value : "";
+}
+
+export async function addPtoCommentAction(
+  _state: PtoActionState,
+  formData: FormData,
+): Promise<PtoActionState> {
+  const requestId = getText(formData, "requestId");
+  try {
+    await addPtoRequestComment({ requestId, body: getText(formData, "body") });
+  } catch (error) {
+    return ptoErrorState(error);
+  }
+  revalidatePath(`/ausencias/${requestId}`);
+  return { status: "idle", message: "Comentario publicado." };
 }
 
 export async function previewLeaveDurationAction(

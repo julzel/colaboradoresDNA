@@ -25,12 +25,24 @@ New calculations carry policy version 2. Previously approved requests retain the
 
 ## In-app notifications
 
-- All active administrators and the assigned approver receive submission notifications.
-- The requester receives approval, denial and admin cancellation notifications, including administrator-created approved leave.
+Approved leave appears on every authenticated collaborator's calendar, across departments and reporting lines. Calendar details expose the absence dates, category, duration and collaborator name. Private notes, comments and the full request remain restricted to the requester, assigned manager and admins. Draft, pending, denied and cancelled requests are excluded from the calendar.
+
+- All active administrators and the assigned manager receive submission notifications.
+- The requester and assigned manager receive approval, denial and cancellation updates when another person makes the transition. The requester also receives administrator-created approved leave updates.
 - Notifications derive from transactionally committed status history. Each transition has its own read key, so reading an approval does not hide a later cancellation.
 - The bell and dashboard refresh every 60 seconds while the page is visible and when the tab becomes visible again. This is in-app delivery, not email or browser push.
 - Notifications are shown only in the bell's responsive drawer, not as a home-page section. Each unread entry offers a mark-as-read button; successful reads animate out and remain excluded on subsequent loads. Opening an entry persists its read state before navigating to its authorized detail page. Failed writes leave the entry available to retry.
 - The feed is bounded to the latest 100 relevant requests/events. Leave transitions are shown newest-first ahead of upcoming calendar events. Open a notification for full request details and cancellation reason.
+
+## Manager review and comments
+
+Only active administrators can approve or deny leave, including requests assigned to a supervisor. Self-approval remains prohibited. The UI, service and repository enforce this rule.
+
+Submission snapshots the effective direct manager in the existing `assignedApproverPlatformUserId` field. It is also used for manager visibility and notifications; the historical field name no longer grants approval permission. An active supervisor or administrator manager is eligible. Collaborators require an eligible manager; supervisors/admins without one use the administrator pool. Changing an employee's assignment does not silently move existing requests to a new manager.
+
+The requester, assigned supervisor/administrator and administrators can read submitted requests and add comments. Unrelated supervisors cannot access the thread, and managers cannot access drafts. Supervisors see their pending requests under **Solicitudes de mi equipo**.
+
+Comments are append-only, stored atomically within the request, and contain server-assigned IDs, author account IDs, author names at posting, timestamps and plain text (1–2000 trimmed characters). All participants see the same thread, including after approval or denial. Existing requests with no comments need no migration. Comments do not change status or PTO balance; comment email/push notifications are not sent.
 
 ## Monthly PTO accrual deployment
 

@@ -21,6 +21,7 @@ import { StatusBadge } from "@/components/ui/status-badge/status-badge";
 import { PtoCategoryIcon } from "@/features/pto/components/pto-category-badge";
 import {
   PtoCancelForm,
+  PtoCommentForm,
   PtoDecisionForm,
   PtoReassignmentForm,
   PtoSubmitForm,
@@ -210,7 +211,7 @@ export function PtoRequestDetailContent({
             />
             <DetailFact
               icon={UserRound}
-              label="Persona aprobadora"
+              label="Jefatura notificada"
               value={request.approverName ?? "Se asignará al enviar"}
             />
             <DetailFact
@@ -269,10 +270,35 @@ export function PtoRequestDetailContent({
         <ElevatedSurface as="section" className={styles.card}>
           <h2>Enviar a aprobación</h2>
           <p className={styles.muted}>
-            Colaboradores se envían a su supervisor. Las demás solicitudes quedan
-            disponibles para administración.
+            Tu jefatura recibirá una notificación y podrá agregar comentarios. Solo
+            administración puede aprobar o denegar la solicitud.
           </p>
           <PtoSubmitForm requestId={request.id} />
+        </ElevatedSurface>
+      )}
+      {detail.canComment && (
+        <ElevatedSurface as="section" className={styles.card}>
+          <SectionTitle icon={MessageSquareText} title="Comentarios" />
+          {request.comments?.length ? (
+            <ol className={styles.commentList}>
+              {request.comments.map((comment) => (
+                <li key={comment.id}>
+                  <strong>{comment.authorName}</strong>
+                  <p className={styles.muted}>
+                    {new Intl.DateTimeFormat("es-CR", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: "America/Costa_Rica",
+                    }).format(new Date(comment.createdAt))}
+                  </p>
+                  <p className={styles.commentBody}>{comment.body}</p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className={styles.muted}>Todavía no hay comentarios.</p>
+          )}
+          <PtoCommentForm requestId={request.id} />
         </ElevatedSurface>
       )}
       {detail.canDecide && (

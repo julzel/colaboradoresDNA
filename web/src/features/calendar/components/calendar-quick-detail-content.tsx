@@ -49,12 +49,14 @@ export function CalendarPtoQuickDetailContent({
         </div>
       </dl>
 
-      <div className={styles.eventDetailActions}>
-        <ButtonLink href={`/ausencias/${detail.id}`}>
-          Ver solicitud completa
-          <ExternalLink aria-hidden="true" size={17} />
-        </ButtonLink>
-      </div>
+      {detail.canViewRequest && (
+        <div className={styles.eventDetailActions}>
+          <ButtonLink href={`/ausencias/${detail.id}`}>
+            Ver solicitud completa
+            <ExternalLink aria-hidden="true" size={17} />
+          </ButtonLink>
+        </div>
+      )}
     </div>
   );
 }
