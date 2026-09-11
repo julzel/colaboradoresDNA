@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Download, FileUp } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { FileUpload } from "@/components/ui/file-upload/file-upload";
 import { CheckboxField } from "@/components/ui/form-field/form-field";
 import {
   encodeCsv,
@@ -174,12 +175,10 @@ export function EmployeeBulkImport({ departments }: { departments: string[] }) {
           La validación no crea registros. Si hay errores, corregí el CSV y seleccioná
           nuevamente el archivo.
         </p>
-        <label className={styles.fileLabel} htmlFor="employee-csv">
-          Archivo CSV
-        </label>
-        <input
+        <FileUpload
           id="employee-csv"
-          type="file"
+          label="Archivo CSV"
+          selectText="Seleccionar archivo"
           accept=".csv,text/csv"
           disabled={busy}
           onChange={(event) => {

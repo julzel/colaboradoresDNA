@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import { describe, expect, it, vi } from "vitest";
 
 import { createProductionTaskTemplateBuffer } from "@/features/production-tasks/server/production-task-template-service";
+import { parseProductionWorkbook } from "@/features/production-tasks/server/production-task-import-parser";
 
 const mocks = vi.hoisted(() => ({
   listActiveEmployees: vi.fn(),
@@ -43,7 +44,7 @@ describe("official production task template", () => {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await createProductionTaskTemplateBuffer());
 
-    expect(workbook.getWorksheet("_Configuración")?.getCell("B2").value).toBe("1");
+    expect(workbook.getWorksheet("_Configuración")?.getCell("B2").value).toBe("2");
     expect(workbook.getWorksheet("_Configuración")?.state).toBe("veryHidden");
     expect(
       (
@@ -61,5 +62,27 @@ describe("official production task template", () => {
     expect(workbook.getWorksheet("Tareas")?.getCell("F3").dataValidation.type).toBe(
       "list",
     );
+    expect(workbook.getWorksheet("Tareas")?.getCell("F2").value).toBe("Encargado");
+    expect(workbook.getWorksheet("Tareas")?.getCell("G2").value).toBeNull();
+    expect(
+      workbook.getWorksheet("Tareas")?.getCell("F3").dataValidation.showErrorMessage,
+    ).not.toBe(true);
+    expect(
+      workbook.getWorksheet("Tareas")?.getCell("F3").dataValidation.formulae,
+    ).toEqual(["'Colaboradores'!$B$2:$B$2"]);
+    const tasks = workbook.getWorksheet("Tareas")!;
+    tasks.getCell("B3").value = "Lunes";
+    tasks.getCell("C3").value = "Cocina";
+    tasks.getCell("E3").value = "Preparar";
+    tasks.getCell("F3").value = "Ana Mora, Luis Solís, María Castro, DNA-0004";
+    const parsed = await parseProductionWorkbook(
+      Buffer.from(await workbook.xlsx.writeBuffer()),
+    );
+    expect(parsed.sheets[0]?.rows[0]?.assigneeTexts).toEqual([
+      "Ana Mora",
+      "Luis Solís",
+      "María Castro",
+      "DNA-0004",
+    ]);
   });
 });

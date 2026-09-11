@@ -10,6 +10,15 @@ import { parseProductionWorkbook } from "@/features/production-tasks/server/prod
 vi.mock("server-only", () => ({}));
 
 describe("production workbook import", () => {
+  it("accepts comma-separated names in a single Encargado CSV cell", async () => {
+    const csv =
+      'Día,Área de trabajo,Producto,Encargado,Tarea\nLunes,Cocina,Producto,"Ana Mora, Luis Solís",Preparar';
+    const result = await parseProductionWorkbook(Buffer.from(csv), "tasks.csv");
+    expect(result.sheets[0]?.rows[0]?.assigneeTexts).toEqual([
+      "Ana Mora",
+      "Luis Solís",
+    ]);
+  });
   it("recognizes legacy week names and assignee separators", () => {
     expect(inferWeekStartFromSheetName("Semana 31 agosto", 2026)).toBe("2026-08-31");
     expect(inferWeekStartFromSheetName("28 julio - 1 agosto", 2026)).toBe("2026-07-27");

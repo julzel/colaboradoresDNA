@@ -1,6 +1,7 @@
 import "server-only";
 
 import { ObjectId } from "mongodb";
+import { resolveTaskAssignees } from "../domain/resolve-assignees";
 
 import { requireProductionTaskManager } from "./production-task-authorization";
 import { productionTaskEmployeeAdapter } from "@/features/employees/integrations/production-task-employee-adapter";
@@ -67,13 +68,6 @@ export async function createProductionImportPreview({
   const areaByName = new Map(
     areas.map((area) => [normalizeProductionLookup(area.name), area]),
   );
-  const employeeByCode = new Map(
-    employees.flatMap((employee) =>
-      employee.employeeCode
-        ? [[employee.employeeCode.toUpperCase(), employee] as const]
-        : [],
-    ),
-  );
   const preview = await createImportPreview({
     actorPlatformUserId: new ObjectId(platformUser.id),
     committedAt: null,
@@ -86,18 +80,9 @@ export async function createProductionImportPreview({
       rows: sheet.rows.map((row) => ({
         ...row,
         areaId: areaByName.get(normalizeProductionLookup(row.areaText))?._id ?? null,
-        // Never partially map a shared assignment or infer identity from a name.
-        assigneeEmployeeIds: row.assigneeTexts.every((value) =>
-          employeeByCode.has(value.toUpperCase()),
-        )
-          ? [
-              ...new Set(
-                row.assigneeTexts.map(
-                  (value) => employeeByCode.get(value.toUpperCase())!.employeeId,
-                ),
-              ),
-            ].map((id) => new ObjectId(id))
-          : [],
+        assigneeEmployeeIds: resolveTaskAssignees(row.assigneeTexts, employees).map(
+          (id) => new ObjectId(id),
+        ),
         key: `${sheetIndex}:${row.rowNumber}`,
       })),
       selected: normalizeProductionLookup(sheet.name) !== "original",

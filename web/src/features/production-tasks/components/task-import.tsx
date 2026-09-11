@@ -9,11 +9,13 @@ import {
   TextField,
 } from "@/components/ui/form-field/form-field";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { FileUpload } from "@/components/ui/file-upload/file-upload";
 import type { ProductionImportPreviewResult } from "../application/production-task-contracts";
 import { addCalendarDays, productionWeekStartSchema } from "../domain/shared";
 import { formatTaskDate, taskErrorMessage } from "../presentation/messages";
 import { taskRequest, TaskApiError } from "../presentation/client";
 import styles from "./tasks.module.css";
+import { TaskAssigneeField } from "./task-assignee-field";
 
 export function TaskImport() {
   const file = useRef<HTMLInputElement>(null);
@@ -143,8 +145,8 @@ export function TaskImport() {
         <div className={styles.toolbar}>
           <h2>1. Prepará el archivo</h2>
           <ButtonLink
+            className={styles.accentButton}
             href="/api/production-tasks/v1/template"
-            variant="secondary"
             prefetch={false}
           >
             <Download size={18} />
@@ -152,20 +154,21 @@ export function TaskImport() {
           </ButtonLink>
         </div>
         <p>
-          Usá una hoja por semana y los códigos DNA de la pestaña Colaboradores. CSV
-          admite una semana. También podés cargar el formato anterior y vincular cada
-          nombre durante la revisión.
+          Usá una hoja por semana. En Encargado, escribí nombres separados por comas.
+          Los nombres del catálogo se vinculan automáticamente. Si un nombre no coincide
+          o está repetido, seleccioná a la persona durante la revisión. También podés
+          usar códigos DNA. CSV admite una semana; si lo escribís a mano, encerrá entre
+          comillas las celdas que contienen comas.
         </p>
         <p className={styles.muted}>
           Columnas: Fecha o Día, Área de trabajo, Producto, Tarea y Encargado. Hasta 8
           MB y 500 tareas por semana. Cargar el archivo no publica tareas.
         </p>
-        <label htmlFor="tasks-file">Archivo XLSX o CSV (UTF-8)</label>
-        <input
+        <FileUpload
           ref={file}
-          className={styles.file}
           id="tasks-file"
-          type="file"
+          label="Archivo XLSX o CSV (UTF-8)"
+          selectText="Seleccionar archivo"
           accept=".xlsx,.csv"
           disabled={busy}
         />
@@ -333,7 +336,8 @@ export function TaskImport() {
                                 {Array.from(
                                   { length: Math.max(1, row.assigneeTexts.length) },
                                   (_, personIndex) => (
-                                    <SelectField
+                                    <TaskAssigneeField
+                                      employees={preview.employees}
                                       key={personIndex}
                                       id={`person-${row.key}-${personIndex}`}
                                       label={`Encargado: ${row.assigneeTexts[personIndex] ?? "sin asignar"}`}
@@ -358,17 +362,7 @@ export function TaskImport() {
                                           })),
                                         }))
                                       }
-                                    >
-                                      <option value="">
-                                        Identificá a esta persona
-                                      </option>
-                                      {preview.employees.map((employee) => (
-                                        <option key={employee.id} value={employee.id}>
-                                          {employee.employeeCode ?? "Sin código"} ·{" "}
-                                          {employee.displayName}
-                                        </option>
-                                      ))}
-                                    </SelectField>
+                                    />
                                   ),
                                 )}
                               </div>

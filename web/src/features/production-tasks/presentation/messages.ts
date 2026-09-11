@@ -30,7 +30,8 @@ const messages: Record<string, string> = {
   task_too_long: "La tarea supera 500 caracteres.",
   subject_too_long: "El producto supera 240 caracteres.",
   assignee_missing: "Falta la persona encargada.",
-  assignee_unknown: "Identificá a todas las personas encargadas con su código.",
+  assignee_unknown:
+    "Hay personas sin identificar o con nombres repetidos. Buscá y seleccioná a cada persona encargada.",
   formula_ignored:
     "Se usó el resultado guardado de una fórmula, sin ejecutarla. Revisalo.",
   duplicate: "Esta tarea está duplicada. Corregí el archivo.",

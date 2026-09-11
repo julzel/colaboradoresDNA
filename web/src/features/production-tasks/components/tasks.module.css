@@ -46,6 +46,15 @@
   justify-content: space-between;
 }
 
+.accentButton {
+  background: var(--color-accent);
+  color: var(--color-primary-action-text);
+}
+
+.accentButton:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
 .weekNav {
   flex-wrap: nowrap;
 }
@@ -220,11 +229,6 @@
   padding: var(--space-4);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-md);
-}
-
-.file {
-  width: 100%;
-  min-height: 48px;
 }
 
 .history {
