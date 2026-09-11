@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Download, Upload } from "lucide-react";
 
+import { ButtonLink } from "@/components/ui/button/button";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
 import { ListToolbar } from "@/components/ui/list-toolbar/list-toolbar";
 import { SearchField } from "@/components/ui/search-field/search-field";
@@ -126,7 +128,7 @@ export function EmployeeDirectory({ items }: EmployeeDirectoryProps) {
         <h2 id="employee-directory-title">Colaboradores del equipo</h2>
       </div>
 
-      <ListToolbar>
+      <ListToolbar className={styles.directoryToolbar}>
         <SearchField
           autoComplete="off"
           className={styles.searchBar}
@@ -136,6 +138,30 @@ export function EmployeeDirectory({ items }: EmployeeDirectoryProps) {
           placeholder="Buscar por nombre…"
           value={search}
         />
+        <div className={styles.directoryActions}>
+          <ButtonLink
+            aria-label="Importar colaboradores"
+            href="/admin/colaboradores/importar"
+            size="small"
+            title="Importar colaboradores"
+            variant="secondary"
+          >
+            <Upload aria-hidden="true" size={18} />
+            <span className={styles.directoryActionLabel}>Importar</span>
+          </ButtonLink>
+          <ButtonLink
+            aria-label="Descargar directorio"
+            download
+            href="/api/employees/bulk?download=directory"
+            prefetch={false}
+            size="small"
+            title="Descargar directorio"
+            variant="secondary"
+          >
+            <Download aria-hidden="true" size={18} />
+            <span className={styles.directoryActionLabel}>Descargar</span>
+          </ButtonLink>
+        </div>
       </ListToolbar>
 
       <p aria-live="polite" className={styles.directoryResultCount}>
@@ -145,8 +171,16 @@ export function EmployeeDirectory({ items }: EmployeeDirectoryProps) {
 
       {visibleItems.length === 0 ? (
         <div className={styles.directoryEmpty}>
-          <h3>No encontramos colaboradores</h3>
-          <p className={styles.muted}>Probá con otro término de búsqueda.</p>
+          <h3>
+            {items.length === 0
+              ? "No hay colaboradores registrados"
+              : "No encontramos colaboradores"}
+          </h3>
+          <p className={styles.muted}>
+            {items.length === 0
+              ? "Importá el directorio o creá el primer registro para comenzar."
+              : "Probá con otro término de búsqueda."}
+          </p>
         </div>
       ) : (
         <>

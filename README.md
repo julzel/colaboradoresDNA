@@ -97,6 +97,12 @@ does not automatically migrate existing data, send invitations, or clear databas
 
 ## Feature initialization
 
+Bulk collaborator creation is available at `/admin/colaboradores/importar`, with
+CSV template download, validation preview, confirmation, per-row results and
+directory export. See the [bulk collaborator guide](./docs/bulk-collaborators.md)
+and [CSV template](./docs/templates/colaboradores.csv). Imports defer invitations
+and reuse the transactional employee creation service.
+
 After verifying the target environment, additional idempotent model bootstraps
 are available:
 
