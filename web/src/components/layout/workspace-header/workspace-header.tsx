@@ -28,10 +28,16 @@ export function WorkspaceHeader({
 }: WorkspaceHeaderProps) {
   const pathname = usePathname();
   const breadcrumbs = getWorkspaceBreadcrumbs(pathname);
-  const parentDestination = [...breadcrumbs]
+  const collaboratorEditPath = pathname.match(
+    /^(\/admin\/colaboradores\/[^/]+)\/editar(?:\/|$)/,
+  );
+  const breadcrumbParent = [...breadcrumbs]
     .reverse()
     .flatMap((item) => ("href" in item ? [{ href: item.href, label: item.label }] : []))
     .at(0);
+  const parentDestination = collaboratorEditPath
+    ? { href: collaboratorEditPath[1]!, label: "Detalle" }
+    : breadcrumbParent;
   return (
     <header className={styles.topbar}>
       <div className={styles.mobileLeading}>
@@ -60,10 +66,7 @@ export function WorkspaceHeader({
         <NotificationDrawer unreadCount={unreadNotificationCount} />
         <PwaInstallButton />
         <span className={styles.desktopAccount}>
-          <AuthControls
-            displayName={displayName}
-            profileImageUrl={profileImageUrl}
-          />
+          <AuthControls displayName={displayName} profileImageUrl={profileImageUrl} />
         </span>
         <Link aria-label="Mi perfil" className={styles.mobileProfile} href="/perfil">
           {profileImageUrl ? (

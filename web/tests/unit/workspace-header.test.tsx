@@ -1,10 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WorkspaceHeader } from "@/components/layout/workspace-header/workspace-header";
 
+const navigation = vi.hoisted(() => ({ pathname: "/" }));
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: () => navigation.pathname,
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
 }));
 vi.mock("@/features/dashboard/actions/dashboard-notification-actions", () => ({
@@ -22,6 +23,46 @@ vi.mock("@/components/pwa/pwa-install-button", () => ({
 }));
 
 describe("workspace header notifications", () => {
+  beforeEach(() => {
+    navigation.pathname = "/";
+  });
+
+  it("updates the mobile back destination while navigating into a collaborator edit form", () => {
+    const header = (
+      <WorkspaceHeader
+        displayName="Ana Mora"
+        profileImageUrl={null}
+        unreadNotificationCount={0}
+      />
+    );
+    const { rerender } = render(header);
+    const detail = "/admin/colaboradores/507f1f77bcf86cd799439012";
+    for (const pathname of ["/admin", "/admin/colaboradores", detail]) {
+      navigation.pathname = pathname;
+      rerender(
+        <WorkspaceHeader
+          displayName="Ana Mora"
+          profileImageUrl={null}
+          unreadNotificationCount={0}
+        />,
+      );
+    }
+    for (const form of ["informacion-personal", "asignacion", "acceso", "horario"]) {
+      navigation.pathname = `${detail}/editar/${form}`;
+      rerender(
+        <WorkspaceHeader
+          displayName="Ana Mora"
+          profileImageUrl={null}
+          unreadNotificationCount={0}
+        />,
+      );
+      expect(screen.getByRole("link", { name: "Volver a Detalle" })).toHaveAttribute(
+        "href",
+        detail,
+      );
+    }
+  });
+
   it("renders the unread badge on the bell control", () => {
     render(
       <WorkspaceHeader

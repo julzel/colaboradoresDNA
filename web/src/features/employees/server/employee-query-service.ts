@@ -14,6 +14,7 @@ import {
   listEmployeeDirectoryForAdministration,
 } from "@/features/employees/server/employee-read-repository";
 import { employeeSchedulingIntegration } from "@/features/scheduling/integrations/employee-scheduling-adapter";
+import { findPtoBalance } from "@/features/pto/server/pto-repository";
 
 async function requireEmployeeAdministrator() {
   return requirePlatformUser({ roles: ["administrator"] });
@@ -68,13 +69,20 @@ export async function getEmployeeDetailPageData(employeeId: string) {
   const detail = await getEmployeeDetailForAdministration(employeeId);
   if (!detail) return null;
 
-  const [profileImageUrl, development, hasSchedule] = await Promise.all([
+  const [profileImageUrl, development, hasSchedule, ptoBalance] = await Promise.all([
     getProfileImageUrl(detail.access.authUserId),
     getOptionalDevelopmentSummary(employeeId),
     employeeSchedulingIntegration.hasAnySchedule(employeeId),
+    findPtoBalance(employeeId),
   ]);
 
-  return { detail, development, hasSchedule, profileImageUrl };
+  return {
+    detail,
+    development,
+    hasSchedule,
+    profileImageUrl,
+    ptoBalanceUnits: ptoBalance?.currentBalanceUnits ?? null,
+  };
 }
 
 export async function getEmployeeAccessPageData(employeeId: string) {

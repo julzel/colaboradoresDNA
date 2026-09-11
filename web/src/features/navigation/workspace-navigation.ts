@@ -182,6 +182,26 @@ export function getWorkspaceBreadcrumbs(pathname: string) {
     ] as const;
   }
 
+  const employeeEditRoute = pathname.match(
+    /^\/admin\/colaboradores\/([^/]+)\/editar\/([^/]+)\/?$/,
+  );
+  if (employeeEditRoute) {
+    const editLabels: Record<string, string> = {
+      "informacion-personal": "Editar información personal",
+      acceso: "Editar acceso",
+      asignacion: "Editar asignación",
+      horario: "Editar horario",
+    };
+
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/admin", label: "Administración" },
+      { href: "/admin/colaboradores", label: "Colaboradores" },
+      { href: `/admin/colaboradores/${employeeEditRoute[1]}`, label: "Detalle" },
+      { label: editLabels[employeeEditRoute[2]!] ?? "Editar colaborador" },
+    ] as const;
+  }
+
   if (/^\/admin\/colaboradores\/[^/]+\/?$/.test(pathname)) {
     return [
       { href: "/", label: "Inicio" },

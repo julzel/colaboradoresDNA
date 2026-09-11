@@ -99,6 +99,34 @@ describe("administrator navigation", () => {
     ]);
   });
 
+  it.each([
+    ["informacion-personal", "Editar información personal"],
+    ["acceso", "Editar acceso"],
+    ["asignacion", "Editar asignación"],
+    ["horario", "Editar horario"],
+  ])(
+    "links %s back to the collaborator detail on desktop and mobile",
+    (form, label) => {
+      const detailHref = "/admin/colaboradores/507f1f77bcf86cd799439012";
+      for (const suffix of ["", "/"]) {
+        const breadcrumbs = getWorkspaceBreadcrumbs(
+          `${detailHref}/editar/${form}${suffix}`,
+        );
+        expect(breadcrumbs).toEqual([
+          { href: "/", label: "Inicio" },
+          { href: "/admin", label: "Administración" },
+          { href: "/admin/colaboradores", label: "Colaboradores" },
+          { href: detailHref, label: "Detalle" },
+          { label },
+        ]);
+        expect(breadcrumbs.filter((item) => "href" in item).at(-1)).toEqual({
+          href: detailHref,
+          label: "Detalle",
+        });
+      }
+    },
+  );
+
   it("nests the read-only schedule under the collaborator profile", () => {
     expect(getWorkspaceBreadcrumbs("/perfil/horario")).toEqual([
       { href: "/", label: "Inicio" },

@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   getDevelopmentSummaryForAdministration: vi.fn(),
   getEmployeeDetailForAdministration: vi.fn(),
   hasAnySchedule: vi.fn(),
+  findPtoBalance: vi.fn(),
   requirePlatformUser: vi.fn(),
 }));
 
@@ -35,6 +36,9 @@ vi.mock("@/features/scheduling/integrations/employee-scheduling-adapter", () => 
     hasAnySchedule: mocks.hasAnySchedule,
   },
 }));
+vi.mock("@/features/pto/server/pto-repository", () => ({
+  findPtoBalance: mocks.findPtoBalance,
+}));
 
 describe("employee detail setup status", () => {
   beforeEach(() => {
@@ -47,6 +51,7 @@ describe("employee detail setup status", () => {
       access: { authUserId: null },
       employee: { id: "507f1f77bcf86cd799439012" },
     });
+    mocks.findPtoBalance.mockResolvedValue({ currentBalanceUnits: 11 });
   });
 
   it("reports a missing schedule independently from employee profile data", async () => {
@@ -54,7 +59,17 @@ describe("employee detail setup status", () => {
 
     await expect(
       getEmployeeDetailPageData("507f1f77bcf86cd799439012"),
-    ).resolves.toMatchObject({ hasSchedule: false });
+    ).resolves.toMatchObject({ hasSchedule: false, ptoBalanceUnits: 11 });
     expect(mocks.hasAnySchedule).toHaveBeenCalledWith("507f1f77bcf86cd799439012");
+    expect(mocks.findPtoBalance).toHaveBeenCalledWith("507f1f77bcf86cd799439012");
+  });
+
+  it("reports an unconfigured vacation balance", async () => {
+    mocks.hasAnySchedule.mockResolvedValue(true);
+    mocks.findPtoBalance.mockResolvedValue(null);
+
+    await expect(
+      getEmployeeDetailPageData("507f1f77bcf86cd799439012"),
+    ).resolves.toMatchObject({ ptoBalanceUnits: null });
   });
 });
