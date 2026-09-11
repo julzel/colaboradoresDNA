@@ -10,6 +10,7 @@ import styles from "./calendar.module.css";
 
 type CalendarYearHolidaysProps = {
   holidays: CalendarHolidayView[];
+  today: string;
   year: number;
 };
 
@@ -36,7 +37,11 @@ function capitalizeLabel(label: string) {
   return label.charAt(0).toLocaleUpperCase("es-CR") + label.slice(1);
 }
 
-export function CalendarYearHolidays({ holidays, year }: CalendarYearHolidaysProps) {
+export function CalendarYearHolidays({
+  holidays,
+  today,
+  year,
+}: CalendarYearHolidaysProps) {
   const [isOpen, setIsOpen] = useState(false);
   const contentId = useId();
   const titleId = `${contentId}-title`;
@@ -100,7 +105,10 @@ export function CalendarYearHolidays({ holidays, year }: CalendarYearHolidaysPro
                       );
 
                       return (
-                        <li key={`${holiday.date}:${holiday.name}`}>
+                        <li
+                          data-past={holiday.date < today}
+                          key={`${holiday.date}:${holiday.name}`}
+                        >
                           <span
                             aria-hidden="true"
                             className={styles.yearHolidayDateTile}

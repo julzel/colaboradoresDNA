@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  addPtoRequestComment,
   createAndApproveEmployeePtoRequestAsAdministrator,
   createOwnPtoDraft,
   decideAssignedPtoRequest,
@@ -14,6 +15,7 @@ import {
 import { PtoScheduleCalculationError } from "@/features/pto/integrations/pto-scheduling-port";
 
 const mocks = vi.hoisted(() => ({
+  appendPtoComment: vi.fn(),
   calculateFullDayLeave: vi.fn(),
   findEffectiveEmployeeAssignment: vi.fn(),
   findEmployeeById: vi.fn(),
@@ -69,6 +71,7 @@ vi.mock("@/features/scheduling/integrations/pto-scheduling-adapter", () => ({
 }));
 
 vi.mock("@/features/pto/server/pto-repository", () => ({
+  appendPtoComment: mocks.appendPtoComment,
   adjustPtoBalance: vi.fn(),
   cancelPtoRequest: vi.fn(),
   createApprovedPtoRequestAsAdministrator:
@@ -133,6 +136,7 @@ describe("PTO submission routing", () => {
   });
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.findEffectiveEmployeeAssignment.mockResolvedValue(null);
     mocks.getDisplayNames.mockResolvedValue({
       employees: new Map(),
       platformUsers: new Map(),
@@ -785,6 +789,88 @@ describe("PTO submission routing", () => {
       proxyEmployeeId: employeeId,
       request: { createdByName: "María Administradora" },
     });
+  });
+
+  it.each(["approved", "denied"] as const)(
+    "blocks supervisors from deciding %s",
+    async (decision) => {
+      mocks.requirePlatformUser.mockResolvedValue({
+        platformUser: { id: approverId, role: "supervisor" },
+      });
+      await expect(
+        decideAssignedPtoRequest({ decision, decisionNote: null, requestId }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+      expect(mocks.decidePtoRequest).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    [approverId, "supervisor"],
+    [actorId, "collaborator"],
+    [managerEmployeeId, "administrator"],
+  ])(
+    "allows participant %s to read and comment on a submitted request",
+    async (id, role) => {
+      mocks.requirePlatformUser.mockResolvedValue({
+        platformUser: { id, role, displayName: "Author" },
+      });
+      mocks.findPtoRequestById.mockResolvedValue({
+        id: requestId,
+        requesterEmployeeId: employeeId,
+        requesterPlatformUserId: actorId,
+        createdByPlatformUserId: actorId,
+        assignedApproverPlatformUserId: approverId,
+        status: "pending",
+        statusHistory: [],
+        startDate: "2027-01-01",
+        endDate: "2027-01-01",
+        comments: [{ body: "Existing comment" }],
+      });
+      const detail = await getPtoRequestDetail(requestId);
+      expect(detail?.canComment).toBe(true);
+      expect(detail?.canDecide).toBe(role === "administrator");
+      expect(detail?.request.comments?.[0]?.body).toBe("Existing comment");
+      await addPtoRequestComment({ requestId, body: "  Coverage arranged  " });
+      expect(mocks.appendPtoComment).toHaveBeenCalledWith({
+        requestId,
+        body: "Coverage arranged",
+        authorPlatformUserId: id,
+        authorName: "Author",
+      });
+    },
+  );
+
+  it("rejects unrelated supervisors and draft comments", async () => {
+    mocks.findPtoRequestById.mockResolvedValue({
+      requesterPlatformUserId: actorId,
+      assignedApproverPlatformUserId: approverId,
+      status: "draft",
+      statusHistory: [],
+      requesterEmployeeId: employeeId,
+    });
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: approverId, role: "supervisor" },
+    });
+    await expect(
+      addPtoRequestComment({ requestId, body: "Draft comment" }),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    mocks.findPtoRequestById.mockResolvedValue({
+      requesterPlatformUserId: actorId,
+      assignedApproverPlatformUserId: approverId,
+      status: "pending",
+    });
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: managerEmployeeId, role: "supervisor" },
+    });
+    await expect(
+      addPtoRequestComment({ requestId, body: "Unrelated comment" }),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    expect(mocks.appendPtoComment).not.toHaveBeenCalled();
+  });
+
+  it.each(["", " ", "a".repeat(2001)])("rejects invalid comment body", async (body) => {
+    await expect(addPtoRequestComment({ requestId, body })).rejects.toThrow();
+    expect(mocks.appendPtoComment).not.toHaveBeenCalled();
   });
 
   it("allows any active administrator to decide a pending request", async () => {

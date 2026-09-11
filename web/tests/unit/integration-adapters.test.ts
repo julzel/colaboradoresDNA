@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   createInternalOneOnOneCalendarEvent: vi.fn(),
   findInternalOneOnOneCalendarEventSummaryForAdministrator: vi.fn(),
   findOneOnOneByCalendarEventId: vi.fn(),
-  getPtoRequestDetail: vi.fn(),
+  getApprovedPtoCalendarDetail: vi.fn(),
   hasAnySchedule: vi.fn(),
   listUpcomingProxyPtoNotifications: vi.fn(),
   listVisibleApprovedPtoForCalendar: vi.fn(),
@@ -40,7 +40,7 @@ vi.mock("@/features/development/server/development-read-repository", () => ({
 }));
 
 vi.mock("@/features/pto/server/pto-service", () => ({
-  getPtoRequestDetail: mocks.getPtoRequestDetail,
+  getApprovedPtoCalendarDetail: mocks.getApprovedPtoCalendarDetail,
   listUpcomingProxyPtoNotifications: mocks.listUpcomingProxyPtoNotifications,
   listVisibleApprovedPtoForCalendar: mocks.listVisibleApprovedPtoForCalendar,
 }));
@@ -106,16 +106,15 @@ describe("cross-feature integration adapters", () => {
   });
 
   it("maps PTO domain values into Calendar-owned display DTOs", async () => {
-    mocks.getPtoRequestDetail.mockResolvedValue({
-      request: {
-        category: "vacation",
-        durationUnits: 3,
-        endDate: "2026-08-27",
-        id: "507f1f77bcf86cd799439099",
-        requesterName: "Ana Mora",
-        startDate: "2026-08-26",
-        status: "approved",
-      },
+    mocks.getApprovedPtoCalendarDetail.mockResolvedValue({
+      canViewRequest: false,
+      category: "vacation",
+      durationUnits: 3,
+      endDate: "2026-08-27",
+      id: "507f1f77bcf86cd799439099",
+      requesterName: "Ana Mora",
+      startDate: "2026-08-26",
+      status: "approved",
     });
 
     await expect(
@@ -123,6 +122,7 @@ describe("cross-feature integration adapters", () => {
         "507f1f77bcf86cd799439099",
       ),
     ).resolves.toEqual({
+      canViewRequest: false,
       category: "vacation",
       categoryLabel: "Vacaciones",
       durationLabel: "1,5",

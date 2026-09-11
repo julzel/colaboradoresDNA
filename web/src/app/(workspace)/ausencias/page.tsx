@@ -155,9 +155,17 @@ export default async function PtoDashboardPage({
           <ElevatedSurface
             as="section"
             className={styles.historyPanel}
-            aria-label="Solicitudes por aprobar"
+            aria-label={
+              dashboard.canManage
+                ? "Solicitudes por aprobar"
+                : "Solicitudes de mi equipo"
+            }
           >
-            <h2>Solicitudes por aprobar</h2>
+            <h2>
+              {dashboard.canManage
+                ? "Solicitudes por aprobar"
+                : "Solicitudes de mi equipo"}
+            </h2>
             <ul className={styles.adminRequestList}>
               {dashboard.pendingApprovals.map((request) => (
                 <li className={styles.adminRequestItem} key={request.id}>

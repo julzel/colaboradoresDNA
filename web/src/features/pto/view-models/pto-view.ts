@@ -7,6 +7,7 @@ export type PtoRequestView = PtoRequest & {
 };
 
 export type PtoRequestDetailView = {
+  canComment?: boolean;
   canCancel: boolean;
   cancellationNoteRequired?: boolean;
   canDecide: boolean;

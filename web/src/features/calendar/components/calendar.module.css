@@ -791,6 +791,20 @@
   line-height: 1.35;
 }
 
+.yearHolidayMonth li[data-past="true"] {
+  opacity: 0.5;
+}
+
+.yearHolidayMonth li[data-past="true"] .yearHolidayDateTile {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.yearHolidayMonth li[data-past="true"] .yearHolidayContent strong,
+.yearHolidayMonth li[data-past="true"] .yearHolidayContent time {
+  color: var(--color-accent);
+}
+
 .yearHolidaysEmpty {
   margin: 0;
   padding: 0 var(--space-4) var(--space-4);

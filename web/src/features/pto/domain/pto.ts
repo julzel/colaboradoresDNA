@@ -172,6 +172,13 @@ export type PtoStatusHistoryEntry = {
 };
 
 export type PtoRequestDocument = {
+  comments?: Array<{
+    id: string;
+    authorPlatformUserId: string;
+    authorName: string;
+    body: string;
+    createdAt: Date;
+  }>;
   _id: ObjectId;
   assignedApproverPlatformUserId: ObjectId | null;
   balanceAfterUnits: number | null;

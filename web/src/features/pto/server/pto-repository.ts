@@ -723,6 +723,16 @@ export async function decidePtoRequest(input: {
   requestId: string;
 }) {
   const decision = ptoDecisionInputSchema.parse(input);
+  // Approval authority is checked against the persisted account, not a caller flag.
+  const database = await getDatabase();
+  const administrator = await database
+    .collection<PlatformUserDocument>("platform_users")
+    .findOne({
+      _id: new ObjectId(objectIdStringSchema.parse(input.actorPlatformUserId)),
+      role: "administrator",
+      status: "active",
+    });
+  if (!administrator) throw new PtoDomainError("forbidden");
   await ensurePtoIndexes();
   const client = await getMongoClient();
   const { balances, ledger, requests } = await getPtoCollections();
@@ -998,6 +1008,30 @@ export async function listPendingPtoApprovals(
   return documents.map(toPtoRequest);
 }
 
+export async function appendPtoComment(input: {
+  requestId: string;
+  authorPlatformUserId: string;
+  authorName: string;
+  body: string;
+}) {
+  const { requests } = await getPtoCollections();
+  const result = await requests.updateOne(
+    { _id: new ObjectId(input.requestId), status: { $ne: "draft" } },
+    {
+      $push: {
+        comments: {
+          id: new ObjectId().toHexString(),
+          authorPlatformUserId: input.authorPlatformUserId,
+          authorName: input.authorName,
+          body: input.body,
+          createdAt: new Date(),
+        },
+      },
+    },
+  );
+  if (!result.matchedCount) throw new PtoDomainError("request_missing");
+}
+
 export async function findPtoBalance(employeeId: string) {
   objectIdStringSchema.parse(employeeId);
   await ensurePtoIndexes();
@@ -1042,8 +1076,6 @@ export async function getPtoRequestWarnings(request: PtoRequest) {
 
 export async function listApprovedPtoInRange({
   endDate,
-  platformUserId,
-  role,
   startDate,
 }: {
   endDate: string;
@@ -1052,21 +1084,8 @@ export async function listApprovedPtoInRange({
   startDate: string;
 }): Promise<PtoRequest[]> {
   const { requests } = await getPtoCollections();
-  const platformObjectId = new ObjectId(objectIdStringSchema.parse(platformUserId));
-  const visibility: Filter<PtoRequestDocument> =
-    role === "administrator"
-      ? {}
-      : role === "supervisor"
-        ? {
-            $or: [
-              { requesterPlatformUserId: platformObjectId },
-              { assignedApproverPlatformUserId: platformObjectId },
-            ],
-          }
-        : { requesterPlatformUserId: platformObjectId };
   const documents = await requests
     .find({
-      ...visibility,
       endDate: { $gte: startDate },
       startDate: { $lte: endDate },
       status: "approved",

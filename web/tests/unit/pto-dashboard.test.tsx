@@ -32,7 +32,7 @@ describe("leave dashboard", () => {
     render(await PtoDashboardPage({ searchParams: Promise.resolve({}) }));
     const summary = screen.getByRole("region", { name: "Resumen de ausencias" });
     expect(within(summary).getByText("1")).toBeInTheDocument();
-    const queue = screen.getByRole("region", { name: "Solicitudes por aprobar" });
+    const queue = screen.getByRole("region", { name: "Solicitudes de mi equipo" });
     expect(within(queue).getAllByRole("link")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Nueva solicitud" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Borradores 0" })).toBeInTheDocument();

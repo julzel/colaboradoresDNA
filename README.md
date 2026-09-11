@@ -118,6 +118,11 @@ A new employee receives an opening PTO balance during creation; existing
 employees need an explicit opening balance under **Saldo de ausencias**.
 Missing and zero balances are intentionally different.
 
+Leave requests notify the assigned manager and administrators. Managers can review
+and comment alongside the requester and admins; only admins can approve or deny.
+The requester and assigned manager receive decision updates in the notification drawer.
+See the [leave workflow](./docs/leave-request-flow.md) for permissions and delivery details.
+
 ## Documentation
 
 - [Architecture](./docs/architecture.md)

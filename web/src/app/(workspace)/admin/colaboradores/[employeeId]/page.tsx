@@ -36,6 +36,7 @@ import { EmployeeDetailItem } from "@/features/employees/components/employee-det
 import { IdentificationReveal } from "@/features/employees/components/identification-reveal";
 import styles from "@/features/employees/components/employee-management.module.css";
 import { getEmployeeDetailPageData } from "@/features/employees/server/employee-query-service";
+import { formatPtoDays } from "@/features/pto/domain/pto";
 
 export const metadata: Metadata = { title: "Detalle del colaborador" };
 
@@ -69,7 +70,8 @@ export default async function EmployeeDetailPage({
   const { employeeId } = await params;
   const pageData = await getEmployeeDetailPageData(employeeId);
   if (!pageData) notFound();
-  const { detail, development, hasSchedule, profileImageUrl } = pageData;
+  const { detail, development, hasSchedule, profileImageUrl, ptoBalanceUnits } =
+    pageData;
   const displayName = [
     detail.employee.givenNames,
     detail.employee.firstSurname,
@@ -227,8 +229,11 @@ export default async function EmployeeDetailPage({
             icon={TreePalm}
             title="Saldo de vacaciones"
           >
-            <p className={styles.muted}>
-              Consultá el saldo, registrá la apertura o aplicá un ajuste auditable.
+            <p className={styles.detailMetricLabel}>Días disponibles</p>
+            <p className={styles.ptoBalanceMetric}>
+              {ptoBalanceUnits === null
+                ? "Sin configurar"
+                : `${formatPtoDays(ptoBalanceUnits)} ${ptoBalanceUnits === 2 ? "día" : "días"}`}
             </p>
           </EmployeeDetailCard>
 

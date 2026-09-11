@@ -6,6 +6,7 @@ import { CalendarMonth } from "@/features/calendar/components/calendar-month";
 import { CalendarYearHolidays } from "@/features/calendar/components/calendar-year-holidays";
 import styles from "@/features/calendar/components/calendar.module.css";
 import { parseCalendarQuery } from "@/features/calendar/domain/calendar-query";
+import { getTodayInCostaRica } from "@/features/calendar/domain/calendar-utils";
 import { getCalendarEntries } from "@/features/calendar/server/calendar-service";
 
 export const metadata: Metadata = { title: "Calendario" };
@@ -32,7 +33,11 @@ export default async function CalendarPage({
       ) : (
         <CalendarAgenda entries={entries} month={query.month} />
       )}
-      <CalendarYearHolidays holidays={holidays} year={year} />
+      <CalendarYearHolidays
+        holidays={holidays}
+        today={getTodayInCostaRica()}
+        year={year}
+      />
     </div>
   );
 }
