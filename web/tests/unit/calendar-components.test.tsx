@@ -218,6 +218,7 @@ describe("calendar views", () => {
           { date: "2026-07-25", name: "Anexión del Partido de Nicoya" },
           { date: "2026-09-15", name: "Día de la Independencia" },
         ]}
+        today="2026-08-01"
         year={2026}
       />,
     );
@@ -242,6 +243,17 @@ describe("calendar views", () => {
     expect(screen.getByText("Jueves, 1 de enero")).toBeVisible();
     expect(screen.getByText("Anexión del Partido de Nicoya")).toBeVisible();
     expect(screen.getByText("Día de la Independencia")).toBeVisible();
+    expect(screen.getByText("Año Nuevo").closest("li")).toHaveAttribute(
+      "data-past",
+      "true",
+    );
+    expect(
+      screen.getByText("Anexión del Partido de Nicoya").closest("li"),
+    ).toHaveAttribute("data-past", "true");
+    expect(screen.getByText("Día de la Independencia").closest("li")).toHaveAttribute(
+      "data-past",
+      "false",
+    );
 
     await user.click(trigger);
     expect(disclosure).toHaveAttribute("data-open", "false");
@@ -314,6 +326,7 @@ describe("calendar quick details", () => {
     render(
       <CalendarPtoQuickDetailContent
         detail={{
+          canViewRequest: true,
           category: "vacation",
           categoryLabel: "Vacaciones",
           durationLabel: "1,5",
