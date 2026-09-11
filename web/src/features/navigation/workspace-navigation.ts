@@ -4,6 +4,7 @@ import {
   ChartNoAxesColumnIncreasing,
   ClipboardCheck,
   ClipboardClock,
+  ClipboardList,
   House,
   Settings,
   ShieldCheck,
@@ -17,6 +18,7 @@ const baseNavigationItems: readonly NavigationItem[] = [
   { href: "/", icon: House, label: "Inicio" },
   { href: "/calendario", icon: CalendarDays, label: "Calendario" },
   { href: "/ausencias", icon: ClipboardClock, label: "Ausencias" },
+  { href: "/tareas", icon: ClipboardList, label: "Tareas" },
 ];
 
 const administratorNavigationItem: NavigationItem = {
@@ -102,6 +104,21 @@ export function getActiveNavigationHref(
 }
 
 export function getWorkspaceBreadcrumbs(pathname: string) {
+  if (pathname === "/tareas")
+    return [{ href: "/", label: "Inicio" }, { label: "Tareas" }] as const;
+  if (pathname.startsWith("/tareas/"))
+    return [
+      { href: "/", label: "Inicio" },
+      { href: "/tareas", label: "Tareas" },
+      {
+        label:
+          pathname === "/tareas/importar"
+            ? "Importar tareas"
+            : pathname === "/tareas/historial"
+              ? "Historial"
+              : "Revisar semana",
+      },
+    ] as const;
   if (pathname.startsWith("/admin/prioridades")) {
     return [
       { href: "/", label: "Inicio" },

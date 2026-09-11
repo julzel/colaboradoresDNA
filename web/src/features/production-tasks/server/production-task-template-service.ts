@@ -2,7 +2,7 @@ import "server-only";
 
 import ExcelJS from "exceljs";
 
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { requireProductionTaskManager } from "./production-task-authorization";
 import { productionTaskEmployeeAdapter } from "@/features/employees/integrations/production-task-employee-adapter";
 import { listProductionAreas } from "@/features/production-tasks/server/production-task-repository";
 import { findProductionPlanById } from "@/features/production-tasks/server/production-task-repository";
@@ -13,7 +13,7 @@ const dark = "102F2B";
 const pale = "DDF7F7";
 
 export async function createProductionTaskTemplateBuffer() {
-  await requirePlatformUser({ roles: ["administrator", "supervisor"] });
+  await requireProductionTaskManager();
   const [areas, employees] = await Promise.all([
     listProductionAreas(),
     productionTaskEmployeeAdapter.listActiveEmployees(),
@@ -22,7 +22,7 @@ export async function createProductionTaskTemplateBuffer() {
   workbook.creator = "Colaboradores DNA";
   workbook.created = new Date();
   const tasks = workbook.addWorksheet("Tareas", {
-    views: [{ showGridLines: false, state: "frozen", ySplit: 3 }],
+    views: [{ showGridLines: false, state: "frozen", ySplit: 2 }],
   });
   const people = workbook.addWorksheet("Colaboradores", {
     views: [{ showGridLines: false, state: "frozen", ySplit: 1 }],
@@ -64,17 +64,39 @@ export async function createProductionTaskTemplateBuffer() {
   }
   tasks.columns = [14, 14, 27, 30, 45, 18, 18, 18].map((width) => ({ width }));
   tasks.getColumn(1).numFmt = "yyyy-mm-dd";
+  tasks.getCell("J1").value = "Cómo completar la plantilla";
+  tasks.getCell("J2").value =
+    "Una hoja por semana. Duplicá Tareas para preparar más semanas.";
+  tasks.getCell("J3").value =
+    "Fecha: AAAA-MM-DD o AAAA/MM/DD. Día es opcional si indicás fecha.";
+  tasks.getCell("J4").value =
+    "Usá códigos de Colaboradores, una persona por columna Encargado.";
+  tasks.getCell("J5").value = "No uses nombres, correos ni cédulas como identificador.";
+  tasks.getCell("J6").value =
+    "Elegí un área del catálogo. Producto es opcional. Tarea es requerida.";
+  tasks.getCell("J7").value =
+    "Al importar, confirmá el lunes y domingo de cada hoja y revisá los errores.";
+  tasks.getCell("J8").value =
+    "Cargar no publica. Revisá el borrador y confirmá su publicación.";
+  tasks.getColumn(10).width = 80;
+  tasks.getCell("J1").font = { bold: true, color: { argb: dark } };
+  for (let column = 6; column <= 8; column++) tasks.getColumn(column).numFmt = "@";
   for (let row = 3; row <= 152; row += 1) {
     tasks.getCell(row, 3).dataValidation = {
       type: "list",
       allowBlank: false,
-      formulae: [`'Áreas'!$A$2:$A$${areas.length + 1}`],
+      formulae: [`'Áreas'!$A$2:$A$${Math.max(2, areas.length + 1)}`],
+    };
+    tasks.getCell(row, 2).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: ['"Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo"'],
     };
     for (let column = 6; column <= 8; column += 1) {
       tasks.getCell(row, column).dataValidation = {
         type: "list",
         allowBlank: true,
-        formulae: [`'Colaboradores'!$A$2:$A$${employees.length + 1}`],
+        formulae: [`'Colaboradores'!$A$2:$A$${Math.max(2, employees.length + 1)}`],
       };
     }
     tasks.getRow(row).alignment = { vertical: "top", wrapText: true };

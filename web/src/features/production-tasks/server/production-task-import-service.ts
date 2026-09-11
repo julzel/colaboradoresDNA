@@ -2,12 +2,13 @@ import "server-only";
 
 import { ObjectId } from "mongodb";
 
-import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
+import { requireProductionTaskManager } from "./production-task-authorization";
 import { productionTaskEmployeeAdapter } from "@/features/employees/integrations/production-task-employee-adapter";
 import { createProductionImportPreviewResult } from "@/features/production-tasks/application/production-task-import-query";
 import {
   inferWeekStartFromSheetName,
   productionImportConfigurationSchema,
+  productionImportCommitSchema,
   type ProductionImportPreviewDocument,
 } from "@/features/production-tasks/domain/production-task-import";
 import {
@@ -24,11 +25,12 @@ import { observeProductionOperation } from "@/features/production-tasks/server/p
 import {
   commitProductionImportDrafts,
   listProductionAreas,
+  getProductionImportTargets,
   type PreparedProductionTaskInput,
 } from "@/features/production-tasks/server/production-task-repository";
 
 async function requireImportManager() {
-  return requirePlatformUser({ roles: ["administrator", "supervisor"] });
+  return requireProductionTaskManager();
 }
 
 async function resolvePreview(preview: ProductionImportPreviewDocument) {
@@ -36,7 +38,13 @@ async function resolvePreview(preview: ProductionImportPreviewDocument) {
     listProductionAreas(),
     productionTaskEmployeeAdapter.listActiveEmployees(),
   ]);
-  return createProductionImportPreviewResult({ areas, employees, preview });
+  const result = createProductionImportPreviewResult({ areas, employees, preview });
+  result.targets = await getProductionImportTargets(
+    result.sheets
+      .filter((sheet) => sheet.selected && sheet.weekStart)
+      .map((sheet) => sheet.weekStart!),
+  );
+  return result;
 }
 
 export async function createProductionImportPreview({
@@ -50,7 +58,7 @@ export async function createProductionImportPreview({
 }) {
   const { platformUser } = await requireImportManager();
   const parsed = await observeProductionOperation("import_preview", () =>
-    parseProductionWorkbook(buffer),
+    parseProductionWorkbook(buffer, fileName),
   );
   const [areas, employees] = await Promise.all([
     listProductionAreas(),
@@ -66,17 +74,6 @@ export async function createProductionImportPreview({
         : [],
     ),
   );
-  const employeesByName = new Map<string, typeof employees>();
-  for (const employee of employees) {
-    const names = new Set([
-      normalizeProductionLookup(employee.displayName),
-      normalizeProductionLookup(employee.displayName.split(" ")[0] ?? ""),
-    ]);
-    for (const name of names) {
-      employeesByName.set(name, [...(employeesByName.get(name) ?? []), employee]);
-    }
-  }
-
   const preview = await createImportPreview({
     actorPlatformUserId: new ObjectId(platformUser.id),
     committedAt: null,
@@ -89,14 +86,18 @@ export async function createProductionImportPreview({
       rows: sheet.rows.map((row) => ({
         ...row,
         areaId: areaByName.get(normalizeProductionLookup(row.areaText))?._id ?? null,
-        assigneeEmployeeIds: row.assigneeTexts.flatMap((value) => {
-          const codeMatch = employeeByCode.get(value.toUpperCase());
-          if (codeMatch) return [new ObjectId(codeMatch.employeeId)];
-          const nameMatches = employeesByName.get(normalizeProductionLookup(value));
-          return nameMatches?.length === 1
-            ? [new ObjectId(nameMatches[0]!.employeeId)]
-            : [];
-        }),
+        // Never partially map a shared assignment or infer identity from a name.
+        assigneeEmployeeIds: row.assigneeTexts.every((value) =>
+          employeeByCode.has(value.toUpperCase()),
+        )
+          ? [
+              ...new Set(
+                row.assigneeTexts.map(
+                  (value) => employeeByCode.get(value.toUpperCase())!.employeeId,
+                ),
+              ),
+            ].map((id) => new ObjectId(id))
+          : [],
         key: `${sheetIndex}:${row.rowNumber}`,
       })),
       selected: normalizeProductionLookup(sheet.name) !== "original",
@@ -158,8 +159,10 @@ export async function configureProductionImport(input: unknown) {
   return resolvePreview(updated);
 }
 
-export async function commitProductionImport(previewId: string) {
+export async function commitProductionImport(input: unknown) {
   const { platformUser } = await requireImportManager();
+  const { previewId, expectedVersion, targets, overrideConfirmed } =
+    productionImportCommitSchema.parse(input);
   const preview = await findImportPreviewForActor({
     actorPlatformUserId: platformUser.id,
     previewId,
@@ -167,6 +170,8 @@ export async function commitProductionImport(previewId: string) {
   if (!preview || preview.status !== "preview") {
     throw new ProductionTaskDomainError("import_expired");
   }
+  if (preview.version !== expectedVersion)
+    throw new ProductionTaskDomainError("stale_version");
   const view = await resolvePreview(preview);
   if (!view.canCommit) throw new ProductionTaskDomainError("import_invalid");
   const areas = await listProductionAreas();
@@ -178,6 +183,19 @@ export async function commitProductionImport(previewId: string) {
   const targetWeeks = selectedSheets.map((sheet) => sheet.weekStart!);
   if (new Set(targetWeeks).size !== targetWeeks.length) {
     throw new ProductionTaskDomainError("import_invalid");
+  }
+  if (
+    targets.length !== targetWeeks.length ||
+    new Set(targets.map((target) => target.weekStart)).size !== targetWeeks.length ||
+    targets.some((target) => !targetWeeks.includes(target.weekStart))
+  ) {
+    throw new ProductionTaskDomainError("import_invalid");
+  }
+  if (
+    !overrideConfirmed &&
+    targets.some((target) => target.draft || target.published)
+  ) {
+    throw new ProductionTaskDomainError("draft_conflict");
   }
   const sheets = selectedSheets.map((sheet) => {
     const tasks: PreparedProductionTaskInput[] = sheet.rows
@@ -207,6 +225,7 @@ export async function commitProductionImport(previewId: string) {
         expectedPreviewVersion: preview.version,
         previewId,
         sheets,
+        expectedTargets: targets,
         workbookHash: preview.workbookHash,
       }),
     sheets.reduce((total, sheet) => total + sheet.tasks.length, 0),

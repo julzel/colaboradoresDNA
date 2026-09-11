@@ -52,19 +52,14 @@ import {
   type PreparedProductionTaskInput,
 } from "@/features/production-tasks/server/production-task-repository";
 import { observeProductionOperation } from "@/features/production-tasks/server/production-task-observability";
-
-async function requireProductionTaskManager() {
-  return requirePlatformUser({ roles: ["administrator", "supervisor"] });
-}
+import {
+  canManageProductionTasks,
+  requireProductionTaskManager,
+} from "./production-task-authorization";
 
 async function getManagerContext() {
   const auth = await requireProductionTaskManager();
-  const employee =
-    await productionTaskEmployeeAdapter.findActiveEmployeeByPlatformUserId(
-      auth.platformUser.id,
-    );
-  if (!employee) throw new ProductionTaskDomainError("active_employee_required");
-  return { auth, employee };
+  return { auth };
 }
 
 async function prepareTasks(tasks: ProductionTaskDraftInput[]) {
@@ -184,11 +179,14 @@ export async function copyProductionWeekAsManager({
   });
 }
 
-export async function getProductionPlanningDashboard() {
+export async function getProductionPlanningDashboard(weekDate?: string) {
   await requireProductionTaskManager();
+  const weekStart = weekDate
+    ? getMondayForDate(productionDateSchema.parse(weekDate))
+    : undefined;
   const [areas, plans, templates] = await Promise.all([
     listProductionAreas(),
-    listProductionPlans(),
+    listProductionPlans(weekStart),
     listProductionTaskTemplates(),
   ]);
   return createProductionPlanningDashboardResult({ areas, plans, templates });
@@ -225,7 +223,7 @@ export async function getProductionPlanEditor(planId: string) {
     ].filter((value): value is ProductionTaskAvailabilityWarning => !!value);
     return [task.id.toHexString(), warnings] as const;
   });
-  return createProductionPlanEditorResult({
+  const result = createProductionPlanEditorResult({
     areas,
     employees,
     plan,
@@ -233,6 +231,15 @@ export async function getProductionPlanEditor(planId: string) {
     templates,
     warnings: new Map(warningEntries),
   });
+  const labels = await productionTaskEmployeeAdapter.listEmployeeLabels(
+    plan.tasks.flatMap((task) => task.assigneeEmployeeIds.map(String)),
+  );
+  result.employees = [
+    ...new Map(
+      [...result.employees, ...labels].map((employee) => [employee.id, employee]),
+    ).values(),
+  ];
+  return result;
 }
 
 export async function createProductionTaskTemplateAsManager(input: unknown) {
@@ -358,19 +365,17 @@ export async function getPublishedProductionBoard({
   const parsedAssigneeId = assigneeId
     ? productionObjectIdSchema.parse(assigneeId)
     : null;
-  const [areas, currentEmployee, employees, plan] = await Promise.all([
+  const [areas, currentEmployee, plan] = await Promise.all([
     listProductionAreas(),
     productionTaskEmployeeAdapter.findActiveEmployeeByPlatformUserId(platformUser.id),
-    productionTaskEmployeeAdapter.listActiveEmployees(),
     findCurrentPublishedPlan(weekStart),
   ]);
 
-  return createProductionBoardResult({
+  const result = createProductionBoardResult({
     areas,
-    canManage:
-      platformUser.role === "administrator" || platformUser.role === "supervisor",
+    canManage: await canManageProductionTasks(platformUser),
     currentEmployeeId: currentEmployee?.employeeId ?? null,
-    employees,
+    employees: [],
     plan,
     selectedFilters: {
       areaId: parsedAreaId,
@@ -382,6 +387,14 @@ export async function getPublishedProductionBoard({
     weekEnd,
     weekStart,
   });
+  // Published readers see only operational labels for people assigned to this plan,
+  // including former employees, never the private employee directory.
+  result.employees = plan
+    ? await productionTaskEmployeeAdapter.listEmployeeLabels(
+        plan.tasks.flatMap((task) => task.assigneeEmployeeIds.map(String)),
+      )
+    : [];
+  return result;
 }
 
 export async function getTodayProductionTaskSummary(): Promise<TodayProductionTaskSummaryResult> {
@@ -440,8 +453,7 @@ export async function completeProductionTaskForCurrentUser({
   if (!employee) throw new ProductionTaskDomainError("active_employee_required");
   const found = await findTaskInPublishedPlan(planId, taskId);
   if (!found) throw new ProductionTaskDomainError("task_not_found");
-  const canManage =
-    platformUser.role === "administrator" || platformUser.role === "supervisor";
+  const canManage = await canManageProductionTasks(platformUser);
   const assigned = found.task.assigneeEmployeeIds.some(
     (id) => id.toHexString() === employee.employeeId,
   );
@@ -476,8 +488,7 @@ export async function reopenProductionTaskForCurrentUser({
   if (!employee) throw new ProductionTaskDomainError("active_employee_required");
   const found = await findTaskInPublishedPlan(planId, taskId);
   if (!found) throw new ProductionTaskDomainError("task_not_found");
-  const canManage =
-    platformUser.role === "administrator" || platformUser.role === "supervisor";
+  const canManage = await canManageProductionTasks(platformUser);
   const ownSameDayCompletion =
     found.task.completedByEmployeeId?.equals(new ObjectId(employee.employeeId)) &&
     !!found.task.completedAt &&

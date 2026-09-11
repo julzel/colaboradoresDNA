@@ -8,6 +8,10 @@ export type ProductionTaskEmployee = {
 };
 
 export type ProductionTaskEmployeePort = {
+  listEmployeeLabels(
+    employeeIds: string[],
+  ): Promise<Array<{ id: string; displayName: string; employeeCode: string | null }>>;
+  isProductionEmployee(platformUserId: string, onDate: string): Promise<boolean>;
   findActiveEmployeeByPlatformUserId(
     platformUserId: string,
   ): Promise<ProductionTaskEmployee | null>;

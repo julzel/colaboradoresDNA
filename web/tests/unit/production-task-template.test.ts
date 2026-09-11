@@ -25,7 +25,9 @@ vi.mock("@/features/production-tasks/server/production-task-repository", () => (
 
 describe("official production task template", () => {
   it("contains a protected redacted catalog, canonical areas, and a machine-readable version", async () => {
-    mocks.requirePlatformUser.mockResolvedValue({ platformUser: { id: "actor" } });
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: { id: "actor", role: "administrator" },
+    });
     mocks.listProductionAreas.mockResolvedValue([
       { _id: { toHexString: () => "area" }, name: "Cocina" },
     ]);

@@ -9,6 +9,7 @@ import {
 } from "@/features/production-tasks/domain/shared";
 
 export type ProductionImportRawRow = {
+  dateText?: string;
   areaText: string;
   assigneeTexts: string[];
   dayText: string;
@@ -63,6 +64,25 @@ export const productionImportConfigurationSchema = z.object({
       weekStart: productionWeekStartSchema.nullable(),
     }),
   ),
+});
+
+const targetPlanSchema = z
+  .object({ id: productionObjectIdSchema, version: z.number().int().positive() })
+  .nullable();
+export const productionImportCommitSchema = z.object({
+  previewId: productionObjectIdSchema,
+  expectedVersion: z.number().int().positive(),
+  overrideConfirmed: z.boolean(),
+  targets: z
+    .array(
+      z.object({
+        weekStart: productionWeekStartSchema,
+        draft: targetPlanSchema,
+        published: targetPlanSchema,
+      }),
+    )
+    .min(1)
+    .max(30),
 });
 
 export type ProductionImportConfiguration = z.infer<

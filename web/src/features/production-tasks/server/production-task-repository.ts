@@ -195,27 +195,24 @@ export async function findCurrentPublishedPlan(weekStart: string) {
   return collection.findOne({ currentSlot: "published", weekStart });
 }
 
-export async function listProductionPlans() {
+export async function listProductionPlans(weekStart?: string) {
   await ensureProductionTaskIndexes();
   const collection = await getPlanCollection();
   return collection
-    .find(
-      {},
-      {
-        projection: {
-          createdAt: 1,
-          currentSlot: 1,
-          publishedAt: 1,
-          revision: 1,
-          status: 1,
-          tasks: 1,
-          updatedAt: 1,
-          version: 1,
-          weekEnd: 1,
-          weekStart: 1,
-        },
+    .find(weekStart ? { weekStart } : {}, {
+      projection: {
+        createdAt: 1,
+        currentSlot: 1,
+        publishedAt: 1,
+        revision: 1,
+        status: 1,
+        tasks: 1,
+        updatedAt: 1,
+        version: 1,
+        weekEnd: 1,
+        weekStart: 1,
       },
-    )
+    })
     .sort({ weekStart: -1, revision: -1 })
     .limit(104)
     .toArray();
@@ -727,12 +724,33 @@ export async function markProductionAssignmentChangesRead(employeeId: string) {
     );
 }
 
+export async function getProductionImportTargets(weekStarts: string[]) {
+  await ensureProductionTaskIndexes();
+  const collection = await getPlanCollection();
+  const plans = await collection
+    .find(
+      { weekStart: { $in: weekStarts }, currentSlot: { $in: ["draft", "published"] } },
+      { projection: { weekStart: 1, currentSlot: 1, version: 1 } },
+    )
+    .toArray();
+  return [...new Set(weekStarts)].map((weekStart) => {
+    const slot = (name: string) => {
+      const plan = plans.find(
+        (item) => item.weekStart === weekStart && item.currentSlot === name,
+      );
+      return plan ? { id: plan._id.toHexString(), version: plan.version } : null;
+    };
+    return { weekStart, draft: slot("draft"), published: slot("published") };
+  });
+}
+
 export async function commitProductionImportDrafts({
   actorPlatformUserId,
   expectedPreviewVersion,
   previewId,
   sheets,
   workbookHash,
+  expectedTargets,
 }: {
   actorPlatformUserId: string;
   expectedPreviewVersion: number;
@@ -743,118 +761,176 @@ export async function commitProductionImportDrafts({
     weekStart: string;
   }>;
   workbookHash: string;
+  expectedTargets: import("../application/production-task-contracts").ProductionImportTarget[];
 }): Promise<string[]> {
   productionObjectIdSchema.parse(previewId);
   await ensureProductionTaskIndexes();
   const client = await getMongoClient();
   const database = await getDatabase();
 
-  return client.withSession(async (session) => {
-    const planIds: string[] = [];
-    await session.withTransaction(async () => {
-      const plans = database.collection<ProductionWeekPlanDocument>(
-        "production_week_plans",
-      );
-      for (const sheet of sheets) {
-        let draft = await plans.findOne(
-          { currentSlot: "draft", weekStart: sheet.weekStart },
-          { session },
+  return client
+    .withSession(async (session) => {
+      const planIds: string[] = [];
+      await session.withTransaction(async () => {
+        planIds.length = 0;
+        const plans = database.collection<ProductionWeekPlanDocument>(
+          "production_week_plans",
         );
-        if (!draft) {
-          const latest = await plans.findOne(
-            { weekStart: sheet.weekStart },
-            { session, sort: { revision: -1 } },
+        for (const sheet of sheets) {
+          const expected = expectedTargets.find(
+            (target) => target.weekStart === sheet.weekStart,
           );
-          const published = await plans.findOne(
-            { currentSlot: "published", weekStart: sheet.weekStart },
+          if (!expected) throw new ProductionTaskDomainError("stale_version");
+          for (const slot of ["draft", "published"] as const) {
+            const current = await plans.findOne(
+              { weekStart: sheet.weekStart, currentSlot: slot },
+              { session },
+            );
+            const reviewed = expected[slot];
+            if (
+              current
+                ? !reviewed ||
+                  current._id.toHexString() !== reviewed.id ||
+                  current.version !== reviewed.version
+                : reviewed !== null
+            ) {
+              throw new ProductionTaskDomainError("stale_version");
+            }
+          }
+          let draft = await plans.findOne(
+            { currentSlot: "draft", weekStart: sheet.weekStart },
             { session },
           );
-          draft = createEmptyWeekDraft({
-            actorPlatformUserId,
-            revision: (latest?.revision ?? 0) + 1,
-            weekStart: sheet.weekStart,
-          });
-          if (published) draft.tasks = published.tasks.map((task) => ({ ...task }));
-          await plans.insertOne(draft, { session });
-          await recordProductionTaskAudit({
-            action: published ? "plan_copied" : "plan_created",
-            actorPlatformUserId,
-            changedFields: ["weekStart", "weekEnd", "tasks"],
-            session,
-            targetPlanId: draft._id.toHexString(),
-          });
-        }
+          if (draft && sheet.mode === "replace") {
+            const previousId = draft._id;
+            const archived = await plans.updateOne(
+              { _id: previousId, currentSlot: "draft", version: draft.version },
+              {
+                $inc: { version: 1 },
+                $set: {
+                  currentSlot: null,
+                  status: "superseded",
+                  updatedAt: new Date(),
+                  updatedByPlatformUserId: new ObjectId(actorPlatformUserId),
+                },
+              },
+              { session },
+            );
+            if (!archived.modifiedCount)
+              throw new ProductionTaskDomainError("stale_version");
+            await recordProductionTaskAudit({
+              action: "plan_updated",
+              actorPlatformUserId,
+              changedFields: ["currentSlot", "status"],
+              session,
+              targetPlanId: previousId.toHexString(),
+            });
+            draft = null;
+          }
+          if (!draft) {
+            const latest = await plans.findOne(
+              { weekStart: sheet.weekStart },
+              { session, sort: { revision: -1 } },
+            );
+            const published = await plans.findOne(
+              { currentSlot: "published", weekStart: sheet.weekStart },
+              { session },
+            );
+            draft = createEmptyWeekDraft({
+              actorPlatformUserId,
+              revision: (latest?.revision ?? 0) + 1,
+              weekStart: sheet.weekStart,
+            });
+            if (published) draft.tasks = published.tasks.map((task) => ({ ...task }));
+            await plans.insertOne(draft, { session });
+            await recordProductionTaskAudit({
+              action: published ? "plan_copied" : "plan_created",
+              actorPlatformUserId,
+              changedFields: ["weekStart", "weekEnd", "tasks"],
+              session,
+              targetPlanId: draft._id.toHexString(),
+            });
+          }
 
-        if (
-          sheet.mode === "merge" &&
-          sheet.tasks.some((incoming) =>
-            draft!.tasks.some((existing) => sameDefinition(existing, incoming)),
-          )
-        ) {
-          throw new ProductionTaskDomainError("import_invalid");
-        }
-        const existingById = new Map(
-          draft.tasks.map((task) => [task.id.toHexString(), task]),
-        );
-        const imported = sheet.tasks.map((task) =>
-          prepareTaskDocument(task, existingById),
-        );
-        const tasks =
-          sheet.mode === "replace" ? imported : [...draft.tasks, ...imported];
-        const updated = await plans.findOneAndUpdate(
-          { _id: draft._id, currentSlot: "draft", version: draft.version },
-          {
-            $inc: { version: 1 },
-            $set: {
-              tasks: tasks.map((task, sortOrder) => ({ ...task, sortOrder })),
-              updatedAt: new Date(),
-              updatedByPlatformUserId: new ObjectId(actorPlatformUserId),
+          if (
+            sheet.mode === "merge" &&
+            sheet.tasks.some((incoming) =>
+              draft!.tasks.some((existing) => sameDefinition(existing, incoming)),
+            )
+          ) {
+            throw new ProductionTaskDomainError("import_invalid");
+          }
+          const existingById = new Map(
+            draft.tasks.map((task) => [task.id.toHexString(), task]),
+          );
+          const imported = sheet.tasks.map((task) =>
+            prepareTaskDocument(task, existingById),
+          );
+          const tasks =
+            sheet.mode === "replace" ? imported : [...draft.tasks, ...imported];
+          if (tasks.length > 500) throw new ProductionTaskDomainError("import_invalid");
+          const updated = await plans.findOneAndUpdate(
+            { _id: draft._id, currentSlot: "draft", version: draft.version },
+            {
+              $inc: { version: 1 },
+              $set: {
+                tasks: tasks.map((task, sortOrder) => ({ ...task, sortOrder })),
+                updatedAt: new Date(),
+                updatedByPlatformUserId: new ObjectId(actorPlatformUserId),
+              },
             },
-          },
-          { returnDocument: "after", session },
-        );
-        if (!updated) throw new ProductionTaskDomainError("stale_version");
-        draft = updated;
-        planIds.push(updated._id.toHexString());
-        await recordProductionTaskAudit({
-          action: "import_committed",
-          actorPlatformUserId,
-          changedFields: ["tasks"],
-          metadata: {
-            importedRowCount: sheet.tasks.length,
-            importModes: [sheet.mode],
-            mappedAreaIds: [...new Set(sheet.tasks.map((task) => task.areaId))],
-            mappedEmployeeIds: [
-              ...new Set(sheet.tasks.flatMap((task) => task.assigneeEmployeeIds)),
-            ],
-            sourceSheetCount: 1,
-            workbookHash,
-          },
-          session,
-          targetPlanId: updated._id.toHexString(),
-        });
-      }
+            { returnDocument: "after", session },
+          );
+          if (!updated) throw new ProductionTaskDomainError("stale_version");
+          draft = updated;
+          planIds.push(updated._id.toHexString());
+          await recordProductionTaskAudit({
+            action: "import_committed",
+            actorPlatformUserId,
+            changedFields: ["tasks"],
+            metadata: {
+              importedRowCount: sheet.tasks.length,
+              importModes: [sheet.mode],
+              mappedAreaIds: [...new Set(sheet.tasks.map((task) => task.areaId))],
+              mappedEmployeeIds: [
+                ...new Set(sheet.tasks.flatMap((task) => task.assigneeEmployeeIds)),
+              ],
+              sourceSheetCount: 1,
+              workbookHash,
+            },
+            session,
+            targetPlanId: updated._id.toHexString(),
+          });
+        }
 
-      const previewUpdate = await database
-        .collection<ProductionImportPreviewDocument>("production_task_import_previews")
-        .updateOne(
-          {
-            _id: new ObjectId(previewId),
-            actorPlatformUserId: new ObjectId(actorPlatformUserId),
-            expiresAt: { $gt: new Date() },
-            status: "preview",
-            version: expectedPreviewVersion,
-          },
-          {
-            $inc: { version: 1 },
-            $set: { committedAt: new Date(), status: "committed" },
-          },
-          { session },
-        );
-      if (!previewUpdate.modifiedCount) {
+        const previewUpdate = await database
+          .collection<ProductionImportPreviewDocument>(
+            "production_task_import_previews",
+          )
+          .updateOne(
+            {
+              _id: new ObjectId(previewId),
+              actorPlatformUserId: new ObjectId(actorPlatformUserId),
+              expiresAt: { $gt: new Date() },
+              status: "preview",
+              version: expectedPreviewVersion,
+            },
+            {
+              $inc: { version: 1 },
+              $set: { committedAt: new Date(), status: "committed" },
+            },
+            { session },
+          );
+        if (!previewUpdate.modifiedCount) {
+          throw new ProductionTaskDomainError("stale_version");
+        }
+      });
+      return [...new Set(planIds)];
+    })
+    .catch((error: unknown) => {
+      // A simultaneous first import can contend on the unique current-week slot.
+      if (error instanceof MongoServerError && error.code === 11000)
         throw new ProductionTaskDomainError("stale_version");
-      }
+      throw error;
     });
-    return [...new Set(planIds)];
-  });
 }
