@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   preview: vi.fn(),
   board: vi.fn(),
   publish: vi.fn(),
+  edit: vi.fn(),
+  options: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/features/auth/server/auth-provider", () => ({
@@ -25,6 +27,8 @@ vi.mock("@/features/production-tasks/server/production-task-application", () => 
   createProductionImportPreview: mocks.preview,
   getPublishedProductionBoard: mocks.board,
   publishProductionWeekAsManager: mocks.publish,
+  editProductionTask: mocks.edit,
+  getProductionTaskEditOptions: mocks.options,
 }));
 const origin = "https://tasks.invalid";
 const request = (path: string, body: string, headers = {}) =>
@@ -34,6 +38,29 @@ const request = (path: string, body: string, headers = {}) =>
     body,
   });
 describe("production tasks HTTP boundary", () => {
+  it("exposes task commands as JSON and keeps availability feedback structured", async () => {
+    mocks.edit.mockResolvedValue({
+      taskId: "task",
+      date: "2026-09-12",
+      planIds: ["plan"],
+    });
+    const result = await productionTaskHttp(
+      request("tasks/edit", JSON.stringify({ action: "remove" })),
+      ["tasks", "edit"],
+    );
+    expect(result.status).toBe(200);
+    expect(mocks.manager).toHaveBeenCalled();
+    expect((await result.json()).data.taskId).toBe("task");
+  });
+  it("rejects task writes before reading the command for unauthorized users", async () => {
+    mocks.manager.mockRejectedValue(new ProductionTaskDomainError("forbidden"));
+    const result = await productionTaskHttp(request("tasks/edit", "invalid json"), [
+      "tasks",
+      "edit",
+    ]);
+    expect(result.status).toBe(403);
+    expect(mocks.edit).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     vi.resetAllMocks();
     vi.stubEnv("APP_BASE_URL", origin);

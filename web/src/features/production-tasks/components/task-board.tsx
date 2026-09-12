@@ -12,6 +12,7 @@ import type { ProductionBoardResult } from "../application/production-task-contr
 import { addCalendarDays } from "../domain/shared";
 import { formatTaskDate } from "../presentation/messages";
 import { TaskGrid } from "./task-grid";
+import { TaskEditor } from "./task-editor";
 import styles from "./tasks.module.css";
 
 export function TaskBoard({
@@ -23,6 +24,9 @@ export function TaskBoard({
 }) {
   const [mine, setMine] = useState(initialMine);
   const [area, setArea] = useState("");
+  const [editing, setEditing] = useState<ProductionBoardResult["tasks"][number] | null>(
+    null,
+  );
   const ownTasks = board.tasks.filter(
     (task) =>
       board.currentEmployeeId &&
@@ -47,7 +51,7 @@ export function TaskBoard({
             </p>
             <p>
               {board.plan
-                ? `Versión ${board.plan.revision} · Solo lectura`
+                ? `Versión ${board.plan.revision} · ${board.canManage ? "Edición de tareas desde hoy" : "Solo lectura"}`
                 : "Semana sin publicar"}
             </p>
           </div>
@@ -149,6 +153,13 @@ export function TaskBoard({
               tasks={tasks}
               employees={board.employees}
               currentEmployeeId={board.currentEmployeeId}
+              today={board.today}
+              {...(board.canManage
+                ? {
+                    onEdit: (id: string) =>
+                      setEditing(board.tasks.find((task) => task.id === id) ?? null),
+                  }
+                : {})}
             />
           )}
         </div>
@@ -184,6 +195,14 @@ export function TaskBoard({
           </Button>
         )}
       </ElevatedSurface>
+      {editing && (
+        <TaskEditor
+          task={editing}
+          today={board.today}
+          initialDate={editing.workDate}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </>
   );
 }

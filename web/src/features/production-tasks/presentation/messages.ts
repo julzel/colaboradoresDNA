@@ -1,4 +1,12 @@
 const messages: Record<string, string> = {
+  task_date_past:
+    "Las tareas de fechas pasadas no se pueden agregar, cambiar ni eliminar.",
+  task_limit: "La semana de destino ya tiene 500 tareas.",
+  pending_draft:
+    "Esta semana tiene un borrador pendiente. Revisalo y publicalo desde el historial antes de editar el plan.",
+  area_not_found: "Seleccioná un área activa.",
+  active_employee_required: "Seleccioná colaboradores activos.",
+  task_not_found: "La tarea ya no está disponible. Actualizá el plan.",
   forbidden:
     "Solo administradores y supervisores de Producción pueden administrar tareas.",
   file_too_large: "El archivo supera el máximo de 8 MB.",

@@ -7,6 +7,7 @@ import * as tasks from "../server/production-task-application";
 import { ProductionTaskDomainError, productionObjectIdSchema } from "../domain/shared";
 import { ProductionWorkbookParseError } from "../application/production-task-errors";
 import { taskErrorMessage } from "../presentation/messages";
+import { TaskAvailabilityError } from "../domain/production-task-edit";
 
 const privateHeaders = {
   "Cache-Control": "private, no-store",
@@ -69,6 +70,12 @@ export async function productionTaskHttp(request: Request, path: string[]) {
     const route = path.join("/");
     const url = new URL(request.url);
     if (request.method === "GET") {
+      if (route === "tasks/options")
+        return response({
+          data: await tasks.getProductionTaskEditOptions(
+            url.searchParams.get("date") ?? "",
+          ),
+        });
       if (route === "board") {
         const query = z
           .object({
@@ -123,6 +130,10 @@ export async function productionTaskHttp(request: Request, path: string[]) {
     if (request.method === "POST") {
       // Authorize management before reading or parsing an expensive upload.
       await tasks.getProductionTaskManagementAccess();
+      if (route === "tasks/edit")
+        return response({
+          data: await tasks.editProductionTask(await jsonBody(request)),
+        });
       if (route === "imports") {
         const fileName = z
           .string()
@@ -179,18 +190,32 @@ export async function productionTaskHttp(request: Request, path: string[]) {
       const status =
         code === "forbidden"
           ? 403
-          : code === "stale_version" || code === "draft_conflict"
+          : code === "stale_version" ||
+              code === "draft_conflict" ||
+              code === "pending_draft"
             ? 409
             : code === "file_too_large"
               ? 413
               : 422;
-      return response({ code, error: taskErrorMessage(code) }, status);
+      return response(
+        {
+          code,
+          error: taskErrorMessage(code),
+          ...(error instanceof TaskAvailabilityError
+            ? { warnings: error.warnings }
+            : {}),
+        },
+        status,
+      );
     }
     if (error instanceof z.ZodError)
       return response(
         {
           code: "invalid_input",
-          error: "Revisá los datos y las fechas. Cada semana debe comenzar un lunes.",
+          error:
+            path[0] === "tasks"
+              ? "Revisá los campos indicados y elegí una fecha válida."
+              : "Revisá los datos y las fechas. Cada semana debe comenzar un lunes.",
           fields: error.issues.map((issue) => ({
             path: issue.path.join("."),
             message: issue.message,

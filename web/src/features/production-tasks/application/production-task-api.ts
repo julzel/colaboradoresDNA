@@ -1,5 +1,7 @@
 import type {
   ProductionBoardQuery,
+  ProductionTaskEditOptions,
+  ProductionTaskEditResult,
   ProductionBoardResult,
   ProductionImportPreviewResult,
   ProductionPlanEditorResult,
@@ -9,6 +11,8 @@ import type {
 
 /** Stable, transport-neutral contract exposed by the Tasks application core. */
 export interface ProductionTaskApplicationApi {
+  getProductionTaskEditOptions(date: string): Promise<ProductionTaskEditOptions>;
+  editProductionTask(input: unknown): Promise<ProductionTaskEditResult>;
   getPublishedProductionBoard(
     query?: ProductionBoardQuery,
   ): Promise<ProductionBoardResult>;

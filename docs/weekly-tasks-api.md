@@ -2,6 +2,9 @@
 
 Pilot implementation: 2026-09-11. Product scope: [PRD](weekly-tasks-pilot-prd.md).
 
+Direct in-app create/edit/remove commands added 2026-09-12:
+[task editing API and behavior](production-task-editing-api.md).
+
 ## Entry points
 
 | Route                                 | Access                                 | Purpose                                                       |

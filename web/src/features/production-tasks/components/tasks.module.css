@@ -229,6 +229,27 @@
   overflow: hidden;
 }
 
+.taskEditor {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-5);
+}
+
+.employeeChoices {
+  display: grid;
+  gap: var(--space-3);
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.editorActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
 .planHeading {
   display: flex;
   flex-wrap: wrap;

@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/container/container";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { getPublishedProductionBoard } from "@/features/production-tasks/server/production-task-application";
 import { TaskBoard } from "@/features/production-tasks/components/task-board";
+import { NewTaskButton } from "@/features/production-tasks/components/task-editor";
 import { productionDateSchema } from "@/features/production-tasks/domain/shared";
 import styles from "@/features/production-tasks/components/tasks.module.css";
 
@@ -24,16 +25,20 @@ export default async function TasksPage({
       <PageSectionHeader
         action={
           board.canManage ? (
-            <ButtonLink
-              aria-label="Importar tareas"
-              className={styles.importButton}
-              href="/tareas/importar"
-              size="small"
-              title="Importar tareas"
-            >
-              <Upload aria-hidden="true" size={18} />
-              <span className={styles.importButtonLabel}>Importar tareas</span>
-            </ButtonLink>
+            <div className={styles.actions}>
+              <ButtonLink
+                aria-label="Importar tareas"
+                className={styles.importButton}
+                href="/tareas/importar"
+                size="small"
+                variant="secondary"
+                title="Importar tareas"
+              >
+                <Upload aria-hidden="true" size={18} />
+                <span className={styles.importButtonLabel}>Importar tareas</span>
+              </ButtonLink>
+              <NewTaskButton today={board.today} date={board.query.selectedDate} />
+            </div>
           ) : undefined
         }
         title="Tareas de producción"

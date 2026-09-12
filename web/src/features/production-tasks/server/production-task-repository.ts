@@ -26,6 +26,7 @@ import { recordProductionTaskAudit } from "@/features/production-tasks/server/pr
 import type { ProductionTaskAuditAction } from "@/features/production-tasks/server/production-task-audit-repository";
 import { ensureProductionTaskIndexes } from "@/features/production-tasks/server/production-task-indexes";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
+import { lockProductionWeeks } from "./production-task-week-lock";
 
 export type PreparedProductionTaskInput = ProductionTaskDraftInput & {
   areaLabelSnapshot: string;
@@ -362,6 +363,7 @@ export async function createOrGetProductionWeekDraft({
 
     try {
       await session.withTransaction(async () => {
+        await lockProductionWeeks(database, session, [weekStart]);
         const collection = database.collection<ProductionWeekPlanDocument>(
           "production_week_plans",
         );
@@ -518,6 +520,8 @@ export async function publishProductionWeekDraft({
       if (draft.version !== expectedVersion) {
         throw new ProductionTaskDomainError("stale_version");
       }
+
+      await lockProductionWeeks(database, session, [draft.weekStart]);
 
       const previousPublished = await collection.findOne(
         { currentSlot: "published", weekStart: draft.weekStart },
@@ -773,6 +777,11 @@ export async function commitProductionImportDrafts({
       const planIds: string[] = [];
       await session.withTransaction(async () => {
         planIds.length = 0;
+        await lockProductionWeeks(
+          database,
+          session,
+          sheets.map((sheet) => sheet.weekStart),
+        );
         const plans = database.collection<ProductionWeekPlanDocument>(
           "production_week_plans",
         );

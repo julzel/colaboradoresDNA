@@ -2,6 +2,7 @@ export class TaskApiError extends Error {
   constructor(
     message: string,
     public readonly code?: string,
+    public readonly warnings?: string[],
   ) {
     super(message);
   }
@@ -18,6 +19,7 @@ export async function taskRequest<T>(path: string, body: unknown): Promise<T> {
     throw new TaskApiError(
       result.error ?? "No pudimos completar la operación.",
       result.code,
+      result.warnings,
     );
   return result.data as T;
 }

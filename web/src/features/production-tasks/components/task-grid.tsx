@@ -4,6 +4,8 @@ import type {
 } from "../application/production-task-contracts";
 import { formatTaskDate } from "../presentation/messages";
 import styles from "./tasks.module.css";
+import { Button } from "@/components/ui/button/button";
+import { Pencil } from "lucide-react";
 
 export type GridTask = Pick<
   ProductionBoardResult["tasks"][number],
@@ -13,10 +15,14 @@ export function TaskGrid({
   tasks,
   employees,
   currentEmployeeId = null,
+  today,
+  onEdit,
 }: {
   tasks: GridTask[];
   employees: ProductionTaskEmployeeDto[];
   currentEmployeeId?: string | null;
+  today?: string;
+  onEdit?: (id: string) => void;
 }) {
   const names = new Map(
     employees.map((employee) => [employee.id, employee.displayName]),
@@ -58,6 +64,20 @@ export function TaskGrid({
                 </dd>
               </div>
             </dl>
+            {onEdit &&
+              today &&
+              (task.workDate >= today ? (
+                <Button
+                  variant="quiet"
+                  onClick={() => onEdit(task.id)}
+                  aria-label={`Editar ${task.description}`}
+                >
+                  <Pencil aria-hidden="true" size={18} />
+                  Editar tarea
+                </Button>
+              ) : (
+                <small className={styles.muted}>Fecha pasada · Solo lectura</small>
+              ))}
           </li>
         ))}
       </ul>
@@ -68,7 +88,10 @@ export function TaskGrid({
         tabIndex={0}
       >
         <table className={styles.grid}>
-          <caption className="sr-only">Tareas de la semana. Solo lectura.</caption>
+          <caption className="sr-only">
+            Tareas de la semana.
+            {onEdit ? " Edición disponible desde hoy." : " Solo lectura."}
+          </caption>
           <thead>
             <tr>
               <th scope="col">Día</th>
@@ -76,6 +99,11 @@ export function TaskGrid({
               <th scope="col">Producto o elemento</th>
               <th scope="col">Tarea</th>
               <th scope="col">Personas encargadas</th>
+              {onEdit && (
+                <th scope="col">
+                  <span className="sr-only">Acciones</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -103,6 +131,22 @@ export function TaskGrid({
                     ))}
                   </span>
                 </td>
+                {onEdit && (
+                  <td>
+                    {today && task.workDate >= today ? (
+                      <Button
+                        variant="quiet"
+                        aria-label={`Editar ${task.description}`}
+                        title="Editar tarea"
+                        onClick={() => onEdit(task.id)}
+                      >
+                        <Pencil aria-hidden="true" size={18} />
+                      </Button>
+                    ) : (
+                      <small className={styles.muted}>Solo lectura</small>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

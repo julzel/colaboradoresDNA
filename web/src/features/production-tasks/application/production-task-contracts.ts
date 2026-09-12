@@ -28,6 +28,18 @@ export type ProductionTaskAvailabilityWarning =
   | "not_scheduled"
   | "availability_unknown";
 
+export type ProductionTaskEditOptions = {
+  today: string;
+  targetPlanId: string | null;
+  areas: ProductionTaskAreaDto[];
+  employees: ProductionTaskEmployeeDto[];
+};
+export type ProductionTaskEditResult = {
+  taskId: string;
+  date: string;
+  planIds: string[];
+};
+
 export type ProductionPlanEditorResult = {
   areas: ProductionTaskAreaDto[];
   employees: ProductionTaskEmployeeDto[];
