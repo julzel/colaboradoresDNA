@@ -246,7 +246,8 @@ export async function getCalendarDashboardOverview({
   const today = getTodayInCostaRica(now);
   const tomorrow = addCalendarDays(today, 1);
   const year = Number(today.slice(0, 4));
-  const includeAllCalendarEntries = includeAgenda && actor.role === "administrator";
+  const includeAllCalendarEntries =
+    includeAgenda && (actor.role === "administrator" || actor.role === "supervisor");
   const [events, birthdays, holidays, ptoEntries] = await Promise.all([
     includeAgenda
       ? listVisibleCalendarEvents({

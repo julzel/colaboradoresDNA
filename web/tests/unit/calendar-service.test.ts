@@ -157,7 +157,7 @@ describe("calendar service authorization and aggregation", () => {
     });
   });
 
-  it("builds a bounded dashboard agenda with only remaining birthdays this year", async () => {
+  it("builds the supervisor agenda from all visible calendar sources", async () => {
     mocks.listVisibleCalendarEvents.mockResolvedValue([
       {
         allDay: false,
@@ -207,7 +207,19 @@ describe("calendar service authorization and aggregation", () => {
       endsAt: new Date("2026-09-05T06:00:00.000Z"),
       startsAt: new Date("2026-09-04T06:00:00.000Z"),
     });
+    expect(mocks.listPublicHolidays).toHaveBeenCalledWith(2026);
+    expect(mocks.listVisibleApprovedAbsences).toHaveBeenCalledWith({
+      endDate: "2026-09-04",
+      platformUserId: "507f1f77bcf86cd799439011",
+      role: "supervisor",
+      startDate: "2026-09-04",
+    });
     expect(overview.todayAgenda).toEqual([
+      expect.objectContaining({
+        kind: "birthday",
+        startDate: "2026-09-04",
+        title: "Cumpleaños de hoy",
+      }),
       expect.objectContaining({
         location: "Sala principal",
         startDate: "2026-09-04",
