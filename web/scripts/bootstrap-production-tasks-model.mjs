@@ -7,6 +7,7 @@ const environmentSchema = z.object({
 });
 
 const indexes = {
+  production_task_week_locks: [{ key: { _id: 1 }, name: "_id_" }],
   production_area_audit: [
     { key: { targetAreaId: 1, createdAt: -1 }, name: "production_area_audit_timeline" },
   ],

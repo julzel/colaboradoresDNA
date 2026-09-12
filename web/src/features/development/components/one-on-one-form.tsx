@@ -292,7 +292,7 @@ export function OneOnOneForm({
             <>
               <CheckboxField
                 checked={scheduleEvent}
-                description={`Crea “Reunión 1:1” visible solo para vos y ${employeeName}.`}
+                description={`Crea “Reunión 1:1” visible solo para ti y ${employeeName}.`}
                 id="scheduleCalendarEvent"
                 label="Agregar esta conversación al calendario"
                 name="scheduleCalendarEvent"

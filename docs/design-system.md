@@ -479,6 +479,19 @@ and “Leer más”; name the destination or result.
 
 ### Tables and mobile record lists
 
+For all new or redesigned operational tables, use `/admin/horarios` as the
+reference for the containing section: `ElevatedSurface`, a padded title and
+context header, the shared `ListToolbar` and `FilterBar`/`FilterChip` controls,
+then a result count and the records. `/tareas` applies this pattern to a semantic
+desktop table and mobile record list. Use shared color tokens without local
+palette overrides. Filter selection uses the shared soft chip treatment, not a
+primary action button. Primary CTAs belong in the page header.
+
+Inset record dividers from both the content edges and the surface borders. Use
+muted column labels, readable row spacing, and no boxed-cell grid. On mobile,
+retain every essential field with visible labels in a semantic record list.
+Reuse these shared controls rather than introducing feature-specific substitutes.
+
 Use tables on desktop when users compare the same fields across records. Use a
 real `<table>` with caption or accessible name, column headers, and correct
 scope.

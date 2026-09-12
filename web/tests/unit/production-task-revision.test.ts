@@ -6,6 +6,7 @@ import type {
   ProductionWeekPlanDocument,
 } from "@/features/production-tasks/domain/production-task";
 import { compareProductionPlanRevisions } from "@/features/production-tasks/domain/production-task-revision";
+import { assertPastTasksUnchanged } from "@/features/production-tasks/domain/production-task-history";
 
 const actorId = new ObjectId();
 const areaId = new ObjectId();
@@ -56,6 +57,40 @@ function plan(
 }
 
 describe("production plan revision comparison", () => {
+  it("prevents publication from removing or moving historical work, even into the future", () => {
+    const historical = task();
+    expect(() => assertPastTasksUnchanged([historical], [], "2026-09-02")).toThrow(
+      "task_date_past",
+    );
+    expect(() =>
+      assertPastTasksUnchanged(
+        [historical],
+        [task({ workDate: "2026-09-03" })],
+        "2026-09-02",
+      ),
+    ).toThrow("task_date_past");
+    expect(() => assertPastTasksUnchanged([], [historical], "2026-09-02")).toThrow(
+      "task_date_past",
+    );
+  });
+
+  it("allows future edits alongside unchanged historical work, but preserves historical completion", () => {
+    const historical = task({
+      status: "completed",
+      completedAt: new Date("2026-09-01T20:00:00Z"),
+      completedByEmployeeId: employeeA,
+    });
+    expect(() =>
+      assertPastTasksUnchanged(
+        [historical],
+        [historical, task({ id: new ObjectId(), workDate: "2026-09-02" })],
+        "2026-09-02",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertPastTasksUnchanged([historical], [task()], "2026-09-02"),
+    ).toThrow("task_date_past");
+  });
   it("classifies reassignment, rescheduling, and content changes deterministically", () => {
     const prior = task();
     const current = task({

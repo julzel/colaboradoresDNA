@@ -3,6 +3,7 @@ import type { ProductionAreaDocument } from "@/features/production-tasks/domain/
 import {
   addCalendarDays,
   normalizeProductionLookup,
+  productionDateSchema,
 } from "@/features/production-tasks/domain/shared";
 import type { ProductionTaskEmployee } from "@/features/production-tasks/integrations/production-task-employee-port";
 import type {
@@ -50,9 +51,11 @@ export function createProductionImportPreviewResult({
         tone: "error" | "warning";
       }> = [];
       const areaId = row.areaId?.toHexString() ?? null;
-      const assigneeEmployeeIds = row.assigneeEmployeeIds
-        .map(String)
-        .filter((id) => activeEmployeeIds.has(id));
+      const assigneeEmployeeIds = [
+        ...new Set(
+          row.assigneeEmployeeIds.map(String).filter((id) => activeEmployeeIds.has(id)),
+        ),
+      ];
       const isTemplateCandidate = !row.description && row.assigneeTexts.length === 0;
 
       if (isTemplateCandidate) {
@@ -73,12 +76,33 @@ export function createProductionImportPreviewResult({
       }
 
       const dayOffset = resolveDayOffset(row.dayText);
-      const workDate =
+      let workDate =
         sheet.weekStart && dayOffset !== null
           ? addCalendarDays(sheet.weekStart, dayOffset)
           : null;
+      if (row.dateText) {
+        const date = row.dateText.replaceAll("/", "-");
+        if (!productionDateSchema.safeParse(date).success) {
+          issues.push({ code: "date_invalid", tone: "error" });
+        } else {
+          workDate = date;
+          if (
+            sheet.weekStart &&
+            (date < sheet.weekStart || date > addCalendarDays(sheet.weekStart, 6))
+          ) {
+            issues.push({ code: "date_outside_week", tone: "error" });
+          }
+          if (
+            dayOffset !== null &&
+            (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7 !== dayOffset
+          ) {
+            issues.push({ code: "day_mismatch", tone: "error" });
+          }
+        }
+      }
       if (!sheet.weekStart) issues.push({ code: "week_missing", tone: "error" });
-      else if (dayOffset === null) issues.push({ code: "day_unknown", tone: "error" });
+      else if (dayOffset === null && !row.dateText)
+        issues.push({ code: "day_unknown", tone: "error" });
       if (!areaId || !activeAreaIds.has(areaId)) {
         issues.push({ code: "area_unknown", tone: "error" });
       }
@@ -94,6 +118,11 @@ export function createProductionImportPreviewResult({
           code: row.assigneeTexts.length ? "assignee_unknown" : "assignee_missing",
           tone: "error",
         });
+      } else if (
+        assigneeEmployeeIds.length <
+        new Set(row.assigneeTexts.map(normalizeProductionLookup)).size
+      ) {
+        issues.push({ code: "assignee_unknown", tone: "error" });
       }
       if (row.hasFormula) issues.push({ code: "formula_ignored", tone: "warning" });
 
@@ -145,11 +174,17 @@ export function createProductionImportPreviewResult({
   const selected = sheets.filter((sheet) => sheet.selected);
 
   return {
+    targets: [],
     areas: areas.map(toProductionTaskAreaDto),
     canCommit:
       selected.length > 0 &&
+      new Set(selected.map((sheet) => sheet.weekStart)).size === selected.length &&
       selected.every(
-        (sheet) => !!sheet.weekStart && sheet.errorCount === 0 && sheet.validCount > 0,
+        (sheet) =>
+          !!sheet.weekStart &&
+          sheet.errorCount === 0 &&
+          sheet.validCount > 0 &&
+          sheet.validCount <= 500,
       ),
     employees: employees.map(toProductionTaskEmployeeDto),
     expiresAt: preview.expiresAt.toISOString(),

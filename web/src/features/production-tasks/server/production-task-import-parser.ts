@@ -1,8 +1,10 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
+import { inflateRawSync } from "node:zlib";
 
 import ExcelJS from "exceljs";
+import { parseProductionCsv } from "./production-task-csv";
 
 import { ProductionWorkbookParseError } from "@/features/production-tasks/application/production-task-errors";
 import {
@@ -32,30 +34,94 @@ function validateZipEnvelope(buffer: Buffer) {
     throw new ProductionWorkbookParseError("file_too_large");
   }
 
-  let entries = 0;
+  // Walk the actual central directory, never signatures occurring inside data.
+  let end = -1;
+  for (
+    let offset = buffer.length - 22;
+    offset >= Math.max(0, buffer.length - 65_557);
+    offset--
+  ) {
+    if (
+      buffer.readUInt32LE(offset) === 0x06054b50 &&
+      offset + 22 + buffer.readUInt16LE(offset + 20) === buffer.length
+    ) {
+      end = offset;
+      break;
+    }
+  }
+  if (end < 0) throw new ProductionWorkbookParseError("limits_exceeded");
+  const entries = buffer.readUInt16LE(end + 10);
+  let offset = buffer.readUInt32LE(end + 16);
+  const directoryEnd = offset + buffer.readUInt32LE(end + 12);
+  if (
+    !entries ||
+    entries > MAX_ZIP_ENTRIES ||
+    buffer.readUInt16LE(end + 4) !== 0 ||
+    buffer.readUInt16LE(end + 6) !== 0 ||
+    buffer.readUInt16LE(end + 8) !== entries ||
+    directoryEnd !== end
+  ) {
+    throw new ProductionWorkbookParseError("limits_exceeded");
+  }
   let uncompressedBytes = 0;
-  for (let offset = 0; offset + 46 <= buffer.length; offset += 1) {
-    if (buffer.readUInt32LE(offset) !== 0x02014b50) continue;
-    entries += 1;
+  for (let entry = 0; entry < entries; entry++) {
+    if (offset + 46 > directoryEnd || buffer.readUInt32LE(offset) !== 0x02014b50)
+      throw new ProductionWorkbookParseError("invalid_workbook");
     const size = buffer.readUInt32LE(offset + 24);
     if (size === 0xffffffff) {
       throw new ProductionWorkbookParseError("limits_exceeded");
     }
     uncompressedBytes += size;
     const nameLength = buffer.readUInt16LE(offset + 28);
+    const nextOffset =
+      offset +
+      46 +
+      nameLength +
+      buffer.readUInt16LE(offset + 30) +
+      buffer.readUInt16LE(offset + 32);
+    if (nextOffset > directoryEnd || (buffer.readUInt16LE(offset + 8) & 1) !== 0)
+      throw new ProductionWorkbookParseError("invalid_workbook");
     const name = buffer
       .subarray(offset + 46, offset + 46 + nameLength)
       .toString("utf8")
+      .replaceAll("\\", "/")
       .toLocaleLowerCase("en-US");
     if (name.includes("vbaproject.bin") || name.includes("externallinks/")) {
       throw new ProductionWorkbookParseError("active_content");
     }
+    if (uncompressedBytes > MAX_UNCOMPRESSED_BYTES || entries > MAX_ZIP_ENTRIES) {
+      throw new ProductionWorkbookParseError("limits_exceeded");
+    }
+    // Do not trust declared expanded sizes: bound each real inflation before ExcelJS.
+    const local = buffer.readUInt32LE(offset + 42);
+    if (local + 30 > buffer.length || buffer.readUInt32LE(local) !== 0x04034b50) {
+      throw new ProductionWorkbookParseError("invalid_workbook");
+    }
+    const start =
+      local + 30 + buffer.readUInt16LE(local + 26) + buffer.readUInt16LE(local + 28);
+    const compressedSize = buffer.readUInt32LE(offset + 20);
+    const method = buffer.readUInt16LE(offset + 10);
+    if (start + compressedSize > buffer.length || (method !== 0 && method !== 8)) {
+      throw new ProductionWorkbookParseError("invalid_workbook");
+    }
+    try {
+      const content = buffer.subarray(start, start + compressedSize);
+      const expanded =
+        method === 8
+          ? inflateRawSync(content, { maxOutputLength: Math.max(1, size) })
+          : content;
+      if (expanded.length !== size) throw new Error("size");
+    } catch {
+      throw new ProductionWorkbookParseError("limits_exceeded");
+    }
+    offset = nextOffset;
   }
 
   if (
     entries === 0 ||
     entries > MAX_ZIP_ENTRIES ||
-    uncompressedBytes > MAX_UNCOMPRESSED_BYTES
+    uncompressedBytes > MAX_UNCOMPRESSED_BYTES ||
+    offset !== directoryEnd
   ) {
     throw new ProductionWorkbookParseError("limits_exceeded");
   }
@@ -87,6 +153,7 @@ function findHeaders(worksheet: ExcelJS.Worksheet) {
       headers.set(normalizeProductionLookup(cellText(cell)), column);
     });
     const day = headers.get("dia");
+    const date = headers.get("fecha");
     const area = headers.get("area de trabajo") ?? headers.get("area");
     const subject = [...headers.entries()].find(([name]) =>
       name.startsWith("producto"),
@@ -96,8 +163,8 @@ function findHeaders(worksheet: ExcelJS.Worksheet) {
       .filter(([name]) => name === "encargada" || name.startsWith("encargado"))
       .map(([, column]) => column)
       .sort((a, b) => a - b);
-    if (day && area && subject && task && assignees.length) {
-      return { area, assignees, day, rowNumber, subject, task };
+    if ((day || date) && area && subject && task && assignees.length) {
+      return { area, assignees, day, date, rowNumber, subject, task };
     }
   }
   return null;
@@ -119,7 +186,8 @@ function parseSheet(worksheet: ExcelJS.Worksheet) {
     rowNumber += 1
   ) {
     const row = worksheet.getRow(rowNumber);
-    const day = cellText(row.getCell(headers.day));
+    const day = headers.day ? cellText(row.getCell(headers.day)) : "";
+    const dateText = headers.date ? cellText(row.getCell(headers.date)) : "";
     const area = cellText(row.getCell(headers.area));
     if (day) {
       currentDay = day;
@@ -135,23 +203,29 @@ function parseSheet(worksheet: ExcelJS.Worksheet) {
     const hasAnyValue = !!(subject || description || assigneeTexts.length);
     if (!hasAnyValue) continue;
     const textValues = [
+      dateText,
       currentDay,
       currentArea,
       subject,
       description,
       ...assigneeTexts,
     ];
-    if (textValues.some((value) => value.length > MAX_TEXT_LENGTH)) {
+    if (
+      textValues.some((value) => value.length > MAX_TEXT_LENGTH) ||
+      assigneeTexts.length > 30
+    ) {
       throw new ProductionWorkbookParseError("limits_exceeded");
     }
 
     rows.push({
+      dateText,
       areaText: currentArea,
       assigneeTexts,
-      dayText: currentDay,
+      dayText: dateText ? day : currentDay,
       description,
       hasFormula:
-        hasFormula(row.getCell(headers.day)) ||
+        (headers.day ? hasFormula(row.getCell(headers.day)) : false) ||
+        (headers.date ? hasFormula(row.getCell(headers.date)) : false) ||
         hasFormula(row.getCell(headers.area)) ||
         hasFormula(row.getCell(headers.subject)) ||
         hasFormula(row.getCell(headers.task)) ||
@@ -167,6 +241,7 @@ function parseSheet(worksheet: ExcelJS.Worksheet) {
         headers.area,
         ...headers.assignees,
         headers.day,
+        headers.date,
         headers.subject,
         headers.task,
       ]).size,
@@ -176,16 +251,29 @@ function parseSheet(worksheet: ExcelJS.Worksheet) {
 
 export async function parseProductionWorkbook(
   buffer: Buffer,
+  fileName = "tareas.xlsx",
 ): Promise<ParsedProductionWorkbook> {
-  validateZipEnvelope(buffer);
+  if (buffer.length > MAX_COMPRESSED_BYTES)
+    throw new ProductionWorkbookParseError("file_too_large");
   const workbook = new ExcelJS.Workbook();
-  try {
-    await workbook.xlsx.load(
-      buffer as unknown as Parameters<typeof workbook.xlsx.load>[0],
-    );
-  } catch {
-    throw new ProductionWorkbookParseError("invalid_workbook");
-  }
+  if (fileName.toLowerCase().endsWith(".csv")) {
+    let text: string;
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    } catch {
+      throw new ProductionWorkbookParseError("invalid_workbook");
+    }
+    workbook.addWorksheet("Tareas").addRows(parseProductionCsv(text));
+  } else if (fileName.toLowerCase().endsWith(".xlsx")) {
+    validateZipEnvelope(buffer);
+    try {
+      await workbook.xlsx.load(
+        buffer as unknown as Parameters<typeof workbook.xlsx.load>[0],
+      );
+    } catch {
+      throw new ProductionWorkbookParseError("invalid_workbook");
+    }
+  } else throw new ProductionWorkbookParseError("invalid_workbook");
   if (workbook.worksheets.length > MAX_SHEETS) {
     throw new ProductionWorkbookParseError("limits_exceeded");
   }

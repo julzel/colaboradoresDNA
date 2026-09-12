@@ -1,26 +1,32 @@
 # Production tasks
 
+> **2026-09-11 pilot update:** The read-only Tasks UI and versioned HTTP API are now
+> implemented. [Weekly pilot PRD](weekly-tasks-pilot-prd.md) and
+> [API / implementation notes](weekly-tasks-api.md) define the current release scope.
+> The broader planning/completion capabilities described below remain core-only
+> unless explicitly listed in the pilot documents.
+
 ## Status and scope
 
 The `production-tasks` slice implements the production board described in the
 [PRD](./production-tasks-prd.md) and
 [implementation roadmap](./production-tasks-roadmap.md). The backend slice is
-implemented as a headless application core. Its original Next.js presentation
-was intentionally removed before the replacement UI is designed.
+implemented as an application core with a replaceable Next.js read-only UI and
+HTTP adapter. Its former editable UI remains out of scope for the current pilot.
 
 The published application board is the source of truth. XLSX files are import
 and controlled export formats only.
 
 ## UI status and access
 
-There are currently no Tasks routes, navigation entries, homepage widgets,
-components, Server Actions, styles, or view models. The former `/tareas` UI has
-been removed. The PRD and roadmap retain the intended route and workflow design
-as input for the replacement interface.
+The pilot exposes `/tareas`, import, revision history, read-only revision review
+and personal weekly tasks on Inicio. HTTP endpoints live under
+`/api/production-tasks/v1`. No task editing or completion controls are exposed.
 
 Authorization remains enforced inside the application services: published-board
 queries require an active authenticated user, while planning, imports, catalogs,
-and publication require supervisor or administrator access. The service derives
+and publication require administrator access or a supervisor's current assignment
+to the active Producción department. The service derives
 the actor and employee from the authenticated session; client-submitted roles or
 actor identifiers are never authoritative.
 
@@ -54,9 +60,8 @@ authorized use cases and domain rules
   exposing repositories or provider clients.
 - `integrations/` contains production-task-owned ports. Provider-owned adapters
   expose redacted Employee, Scheduling, and PTO facts.
-- There is currently no presentation adapter. A future UI will own localized
-  labels, display-date formatting, board grouping, transport parsing, navigation,
-  and cache invalidation.
+- `components/`, `presentation/` and `http/` own UI, Spanish messages, display-date
+  formatting and transport concerns without exposing repositories to routes.
 
 The dependency direction is one-way: presentation may depend on application
 contracts, while `application/`, `domain/`, `integrations/`, and `server/` may
@@ -71,11 +76,9 @@ A replacement Next.js UI must call use cases only through
 its own view models. New Server Actions translate their transport input into
 use-case arguments; use cases must never accept `FormData` or perform navigation.
 
-The original task routes plus `actions/`, `components/`, `presentation/next/`,
-and `view-models/` have been removed. The application contracts, domain,
-integrations, services, repositories, workbook processing, and business-rule
-tests remain usable. If a non-Next client is added later, an authenticated HTTP
-adapter can call the same public application entry without changing the core.
+The original editable UI remains removed. The pilot's replacement presentation
+and authenticated HTTP adapter call the same public application entry. A later
+UI can consume these endpoints without depending on MongoDB repositories.
 
 Scheduling checks expose only scheduled/not-scheduled/unknown. PTO checks expose
 only whether approved leave overlaps the date; leave category and notes never
@@ -134,7 +137,7 @@ read state.
 
 ## XLSX import contract
 
-The importer accepts `.xlsx` only and never executes formulas. Cached formula
+The importer accepts `.xlsx` and UTF-8 `.csv` and never executes formulas. Cached formula
 results may be displayed with a warning. Macros and external workbook links are
 rejected. Limits are enforced at the upload/parser boundary:
 
@@ -154,9 +157,9 @@ The parser recognizes the legacy columns `Día`, `Área de trabajo`,
 `Producto`/`Producto-Zona`, `Encargada`/`Encargado n`, and `Tarea`. It
 forward-fills merged day and area context in memory, ignores truly empty
 template slots, separates legacy assignee lists on commas or Spanish `y`, and
-excludes `Original` by default. Exact codes resolve automatically. A unique
-exact normalized name may be proposed; ambiguous or unknown people remain a
-blocking row until a manager selects the employee explicitly.
+excludes `Original` by default. Exact codes resolve automatically. All natural
+names require explicit mapping, even if currently unique. Partially resolved
+shared assignments block import.
 
 Rows require a confirmed target Monday, recognizable weekday, canonical area,
 meaningful task, and at least one active employee. Potential duplicates are
@@ -172,8 +175,8 @@ mode, and mapped IDs without names or task content.
 3. Usá los códigos de la hoja protegida **Colaboradores** en las columnas
    `Encargado`. No uses cédula ni correo.
 4. Cargá el archivo, confirmá el lunes de cada semana y resolvé todos los errores.
-5. Elegí **Agregar al borrador** o **Reemplazar borrador**, importá y revisá el
-   editor. La publicación siempre es un paso separado.
+5. Validá, confirmá los reemplazos e importá. Revisá la tabla de solo lectura y
+   publicá cada semana por separado. Los borradores reemplazados se conservan.
 
 The hidden `_Configuración` sheet carries `template_version=1` and the Costa
 Rica timezone. The collaborator catalog contains code and display name only.

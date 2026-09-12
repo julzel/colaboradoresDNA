@@ -50,6 +50,7 @@ describe("dashboard highlights", () => {
       "/calendario/eventos/evento",
     );
     expect(screen.getByText("1 h 30 min")).toBeVisible();
+    expect(screen.getByText("Sala principal")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Cumpleaños próximos" })).toBeVisible();
     expect(screen.getByRole("link", { name: /María Fernández/ })).toHaveAttribute(
       "href",
@@ -57,6 +58,29 @@ describe("dashboard highlights", () => {
     );
     expect(screen.getByText("Hoy")).toBeVisible();
     expect(screen.queryByText("Ver todos")).not.toBeInTheDocument();
+  });
+
+  it("shows the calendar label for an all-day entry without a location", () => {
+    render(
+      <DashboardHighlights
+        today="2026-09-04"
+        todayAgenda={[
+          entry({
+            allDay: true,
+            detailHref: null,
+            id: "holiday:2026-09-04",
+            kind: "holiday",
+            label: "Feriado nacional",
+            location: null,
+            title: "Feriado de prueba",
+          }),
+        ]}
+        upcomingBirthdays={[]}
+      />,
+    );
+
+    expect(screen.getByText("Todo el día")).toBeVisible();
+    expect(screen.getByText("Feriado nacional")).toBeVisible();
   });
 
   it("can show upcoming birthdays without the agenda for collaborators", () => {

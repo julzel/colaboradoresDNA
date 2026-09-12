@@ -19,3 +19,6 @@ test-results/
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Private data snapshots created before task cleanup
+/.local-backups/

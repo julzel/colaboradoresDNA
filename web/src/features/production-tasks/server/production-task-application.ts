@@ -1,4 +1,9 @@
 import "server-only";
+export {
+  getProductionTaskEditOptions,
+  editProductionTask,
+} from "./production-task-edit-service";
+export { requireProductionTaskManager as getProductionTaskManagementAccess } from "./production-task-authorization";
 
 // This is the only server entry point presentation adapters should import.
 // Its exports are transport-neutral use cases; Next.js concerns stay in actions/routes.

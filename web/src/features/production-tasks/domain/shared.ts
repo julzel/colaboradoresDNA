@@ -55,6 +55,9 @@ export function addCalendarDays(value: string, days: number) {
 }
 
 export const productionTaskErrorCodes = [
+  "task_date_past",
+  "task_limit",
+  "pending_draft",
   "active_employee_required",
   "area_not_found",
   "area_exists",

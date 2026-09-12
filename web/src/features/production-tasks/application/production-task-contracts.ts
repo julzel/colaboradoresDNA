@@ -11,7 +11,6 @@ export type ProductionTaskAreaDto = {
 
 export type ProductionTaskEmployeeDto = {
   displayName: string;
-  email: string;
   employeeCode: string | null;
   id: string;
 };
@@ -29,6 +28,18 @@ export type ProductionTaskAvailabilityWarning =
   | "not_scheduled"
   | "availability_unknown";
 
+export type ProductionTaskEditOptions = {
+  today: string;
+  targetPlanId: string | null;
+  areas: ProductionTaskAreaDto[];
+  employees: ProductionTaskEmployeeDto[];
+};
+export type ProductionTaskEditResult = {
+  taskId: string;
+  date: string;
+  planIds: string[];
+};
+
 export type ProductionPlanEditorResult = {
   areas: ProductionTaskAreaDto[];
   employees: ProductionTaskEmployeeDto[];
@@ -38,6 +49,7 @@ export type ProductionPlanEditorResult = {
     status: ProductionPlanStatus;
     tasks: Array<{
       areaId: string;
+      areaName: string;
       assigneeEmployeeIds: string[];
       description: string;
       id: string;
@@ -141,6 +153,9 @@ export type TodayProductionTaskSummaryResult = {
 export type ProductionImportIssueCode =
   | "week_missing"
   | "day_unknown"
+  | "date_invalid"
+  | "date_outside_week"
+  | "day_mismatch"
   | "area_unknown"
   | "task_missing"
   | "task_too_long"
@@ -151,6 +166,7 @@ export type ProductionImportIssueCode =
   | "duplicate";
 
 export type ProductionImportPreviewResult = {
+  targets: ProductionImportTarget[];
   areas: ProductionTaskAreaDto[];
   canCommit: boolean;
   employees: ProductionTaskEmployeeDto[];
@@ -184,4 +200,10 @@ export type ProductionImportPreviewResult = {
     weekStart: string | null;
   }>;
   version: number;
+};
+
+export type ProductionImportTarget = {
+  weekStart: string;
+  draft: { id: string; version: number } | null;
+  published: { id: string; version: number } | null;
 };

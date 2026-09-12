@@ -12,6 +12,8 @@ import type {
   ProductionTaskEmployeePort,
 } from "@/features/production-tasks/integrations/production-task-employee-port";
 import { getDatabase } from "@/lib/server/mongodb";
+import type { EmployeeAssignmentDocument } from "@/features/employees/domain/assignment";
+import type { DepartmentDocument } from "@/features/employees/domain/department";
 
 const taskEmployeeProjection = {
   _id: 1,
@@ -50,6 +52,53 @@ async function toTaskEmployee(
 }
 
 export const productionTaskEmployeeAdapter: ProductionTaskEmployeePort = {
+  async listEmployeeLabels(employeeIds) {
+    if (!employeeIds.length) return [];
+    const database = await getDatabase();
+    const employees = await database
+      .collection<EmployeeDocument>("employees")
+      .find(
+        { _id: { $in: [...new Set(employeeIds)].map((id) => new ObjectId(id)) } },
+        { projection: taskEmployeeProjection },
+      )
+      .toArray();
+    return employees.map((employee) => ({
+      id: employee._id.toHexString(),
+      displayName: formatEmployeePreferredDisplayName(employee),
+      employeeCode: employee.employeeCode ?? null,
+    }));
+  },
+  async isProductionEmployee(platformUserId, onDate) {
+    const database = await getDatabase();
+    const employee = await database
+      .collection<EmployeeDocument>("employees")
+      .findOne(
+        { platformUserId: new ObjectId(platformUserId), employmentStatus: "active" },
+        { projection: { _id: 1 } },
+      );
+    if (!employee) return false;
+    const assignment = await database
+      .collection<EmployeeAssignmentDocument>("employee_assignments")
+      .findOne(
+        {
+          employeeId: employee._id,
+          effectiveFrom: { $lte: onDate },
+          $or: [{ effectiveTo: null }, { effectiveTo: { $gte: onDate } }],
+        },
+        { sort: { effectiveFrom: -1 }, projection: { departmentId: 1 } },
+      );
+    if (!assignment) return false;
+    return Boolean(
+      await database.collection<DepartmentDocument>("departments").findOne(
+        {
+          _id: assignment.departmentId,
+          status: "active",
+          normalizedName: "produccion",
+        },
+        { projection: { _id: 1 } },
+      ),
+    );
+  },
   async findActiveEmployeeByPlatformUserId(platformUserId) {
     const database = await getDatabase();
     const employee = await database.collection<EmployeeDocument>("employees").findOne(

@@ -6,6 +6,8 @@ import styles from "@/features/dashboard/components/dashboard.module.css";
 import { DashboardHighlights } from "@/features/dashboard/components/dashboard-highlights";
 import { DashboardWelcome } from "@/features/dashboard/components/dashboard-welcome";
 import { getDashboardDate } from "@/features/dashboard/domain/dashboard-date";
+import { Suspense } from "react";
+import { HomeTasks } from "@/features/production-tasks/components/home-tasks";
 
 export default async function HomePage() {
   const { platformUser: dashboard } = await requirePlatformUser();
@@ -28,6 +30,11 @@ export default async function HomePage() {
           <AdministratorModuleLinks />
         </Container>
       )}
+      <Container>
+        <Suspense fallback={<p role="status">Cargando mis tareas…</p>}>
+          <HomeTasks />
+        </Suspense>
+      </Container>
     </div>
   );
 }

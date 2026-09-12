@@ -6,6 +6,7 @@ import { cache } from "react";
 import type { PlatformUser } from "@/features/auth/domain/platform-user";
 import { requirePlatformUser } from "@/features/auth/server/require-platform-user";
 import {
+  calendarEntryOccursOn,
   compareCalendarEntries,
   type CalendarEntry,
 } from "@/features/calendar/domain/calendar-entry";
@@ -245,7 +246,9 @@ export async function getCalendarDashboardOverview({
   const today = getTodayInCostaRica(now);
   const tomorrow = addCalendarDays(today, 1);
   const year = Number(today.slice(0, 4));
-  const [events, birthdays] = await Promise.all([
+  const includeAllCalendarEntries =
+    includeAgenda && (actor.role === "administrator" || actor.role === "supervisor");
+  const [events, birthdays, holidays, ptoEntries] = await Promise.all([
     includeAgenda
       ? listVisibleCalendarEvents({
           actor,
@@ -254,14 +257,37 @@ export async function getCalendarDashboardOverview({
         })
       : Promise.resolve([]),
     listBirthdayCalendarEntries({ viewerRole: actor.role }),
+    includeAllCalendarEntries
+      ? calendarHolidayIntegration.listPublicHolidays(year)
+      : Promise.resolve([]),
+    includeAllCalendarEntries
+      ? calendarPtoIntegration.listVisibleApprovedAbsences({
+          endDate: today,
+          platformUserId: actor.platformUserId,
+          role: actor.role,
+          startDate: today,
+        })
+      : Promise.resolve([]),
   ]);
+
+  const calendarAgenda = [
+    ...events.map((event) => eventToEntry(actor, event)),
+    ...(includeAllCalendarEntries
+      ? birthdays
+          .map((birthday) => birthdayToEntry({ ...birthday, year }))
+          .filter((birthday) => calendarEntryOccursOn(birthday, today))
+      : []),
+    ...holidays.filter((holiday) => holiday.date === today).map(holidayToEntry),
+    ...ptoEntries
+      .map(ptoToEntry)
+      .filter((entry) => calendarEntryOccursOn(entry, today)),
+  ].sort(compareCalendarEntries);
 
   return {
     today,
-    todayAgenda: events
-      .map((event) => eventToEntry(actor, event))
-      .sort(compareCalendarEntries)
-      .slice(0, 4),
+    todayAgenda: includeAllCalendarEntries
+      ? calendarAgenda
+      : calendarAgenda.slice(0, 4),
     upcomingBirthdays: birthdays
       .map((birthday) => birthdayToEntry({ ...birthday, year }))
       .filter((birthday) => birthday.startDate >= today)

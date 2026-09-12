@@ -41,6 +41,24 @@
   --blue-50: #edf5ff;
   --blue-600: #2868a9;
 
+  /* Production area categories */
+  --color-area-cocinado: #963b63;
+  --color-area-cocinado-soft: #fbeef3;
+  --color-area-congelado: #434eac;
+  --color-area-congelado-soft: #f0f1fc;
+  --color-area-deshidratado: #66651f;
+  --color-area-deshidratado-soft: #f5f4e6;
+  --color-area-etiquetado: #963b8c;
+  --color-area-etiquetado-soft: #faeff9;
+  --color-area-cuarto-frio: #3e6279;
+  --color-area-cuarto-frio-soft: #edf4f8;
+  --color-area-materia-prima: #78543c;
+  --color-area-materia-prima-soft: #f8f1eb;
+  --color-area-rutas: #356c64;
+  --color-area-rutas-soft: #ecf5f2;
+  --color-area-inventario: #615c76;
+  --color-area-inventario-soft: #f3f1f7;
+
   /* Semantic colors */
   --color-canvas: var(--neutral-50);
   --color-surface: var(--neutral-0);
@@ -166,6 +184,22 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
+  --color-area-cocinado: #f0a7c5;
+  --color-area-cocinado-soft: #35212c;
+  --color-area-congelado: #b6bdf9;
+  --color-area-congelado-soft: #23263e;
+  --color-area-deshidratado: #d4d18a;
+  --color-area-deshidratado-soft: #2d2e1d;
+  --color-area-etiquetado: #e7ade0;
+  --color-area-etiquetado-soft: #342236;
+  --color-area-cuarto-frio: #a3c7df;
+  --color-area-cuarto-frio-soft: #20303a;
+  --color-area-materia-prima: #dcb99e;
+  --color-area-materia-prima-soft: #32291f;
+  --color-area-rutas: #9acdc1;
+  --color-area-rutas-soft: #1d322e;
+  --color-area-inventario: #c7bedb;
+  --color-area-inventario-soft: #2b2735;
   --color-canvas: #061614;
   --color-surface: #102522;
   --color-surface-subtle: #142d29;

@@ -28,7 +28,6 @@ export function toProductionTaskEmployeeDto(
 ): ProductionTaskEmployeeDto {
   return {
     displayName: employee.displayName,
-    email: employee.email,
     employeeCode: employee.employeeCode,
     id: employee.employeeId,
   };
@@ -109,6 +108,7 @@ export function createProductionPlanEditorResult({
       status: plan.status,
       tasks: plan.tasks.map((task) => ({
         areaId: task.areaId.toHexString(),
+        areaName: task.areaLabelSnapshot,
         assigneeEmployeeIds: task.assigneeEmployeeIds.map(String),
         description: task.description,
         id: task.id.toHexString(),

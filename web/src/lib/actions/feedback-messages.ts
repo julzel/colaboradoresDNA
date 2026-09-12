@@ -1,4 +1,16 @@
 export const feedbackMessages = {
+  production_task_created: {
+    message: "Tarea creada y compartida con el equipo.",
+    tone: "success",
+  },
+  production_task_updated: {
+    message: "Tarea actualizada para el equipo.",
+    tone: "success",
+  },
+  production_task_removed: {
+    message: "Tarea eliminada del plan. La versión anterior queda en el historial.",
+    tone: "success",
+  },
   development_one_on_one_action_failed: {
     message: "No fue posible actualizar la acción acordada.",
     tone: "error",

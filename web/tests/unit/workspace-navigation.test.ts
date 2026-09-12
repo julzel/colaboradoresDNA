@@ -29,6 +29,7 @@ describe("administrator navigation", () => {
       "/admin",
       "/calendario",
       "/ausencias",
+      "/tareas",
     ]);
     expect(getActiveNavigationHref("/admin/colaboradores", items)).toBe("/admin");
     expect(getActiveNavigationHref("/admin/horarios", items)).toBe("/admin");
