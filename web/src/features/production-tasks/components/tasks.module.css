@@ -7,13 +7,6 @@
   min-width: 0;
 }
 
-.page,
-.panel {
-  /* Keep white CTA text readable without changing the shared palette elsewhere. */
-  --background-primary-action: color-mix(in srgb, var(--color-brand) 50%, #102f2b);
-  --color-brand-hover: color-mix(in srgb, var(--color-brand) 45%, #102f2b);
-}
-
 .fieldset {
   border: 0;
   padding: 0;
@@ -46,6 +39,15 @@
   justify-content: space-between;
 }
 
+.importButton {
+  width: var(--control-height-sm);
+  padding-inline: 0;
+}
+
+.importButtonLabel {
+  display: none;
+}
+
 .accentButton {
   background: var(--color-accent);
   color: var(--color-primary-action-text);
@@ -68,6 +70,17 @@
   max-width: 100%;
   white-space: normal;
   text-align: center;
+}
+
+@media (width >= 40rem) {
+  .importButton {
+    width: auto;
+    padding-inline: var(--space-3);
+  }
+
+  .importButtonLabel {
+    display: inline;
+  }
 }
 
 .muted {
@@ -108,15 +121,16 @@
 }
 
 .gridScroll {
+  display: none;
   overflow: auto;
   max-width: 100%;
-  border-radius: var(--radius-md);
 }
 
 .grid {
   width: 100%;
   min-width: 760px;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
   font-size: var(--text-sm);
 }
@@ -125,13 +139,38 @@
 .grid td {
   padding: var(--space-4);
   vertical-align: top;
-  border-bottom: 1px solid var(--color-border);
   overflow-wrap: anywhere;
 }
 
-.grid thead {
+.grid :where(tbody td, tbody th) {
+  position: relative;
+}
+
+.grid tbody tr:not(:last-child) > *::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: var(--color-border);
+  content: "";
+}
+
+.grid tbody tr > :first-child::after {
+  left: var(--space-4);
+}
+
+.grid tbody tr > :last-child::after {
+  right: var(--space-4);
+}
+
+.grid tbody tr:hover {
   background: var(--color-surface-subtle);
+}
+
+.grid thead {
   color: var(--color-text-muted);
+  font-size: var(--text-xs);
 }
 
 .grid th {
@@ -165,9 +204,160 @@
   font-weight: 600;
 }
 
+.assignees {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .person {
-  display: block;
-  min-width: 110px;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: var(--line-body);
+}
+
+.workPlan {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.planHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.planNavigation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.historyLabel {
+  display: none;
+}
+
+.planToolbar {
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.planFilters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+}
+
+@media (width >= 40rem) {
+  .planFilters {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+
+  .historyLabel {
+    display: inline;
+  }
+}
+
+@media (width >= 64rem) {
+  .planFilters {
+    width: min(100%, 34rem);
+  }
+}
+
+.workPlanHeader {
+  padding: var(--space-4);
+}
+
+.workPlanHeader h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  letter-spacing: -0.025em;
+}
+
+.workPlanHeader p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.workPlanContent {
+  padding: var(--space-4);
+  min-width: 0;
+}
+
+.resultCount {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.taskCards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.taskCards li {
+  position: relative;
+  padding: var(--space-5) 0;
+  overflow-wrap: anywhere;
+}
+
+.taskCards li:not(:last-child)::after {
+  position: absolute;
+  right: var(--space-4);
+  bottom: 0;
+  left: var(--space-4);
+  height: 1px;
+  background: var(--color-border);
+  content: "";
+}
+
+.taskCards dl {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+}
+
+.taskCards dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.taskCards dd {
+  margin: var(--space-1) 0 0;
+}
+
+@media (width >= 48rem) {
+  .workPlanHeader {
+    padding: var(--space-6);
+  }
+
+  .workPlanContent {
+    padding: var(--space-4) var(--space-6) var(--space-3);
+  }
+
+  .gridScroll {
+    display: block;
+  }
+
+  .taskCards {
+    display: none;
+  }
 }
 
 .personalList {

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, History, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, History } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button/button";
 import { SelectField, TextField } from "@/components/ui/form-field/form-field";
 import { ElevatedSurface } from "@/components/ui/elevated-surface/elevated-surface";
+import { FilterBar, FilterChip } from "@/components/ui/filter-bar/filter-bar";
+import { ListToolbar } from "@/components/ui/list-toolbar/list-toolbar";
 import type { ProductionBoardResult } from "../application/production-task-contracts";
 import { addCalendarDays } from "../domain/shared";
 import { formatTaskDate } from "../presentation/messages";
@@ -31,79 +33,124 @@ export function TaskBoard({
   );
   return (
     <>
-      <ElevatedSurface className={styles.panel}>
-        <div className={styles.toolbar}>
-          <div className={styles.weekNav}>
+      <ElevatedSurface
+        as="section"
+        className={styles.workPlan}
+        aria-labelledby="work-plan-title"
+      >
+        <div className={`${styles.workPlanHeader} ${styles.planHeading}`}>
+          <div>
+            <h2 id="work-plan-title">Plan de trabajo</h2>
+            <p>
+              {formatTaskDate(board.query.weekStart)} –{" "}
+              {formatTaskDate(board.query.weekEnd)}
+            </p>
+            <p>
+              {board.plan
+                ? `Versión ${board.plan.revision} · Solo lectura`
+                : "Semana sin publicar"}
+            </p>
+          </div>
+          <nav className={styles.planNavigation} aria-label="Navegar semanas">
             <ButtonLink
-              href={`/tareas?fecha=${addCalendarDays(board.query.weekStart, -7)}`}
+              href={`/tareas?fecha=${addCalendarDays(board.query.weekStart, -7)}${mine ? "&vista=mias" : ""}`}
               variant="quiet"
               aria-label="Semana anterior"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft aria-hidden="true" size={20} />
             </ButtonLink>
-            <div>
-              <h2>
-                {formatTaskDate(board.query.weekStart)} –{" "}
-                {formatTaskDate(board.query.weekEnd)}
-              </h2>
-              <p className={styles.muted}>
-                {board.plan
-                  ? `Versión ${board.plan.revision} · Solo lectura`
-                  : "Semana sin publicar"}
-              </p>
-            </div>
             <ButtonLink
-              href={`/tareas?fecha=${addCalendarDays(board.query.weekStart, 7)}`}
+              href={`/tareas?fecha=${board.today}${mine ? "&vista=mias" : ""}`}
+              variant="quiet"
+            >
+              Hoy
+            </ButtonLink>
+            <ButtonLink
+              href={`/tareas?fecha=${addCalendarDays(board.query.weekStart, 7)}${mine ? "&vista=mias" : ""}`}
               variant="quiet"
               aria-label="Semana siguiente"
             >
-              <ChevronRight size={20} />
+              <ChevronRight aria-hidden="true" size={20} />
             </ButtonLink>
-          </div>
-          {board.canManage && (
-            <div className={styles.actions}>
-              <ButtonLink href="/tareas/historial" variant="quiet">
-                <History size={18} />
-                Historial
+            {board.canManage && (
+              <ButtonLink
+                href="/tareas/historial"
+                variant="quiet"
+                aria-label="Historial"
+                title="Historial"
+              >
+                <History aria-hidden="true" size={18} />
+                <span className={styles.historyLabel}>Historial</span>
               </ButtonLink>
-              <ButtonLink href="/tareas/importar">
-                <Upload size={18} />
-                Importar tareas
-              </ButtonLink>
-            </div>
-          )}
+            )}
+          </nav>
         </div>
-        <div className={styles.controls}>
-          <form className={styles.datePicker} action="/tareas">
-            <TextField
-              id="tasks-date"
-              label="Buscar semana"
-              type="date"
-              name="fecha"
-              defaultValue={board.query.selectedDate}
-              required
+        <ListToolbar className={styles.planToolbar}>
+          <FilterBar aria-label="Filtrar tareas">
+            <FilterChip
+              active={!mine}
+              count={board.tasks.length}
+              onClick={() => setMine(false)}
+            >
+              Equipo completo
+            </FilterChip>
+            <FilterChip
+              active={mine}
+              count={ownTasks.length}
+              onClick={() => setMine(true)}
+            >
+              Mis tareas
+            </FilterChip>
+          </FilterBar>
+          <div className={styles.planFilters}>
+            <form className={styles.datePicker} action="/tareas">
+              {mine && <input type="hidden" name="vista" value="mias" />}
+              <TextField
+                id="tasks-date"
+                label="Buscar semana"
+                type="date"
+                name="fecha"
+                defaultValue={board.query.selectedDate}
+                required
+              />
+              <Button variant="secondary" type="submit">
+                Ver
+              </Button>
+            </form>
+            <SelectField
+              id="tasks-area"
+              label="Área de trabajo"
+              value={area}
+              onChange={(event) => setArea(event.target.value)}
+            >
+              <option value="">Todas las áreas</option>
+              {[
+                ...new Map(
+                  board.tasks.map((task) => [task.areaId, task.areaName]),
+                ).entries(),
+              ].map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+        </ListToolbar>
+        <div className={styles.workPlanContent}>
+          <p className={styles.resultCount} aria-live="polite">
+            {tasks.length} {tasks.length === 1 ? "tarea" : "tareas"}
+          </p>
+          {!board.plan ? (
+            <p className={styles.empty}>
+              Todavía no se ha publicado el plan de esta semana.
+            </p>
+          ) : (
+            <TaskGrid
+              tasks={tasks}
+              employees={board.employees}
+              currentEmployeeId={board.currentEmployeeId}
             />
-            <Button variant="secondary" type="submit">
-              Ver
-            </Button>
-          </form>
-          <SelectField
-            id="tasks-area"
-            label="Área de trabajo"
-            value={area}
-            onChange={(event) => setArea(event.target.value)}
-          >
-            <option value="">Todas las áreas</option>
-            {[
-              ...new Map(
-                board.tasks.map((task) => [task.areaId, task.areaName]),
-              ).entries(),
-            ].map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </SelectField>
+          )}
         </div>
       </ElevatedSurface>
       <ElevatedSurface className={styles.panel}>
@@ -135,38 +182,6 @@ export function TaskBoard({
           <Button variant="quiet" onClick={() => setMine(true)}>
             Ver mis {ownTasks.length} tareas en la tabla
           </Button>
-        )}
-      </ElevatedSurface>
-      <ElevatedSurface className={styles.panel}>
-        <div className={styles.toolbar}>
-          <h2>Plan de trabajo</h2>
-          <div className={styles.tabs} aria-label="Filtrar tareas">
-            <Button
-              variant={!mine ? "primary" : "quiet"}
-              aria-pressed={!mine}
-              onClick={() => setMine(false)}
-            >
-              Equipo completo
-            </Button>
-            <Button
-              variant={mine ? "primary" : "quiet"}
-              aria-pressed={mine}
-              onClick={() => setMine(true)}
-            >
-              Mis tareas
-            </Button>
-          </div>
-        </div>
-        {!board.plan ? (
-          <p className={styles.empty}>
-            Todavía no se ha publicado el plan de esta semana.
-          </p>
-        ) : (
-          <TaskGrid
-            tasks={tasks}
-            employees={board.employees}
-            currentEmployeeId={board.currentEmployeeId}
-          />
         )}
       </ElevatedSurface>
     </>

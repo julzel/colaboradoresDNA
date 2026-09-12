@@ -1,4 +1,5 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Upload } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button/button";
 import { Container } from "@/components/ui/container/container";
 import { PageSectionHeader } from "@/components/ui/page-section-header/page-section-header";
 import { getPublishedProductionBoard } from "@/features/production-tasks/server/production-task-application";
@@ -20,7 +21,24 @@ export default async function TasksPage({
   });
   return (
     <Container className={styles.page}>
-      <PageSectionHeader title="Tareas de producción" icon={ClipboardList} />
+      <PageSectionHeader
+        action={
+          board.canManage ? (
+            <ButtonLink
+              aria-label="Importar tareas"
+              className={styles.importButton}
+              href="/tareas/importar"
+              size="small"
+              title="Importar tareas"
+            >
+              <Upload aria-hidden="true" size={18} />
+              <span className={styles.importButtonLabel}>Importar tareas</span>
+            </ButtonLink>
+          ) : undefined
+        }
+        title="Tareas de producción"
+        icon={ClipboardList}
+      />
       <TaskBoard
         key={board.query.weekStart}
         board={board}

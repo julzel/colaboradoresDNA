@@ -51,17 +51,13 @@ describe("read-only weekly tasks UI", () => {
     ).not.toBeInTheDocument();
     const table = screen.getByRole("table");
     expect(within(table).getByText("Tarea other")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Mis tareas" }));
+    await userEvent.click(screen.getByRole("button", { name: /^Mis tareas/ }));
     expect(within(table).queryByText("Tarea other")).not.toBeInTheDocument();
     expect(within(table).getByText("Tarea me")).toBeInTheDocument();
     expect(within(table).queryByRole("textbox")).not.toBeInTheDocument();
   });
-  it("exposes import and history only when the server grants management permission", () => {
+  it("exposes history only when the server grants management permission", () => {
     render(<TaskBoard board={{ ...board, canManage: true }} />);
-    expect(screen.getByRole("link", { name: "Importar tareas" })).toHaveAttribute(
-      "href",
-      "/tareas/importar",
-    );
     expect(screen.getByRole("link", { name: "Historial" })).toHaveAttribute(
       "href",
       "/tareas/historial",
