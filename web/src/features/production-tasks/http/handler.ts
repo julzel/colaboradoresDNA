@@ -237,6 +237,15 @@ export async function productionTaskHttp(request: Request, path: string[]) {
         },
         403,
       );
+    console.error(
+      JSON.stringify({
+        scope: "production_tasks",
+        operation: "http",
+        outcome: "failure",
+        code: "unexpected",
+        method: request.method,
+      }),
+    );
     return response(
       {
         code: "unavailable",

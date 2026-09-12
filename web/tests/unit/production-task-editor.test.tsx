@@ -96,6 +96,32 @@ describe("task editor", () => {
       source: { taskId: "task", planId: "plan", expectedTaskVersion: 2 },
     });
   });
+
+  it("preserves the form and blocks blind retries after an uncertain save response", async () => {
+    const user = userEvent.setup();
+    mocks.fetch.mockImplementation(async (_url: string, init?: RequestInit) => {
+      if (init?.method === "POST") throw new TypeError("Failed to fetch");
+      return { ok: true, json: async () => ({ data: options }) };
+    });
+    render(
+      <TaskEditor
+        task={task}
+        today={options.today}
+        initialDate={options.today}
+        onClose={vi.fn()}
+      />,
+    );
+    await screen.findByLabelText("Ana Mora");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Revisá el plan o el historial antes de reintentar",
+    );
+    expect(screen.getByLabelText("Tarea")).toHaveValue("Preparar");
+    expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Cerrar y actualizar plan" }),
+    ).toBeEnabled();
+  });
   it("shows availability warnings, retains values, and resets acknowledgment after editing", async () => {
     const user = userEvent.setup();
     mocks.fetch.mockImplementation(async (_url: string, init?: RequestInit) =>

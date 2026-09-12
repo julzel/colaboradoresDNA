@@ -12,6 +12,7 @@ const safeImportCodes = new Set([
 ]);
 
 type ProductionOperation =
+  | "task_edit"
   | "completion"
   | "import_commit"
   | "import_preview"

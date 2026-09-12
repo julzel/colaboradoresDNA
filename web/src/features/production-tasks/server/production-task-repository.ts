@@ -27,6 +27,8 @@ import type { ProductionTaskAuditAction } from "@/features/production-tasks/serv
 import { ensureProductionTaskIndexes } from "@/features/production-tasks/server/production-task-indexes";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
 import { lockProductionWeeks } from "./production-task-week-lock";
+import { assertPastTasksUnchanged } from "../domain/production-task-history";
+import { getCostaRicaDate } from "../domain/shared";
 
 export type PreparedProductionTaskInput = ProductionTaskDraftInput & {
   areaLabelSnapshot: string;
@@ -527,6 +529,11 @@ export async function publishProductionWeekDraft({
         { currentSlot: "published", weekStart: draft.weekStart },
         { session },
       );
+      assertPastTasksUnchanged(
+        previousPublished?.tasks ?? [],
+        draft.tasks,
+        getCostaRicaDate(),
+      );
       const assignmentChanges = compareProductionPlanRevisions(
         previousPublished,
         draft,
@@ -872,11 +879,29 @@ export async function commitProductionImportDrafts({
           const existingById = new Map(
             draft.tasks.map((task) => [task.id.toHexString(), task]),
           );
-          const imported = sheet.tasks.map((task) =>
-            prepareTaskDocument(task, existingById),
+          const today = getCostaRicaDate();
+          const publishedForDates = await plans.findOne(
+            { currentSlot: "published", weekStart: sheet.weekStart },
+            { session },
           );
+          const availableHistorical = [...(publishedForDates?.tasks ?? [])];
+          const imported = sheet.tasks.map((task) => {
+            // An unchanged historical row in a replacement retains its identity and completion.
+            const historicalIndex =
+              task.workDate < today
+                ? availableHistorical.findIndex((existing) =>
+                    sameDefinition(existing, task),
+                  )
+                : -1;
+            const historical =
+              historicalIndex >= 0
+                ? availableHistorical.splice(historicalIndex, 1)[0]
+                : undefined;
+            return historical ?? prepareTaskDocument(task, existingById);
+          });
           const tasks =
             sheet.mode === "replace" ? imported : [...draft.tasks, ...imported];
+          assertPastTasksUnchanged(publishedForDates?.tasks ?? [], tasks, today);
           if (tasks.length > 500) throw new ProductionTaskDomainError("import_invalid");
           const updated = await plans.findOneAndUpdate(
             { _id: draft._id, currentSlot: "draft", version: draft.version },

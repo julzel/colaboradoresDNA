@@ -23,6 +23,7 @@ import {
   type ProductionTaskDraftInput,
 } from "@/features/production-tasks/domain/production-task";
 import { compareProductionPlanRevisions } from "@/features/production-tasks/domain/production-task-revision";
+import { assertPastTasksUnchanged } from "../domain/production-task-history";
 import {
   ProductionTaskDomainError,
   addCalendarDays,
@@ -327,6 +328,8 @@ export async function publishProductionWeekAsManager({
       workDate: task.workDate,
     }),
   );
+  const previous = await findCurrentPublishedPlan(plan.weekStart);
+  assertPastTasksUnchanged(previous?.tasks ?? [], plan.tasks, getCostaRicaDate());
   await prepareTasks(parsedTasks);
   const availability = await checkTaskAvailability(plan.tasks);
   if (

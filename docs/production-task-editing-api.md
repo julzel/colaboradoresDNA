@@ -99,8 +99,8 @@ Unit/component/HTTP tests cover authorization, Costa Rica date boundaries, past
 source and destination protection, invalid selections, optimistic concurrency,
 availability confirmation, multi-assignee editing, and delete confirmation.
 
-`web/tests/integration/production-task-edit-mongodb.test.ts` additionally exercises
-revision history, cross-week moves, empty weeks and concurrent edits using an isolated
-temporary database. It is opt-in (`RUN_TASK_EDIT_LIVE=1`) and creates/deletes that
-database. Its execution requires explicit authorization for the configured MongoDB
-destination; it was not verified against a live database during this implementation.
+Run `pnpm test:tasks:integration` from `web` for a disposable local MongoDB replica
+set covering revision history, cross-week moves, empty weeks, concurrent edits,
+imports, historical-date protection, and safe cleanup. It never loads `.env.local`.
+See the [production-readiness audit](production-tasks-production-audit.md) for
+operational details and the backup/reset procedure.

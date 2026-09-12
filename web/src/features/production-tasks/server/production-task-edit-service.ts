@@ -19,6 +19,7 @@ import {
   listProductionAreas,
 } from "./production-task-repository";
 import { commitTaskEdit } from "./production-task-edit-repository";
+import { observeProductionOperation } from "./production-task-observability";
 import type { ProductionTaskEditOptions } from "../application/production-task-contracts";
 
 export async function getProductionTaskEditOptions(
@@ -48,6 +49,10 @@ export async function getProductionTaskEditOptions(
 }
 
 export async function editProductionTask(input: unknown) {
+  return observeProductionOperation("task_edit", () => applyProductionTaskEdit(input));
+}
+
+async function applyProductionTaskEdit(input: unknown) {
   const auth = await requireProductionTaskManager();
   const command = taskEditCommandSchema.parse(input);
   const today = getCostaRicaDate();

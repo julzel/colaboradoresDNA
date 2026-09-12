@@ -82,6 +82,8 @@ describe.skipIf(process.env.RUN_TASKS_LIVE !== "1")(
   "weekly tasks real MongoDB, isolated synthetic database",
   () => {
     beforeAll(async () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-09-07T12:00:00.000Z"));
       vi.stubEnv("MONGODB_DB", databaseName);
       database = await getDatabase();
       if ((await database.listCollections().toArray()).length)
@@ -168,6 +170,7 @@ describe.skipIf(process.env.RUN_TASKS_LIVE !== "1")(
         await database.dropDatabase();
       await (await getMongoClient()).close();
       vi.unstubAllEnvs();
+      vi.useRealTimers();
     });
 
     it("restricts supervisor management to an effective active production department", async () => {
@@ -196,7 +199,7 @@ describe.skipIf(process.env.RUN_TASKS_LIVE !== "1")(
       actor.role = "administrator";
     });
 
-    it("round-trips the template, keeps previews private, and requires mapping names", async () => {
+    it("round-trips the template, keeps previews private, and resolves unique names", async () => {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await createProductionTaskTemplateBuffer());
       workbook.getWorksheet("Tareas")!.getRow(3).values = [
@@ -227,7 +230,7 @@ describe.skipIf(process.env.RUN_TASKS_LIVE !== "1")(
           year: 2026,
         }),
       );
-      expect(legacy.canCommit).toBe(false);
+      expect(legacy.canCommit).toBe(true);
     });
 
     it("imports, publishes, reads personal assignments, and preserves revisions on confirmed replacement", async () => {
@@ -304,6 +307,58 @@ describe.skipIf(process.env.RUN_TASKS_LIVE !== "1")(
       ).toBeGreaterThan(0);
     });
 
+    it("blocks historical replacements, preserves unchanged past work, and rechecks dates at publication", async () => {
+      vi.setSystemTime(new Date("2026-09-08T12:00:00Z"));
+      try {
+        const before = await getPublishedProductionBoard({
+          date: "2026-09-07",
+          view: "week",
+        });
+        const totalBefore = await database
+          .collection("production_week_plans")
+          .countDocuments();
+        const changed = await configure(
+          await createProductionImportPreview({
+            buffer: csv("Cambiar el pasado"),
+            fileName: "past.csv",
+            year: 2026,
+          }),
+        );
+        await expect(
+          commitProductionImport(commitInput(changed)),
+        ).rejects.toMatchObject({ code: "task_date_past" });
+        expect(
+          await database.collection("production_week_plans").countDocuments(),
+        ).toBe(totalBefore);
+
+        const unchanged = await configure(
+          await createProductionImportPreview({
+            buffer: Buffer.from(
+              `${csv("Empacar").toString()}\n2026/09/08,Cocina,Producto,DNA-0002,Trabajo nuevo`,
+            ),
+            fileName: "mixed.csv",
+            year: 2026,
+          }),
+        );
+        const [id] = await commitProductionImport(commitInput(unchanged));
+        const draft = (await getProductionPlanEditor(id!))!;
+        expect(draft.plan.tasks[0]?.id).toBe(before.tasks[0]?.id);
+        vi.setSystemTime(new Date("2026-09-09T12:00:00Z"));
+        await expect(
+          publishProductionWeekAsManager({
+            planId: id!,
+            expectedVersion: draft.plan.version,
+          }),
+        ).rejects.toMatchObject({ code: "task_date_past" });
+        expect(
+          (await getPublishedProductionBoard({ date: "2026-09-07", view: "week" }))
+            .tasks,
+        ).toEqual(before.tasks);
+      } finally {
+        vi.setSystemTime(new Date("2026-09-07T12:00:00Z"));
+      }
+    });
+
     it("retains replaced drafts and rejects expired previews", async () => {
       const create = async (task: string) =>
         configure(
@@ -344,6 +399,9 @@ describe.skipIf(process.env.RUN_TASKS_LIVE !== "1")(
     });
 
     it("rejects stale target confirmations and rolls back the entire multi-week import", async () => {
+      const draftsBefore = await database
+        .collection("production_week_plans")
+        .countDocuments({ currentSlot: "draft" });
       const preview = await configure(
         await createProductionImportPreview({
           buffer: csv("Revisar"),
@@ -365,7 +423,7 @@ describe.skipIf(process.env.RUN_TASKS_LIVE !== "1")(
         await database
           .collection("production_week_plans")
           .countDocuments({ currentSlot: "draft" }),
-      ).toBe(0);
+      ).toBe(draftsBefore);
       const workbook = new ExcelJS.Workbook();
       for (const name of ["New", "Conflict"])
         workbook.addWorksheet(name).addRows([

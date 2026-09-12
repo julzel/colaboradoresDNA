@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal/modal";
@@ -75,6 +75,11 @@ export function TaskEditor({
   const [changed, setChanged] = useState(false);
   const [reload, setReload] = useState(0);
   const [conflict, setConflict] = useState(false);
+  const submitting = useRef(false);
+  const feedback = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) feedback.current?.focus();
+  }, [error]);
   useEffect(() => {
     const controller = new AbortController();
     fetch(`/api/production-tasks/v1/tasks/options?date=${encodeURIComponent(date)}`, {
@@ -106,11 +111,13 @@ export function TaskEditor({
   }
   async function submit(event?: FormEvent, remove = false) {
     event?.preventDefault();
-    if (busy || conflict || (!remove && (!options || loading))) return;
+    if (submitting.current || busy || conflict || (!remove && (!options || loading)))
+      return;
     if (!remove && !people.length) {
       setError("Asigná al menos una persona.");
       return;
     }
+    submitting.current = true;
     setBusy(true);
     setError("");
     const source = task
@@ -150,9 +157,15 @@ export function TaskEditor({
       setError(cause instanceof Error ? cause.message : "No pudimos guardar la tarea.");
       if (cause instanceof TaskApiError) {
         setWarnings(cause.warnings ?? []);
-        if (cause.code === "stale_version") setConflict(true);
+        if (
+          cause.code === "stale_version" ||
+          cause.code === "outcome_unknown" ||
+          cause.code === "unavailable"
+        )
+          setConflict(true);
       }
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
@@ -182,7 +195,7 @@ export function TaskEditor({
         data-unsaved-changes={changed}
       >
         {error && (
-          <p role="alert" className={styles.error}>
+          <p role="alert" ref={feedback} tabIndex={-1} className={styles.error}>
             {error}
           </p>
         )}
