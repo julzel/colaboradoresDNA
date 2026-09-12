@@ -232,6 +232,63 @@ describe("calendar service authorization and aggregation", () => {
     expect(overview.todayAgenda).toEqual([]);
   });
 
+  it("includes every calendar entry for today in the administrator agenda", async () => {
+    mocks.requirePlatformUser.mockResolvedValue({
+      platformUser: {
+        displayName: "Julio Zeledon",
+        id: "507f1f77bcf86cd799439011",
+        role: "administrator",
+      },
+    });
+    mocks.listPublicHolidays.mockResolvedValue([
+      { date: "2026-09-12", name: "Feriado de prueba" },
+      { date: "2026-09-15", name: "Otro feriado" },
+    ]);
+    mocks.listBirthdayCalendarEntries.mockResolvedValue([
+      {
+        birthday: "12/09",
+        displayName: "Cumpleaños de hoy",
+        employeeId: "507f1f77bcf86cd799439021",
+      },
+      {
+        birthday: "13/09",
+        displayName: "Cumpleaños de mañana",
+        employeeId: "507f1f77bcf86cd799439022",
+      },
+    ]);
+    mocks.listVisibleApprovedAbsences.mockResolvedValue([
+      {
+        durationLabel: "2",
+        endDate: "2026-09-13",
+        id: "507f1f77bcf86cd799439031",
+        requesterName: "Persona ausente",
+        startDate: "2026-09-11",
+      },
+    ]);
+
+    const overview = await getCalendarDashboardOverview({
+      now: new Date("2026-09-12T15:00:00.000Z"),
+    });
+
+    expect(mocks.listPublicHolidays).toHaveBeenCalledWith(2026);
+    expect(mocks.listVisibleApprovedAbsences).toHaveBeenCalledWith({
+      endDate: "2026-09-12",
+      platformUserId: "507f1f77bcf86cd799439011",
+      role: "administrator",
+      startDate: "2026-09-12",
+    });
+    expect(overview.todayAgenda.map((entry) => entry.kind)).toEqual([
+      "pto",
+      "birthday",
+      "holiday",
+    ]);
+    expect(overview.todayAgenda.map((entry) => entry.title)).toEqual([
+      "Persona ausente",
+      "Cumpleaños de hoy",
+      "Feriado de prueba",
+    ]);
+  });
+
   it("adds Costa Rican public holidays as read-only all-day entries", async () => {
     mocks.listPublicHolidays.mockResolvedValue([
       { date: "2026-07-25", name: "Anexión del Partido de Nicoya" },

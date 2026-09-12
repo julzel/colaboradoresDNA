@@ -90,12 +90,10 @@ export function DashboardHighlights({
                   >
                     <span className={styles.agendaDetails}>
                       <strong>{entry.title}</strong>
-                      {entry.location && (
-                        <span className={styles.meta}>
-                          <MapPin aria-hidden="true" size={14} />
-                          {entry.location}
-                        </span>
-                      )}
+                      <span className={styles.meta}>
+                        {entry.location && <MapPin aria-hidden="true" size={14} />}
+                        {entry.location ?? entry.label}
+                      </span>
                     </span>
                     {!entry.allDay && (
                       <span className={styles.duration}>{formatDuration(entry)}</span>
