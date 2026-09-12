@@ -194,8 +194,51 @@
   border-bottom: 0;
 }
 
-.grid tr[data-mine="true"] {
-  background: var(--color-brand-soft);
+.areaRow {
+  --area-accent: var(--color-text-muted);
+  --area-soft: var(--color-surface-subtle);
+
+  background: var(--area-soft);
+}
+
+.areaRow[data-area="cocinado"] {
+  --area-accent: var(--color-area-cocinado);
+  --area-soft: var(--color-area-cocinado-soft);
+}
+
+.areaRow[data-area="congelado"] {
+  --area-accent: var(--color-area-congelado);
+  --area-soft: var(--color-area-congelado-soft);
+}
+
+.areaRow[data-area="deshidratado"] {
+  --area-accent: var(--color-area-deshidratado);
+  --area-soft: var(--color-area-deshidratado-soft);
+}
+
+.areaRow[data-area="etiquetado"] {
+  --area-accent: var(--color-area-etiquetado);
+  --area-soft: var(--color-area-etiquetado-soft);
+}
+
+.areaRow[data-area="cuarto-frio"] {
+  --area-accent: var(--color-area-cuarto-frio);
+  --area-soft: var(--color-area-cuarto-frio-soft);
+}
+
+.areaRow[data-area="materia-prima"] {
+  --area-accent: var(--color-area-materia-prima);
+  --area-soft: var(--color-area-materia-prima-soft);
+}
+
+.areaRow[data-area="rutas"] {
+  --area-accent: var(--color-area-rutas);
+  --area-soft: var(--color-area-rutas-soft);
+}
+
+.areaRow[data-area="inventario"] {
+  --area-accent: var(--color-area-inventario);
+  --area-soft: var(--color-area-inventario-soft);
 }
 
 .taskDescription {
@@ -333,7 +376,7 @@
 
 .taskCards li {
   position: relative;
-  padding: var(--space-5) 0;
+  padding: var(--space-5) var(--space-4);
   overflow-wrap: anywhere;
 }
 
@@ -478,4 +521,16 @@
   .personalList {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+
+.areaRow .taskDescription,
+.areaRow > strong,
+.areaRow > td:nth-child(2),
+.areaRow dl > div:nth-child(2) dd {
+  color: var(--area-accent);
+}
+
+.areaRow .person {
+  background: color-mix(in srgb, var(--area-accent) 10%, var(--area-soft));
+  color: var(--area-accent);
 }

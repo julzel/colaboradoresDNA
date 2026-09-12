@@ -3,6 +3,7 @@ import type {
   ProductionTaskEmployeeDto,
 } from "../application/production-task-contracts";
 import { formatTaskDate } from "../presentation/messages";
+import { getAreaColor } from "../presentation/area-color";
 import styles from "./tasks.module.css";
 import { Button } from "@/components/ui/button/button";
 import { Pencil } from "lucide-react";
@@ -33,7 +34,11 @@ export function TaskGrid({
     <>
       <ul className={styles.taskCards} aria-label="Tareas de la semana">
         {tasks.map((task) => (
-          <li key={task.id}>
+          <li
+            key={task.id}
+            className={styles.areaRow}
+            data-area={getAreaColor(task.areaName)}
+          >
             <strong>{task.description}</strong>
             <dl>
               <div>
@@ -110,6 +115,8 @@ export function TaskGrid({
             {tasks.map((task) => (
               <tr
                 key={task.id}
+                className={styles.areaRow}
+                data-area={getAreaColor(task.areaName)}
                 data-mine={
                   !!currentEmployeeId &&
                   task.assigneeEmployeeIds.includes(currentEmployeeId)
