@@ -49,11 +49,6 @@ export function TaskBoard({
               {formatTaskDate(board.query.weekStart)} –{" "}
               {formatTaskDate(board.query.weekEnd)}
             </p>
-            <p>
-              {board.plan
-                ? `Versión ${board.plan.revision} · ${board.canManage ? "Edición de tareas desde hoy" : "Solo lectura"}`
-                : "Semana sin publicar"}
-            </p>
           </div>
           <nav className={styles.planNavigation} aria-label="Navegar semanas">
             <ButtonLink
