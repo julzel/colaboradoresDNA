@@ -367,7 +367,7 @@ export function PlanningWorkspace() {
                       {data.workspace.conversation.map((message, index) => (
                         <li key={index}>
                           <strong>
-                            {message.role === "user" ? "Vos" : "Asistente"}
+                            {message.role === "user" ? "Tú" : "Asistente"}
                           </strong>
                           <p>{message.content}</p>
                         </li>

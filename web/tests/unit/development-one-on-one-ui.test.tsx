@@ -66,7 +66,7 @@ describe("development 1:1 UI", () => {
 
     expect(screen.getByLabelText("Inicio")).toHaveValue("2026-08-12T09:00");
     expect(screen.getByLabelText("Final")).toHaveValue("2026-08-12T09:30");
-    expect(screen.getByText(/visible solo para vos y Ana Vargas/i)).toBeInTheDocument();
+    expect(screen.getByText(/visible solo para ti y Ana Vargas/i)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Fecha de la conversación"), {
       target: { value: "2026-08-13" },
