@@ -7,6 +7,8 @@ import type {
   ProductionBoardResult,
   ProductionImportPreviewResult,
 } from "@/features/production-tasks/application/production-task-contracts";
+const navigation = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 const board: ProductionBoardResult = {
   areas: [],
   canManage: false,
@@ -45,16 +47,19 @@ const board: ProductionBoardResult = {
 };
 describe("read-only weekly tasks UI", () => {
   it("shows personal work and the full board without management/edit controls for readers", async () => {
-    render(<TaskBoard board={board} />);
+    const { rerender } = render(<TaskBoard board={board} />);
     expect(
       screen.queryByRole("link", { name: "Importar tareas" }),
     ).not.toBeInTheDocument();
-    const table = screen.getByRole("table");
-    expect(within(table).getByText("Tarea other")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /^Mis tareas/ }));
-    expect(within(table).queryByText("Tarea other")).not.toBeInTheDocument();
-    expect(within(table).getByText("Tarea me")).toBeInTheDocument();
-    expect(within(table).queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.getByText("Tarea other")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Mis tareas/ })).toHaveAttribute(
+      "href",
+      "/tareas?fecha=2026-09-07&periodo=dia&vista=mias",
+    );
+    rerender(<TaskBoard board={board} initialMine />);
+    expect(screen.queryByText("Tarea other")).not.toBeInTheDocument();
+    expect(screen.getByText("Tarea me")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Editar/ })).not.toBeInTheDocument();
   });
   it("exposes history only when the server grants management permission", () => {
     render(<TaskBoard board={{ ...board, canManage: true }} />);
@@ -62,6 +67,73 @@ describe("read-only weekly tasks UI", () => {
       "href",
       "/tareas/historial",
     );
+  });
+  it("shows only the chosen day and preserves filters across day/week boundaries", () => {
+    render(<TaskBoard board={board} initialMine initialArea="area" />);
+    expect(screen.getByRole("link", { name: "Día anterior" })).toHaveAttribute(
+      "href",
+      "/tareas?fecha=2026-09-06&periodo=dia&vista=mias&area=area",
+    );
+    expect(screen.getByRole("link", { name: "Semana" })).toHaveAttribute(
+      "href",
+      "/tareas?fecha=2026-09-07&periodo=semana&vista=mias&area=area",
+    );
+    expect(screen.getByRole("link", { name: "Día" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(
+      within(
+        screen.getByRole("navigation", { name: "Días de la semana" }),
+      ).getAllByRole("link"),
+    ).toHaveLength(7);
+    const form = screen.getByLabelText("Ir a una fecha").closest("form")!;
+    expect(new FormData(form).get("area")).toBe("area");
+    expect(new FormData(form).get("vista")).toBe("mias");
+  });
+  it("groups all seven days in week view, including empty days", () => {
+    const nextTask = {
+      ...board.tasks[0]!,
+      id: "next",
+      workDate: "2026-09-08",
+      description: "Tarea del martes",
+    };
+    const { rerender } = render(
+      <TaskBoard board={{ ...board, tasks: [...board.tasks, nextTask] }} />,
+    );
+    expect(screen.queryByText("Tarea del martes")).not.toBeInTheDocument();
+    rerender(
+      <TaskBoard
+        board={{ ...board, tasks: [...board.tasks, nextTask] }}
+        initialView="week"
+      />,
+    );
+    expect(screen.getByText("Tarea del martes")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(7);
+    expect(screen.getAllByText("Sin tareas para este día.")).toHaveLength(5);
+    expect(screen.getByRole("link", { name: "Semana siguiente" })).toHaveAttribute(
+      "href",
+      "/tareas?fecha=2026-09-14&periodo=semana",
+    );
+  });
+  it("distinguishes unpublished plans and filtered empty days", () => {
+    const { rerender } = render(
+      <TaskBoard board={{ ...board, plan: null, tasks: [] }} />,
+    );
+    expect(
+      screen.getByText("El plan de esta semana aún no está publicado"),
+    ).toBeInTheDocument();
+    rerender(<TaskBoard board={board} initialArea="missing" />);
+    expect(screen.getByText("No hay tareas con estos filtros.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Limpiar filtros" })).toHaveAttribute(
+      "href",
+      "/tareas?fecha=2026-09-07&periodo=dia",
+    );
+  });
+  it("keeps past tasks read-only for managers", () => {
+    render(<TaskBoard board={{ ...board, canManage: true, today: "2026-09-08" }} />);
+    expect(screen.queryByRole("button", { name: /^Editar/ })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Fecha pasada · Solo lectura")).toHaveLength(2);
   });
   it("requires validation and a separate explicit import confirmation", async () => {
     const preview: ProductionImportPreviewResult = {

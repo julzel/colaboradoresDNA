@@ -12,7 +12,12 @@ export const metadata = { title: "Tareas de producción" };
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ fecha?: string; vista?: string }>;
+  searchParams: Promise<{
+    fecha?: string;
+    vista?: string;
+    periodo?: string;
+    area?: string;
+  }>;
 }) {
   const query = await searchParams;
   const date = productionDateSchema.safeParse(query.fecha);
@@ -45,9 +50,11 @@ export default async function TasksPage({
         icon={ClipboardList}
       />
       <TaskBoard
-        key={board.query.weekStart}
+        key={`${board.query.selectedDate}-${query.periodo}-${query.vista}-${query.area}`}
         board={board}
         initialMine={query.vista === "mias"}
+        initialArea={query.area ?? ""}
+        initialView={query.periodo === "semana" ? "week" : "day"}
       />
     </Container>
   );

@@ -1,7 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { getDatabase, getMongoClient } from "@/lib/server/mongodb";
-import { createAuthentication } from "./auth-factory";
+import { createAuthentication, getAuthenticationTrustedOrigins } from "./auth-factory";
 import { sendAuthMail } from "./auth-email";
 
 let instance: Promise<ReturnType<typeof createAuthentication>> | undefined;
@@ -15,6 +15,12 @@ export function getAuthentication() {
       database: await getDatabase(),
       client: await getMongoClient(),
       baseURL,
+      trustedOrigins: getAuthenticationTrustedOrigins({
+        baseURL,
+        configuredOrigins: process.env.AUTH_TRUSTED_ORIGINS,
+        environment: process.env.APP_ENVIRONMENT,
+        nodeEnvironment: process.env.NODE_ENV,
+      }),
       secret,
       sendMail: sendAuthMail,
     });

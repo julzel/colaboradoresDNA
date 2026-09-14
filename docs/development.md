@@ -29,6 +29,17 @@ value. It sends an invitation, not a password or automatic login. See
 
 Use the canonical localhost hostname during authentication, not a mixture of
 localhost and 127.0.0.1. Do not use production credentials in local tests.
+To test from a phone or another device on the same network, add its exact app
+origin to `AUTH_TRUSTED_ORIGINS`, for example
+`AUTH_TRUSTED_ORIGINS=http://192.168.1.25:3000`. Separate multiple origins with
+commas. Extra auth origins are accepted only when `NODE_ENV=development` and
+`APP_ENVIRONMENT` is not `production`; production builds ignore them even when
+`APP_ENVIRONMENT=development`.
+Also set `NEXT_DEV_ALLOWED_ORIGINS=192.168.1.25` in `web/.env.local` for Next.js
+dev-server access. This accepts comma-separated hostnames without a scheme or
+port, and is ignored outside the development runtime. Restart `pnpm dev` after
+changing these settings. Keep machine-specific addresses in the ignored local
+environment file.
 Opt-in live auth/PTO tests create disposable databases and require a suitably
 isolated test credential; see the main README for commands.
 
