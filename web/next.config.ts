@@ -102,6 +102,13 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  allowedDevOrigins:
+    process.env.NODE_ENV === "development"
+      ? (process.env.NEXT_DEV_ALLOWED_ORIGINS ?? "")
+          .split(",")
+          .map((hostname) => hostname.trim())
+          .filter(Boolean)
+      : [],
 };
 
 export default nextConfig;

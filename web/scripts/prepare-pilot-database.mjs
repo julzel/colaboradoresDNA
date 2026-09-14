@@ -78,9 +78,7 @@ try {
     await session.withTransaction(async () => {
       for (const { name } of collections) {
         const preservationFilter = preservationFilters.get(name);
-        const deletionFilter = preservationFilter
-          ? { $nor: [preservationFilter] }
-          : {};
+        const deletionFilter = preservationFilter ? { $nor: [preservationFilter] } : {};
         const result = await database
           .collection(name)
           .deleteMany(deletionFilter, { session });

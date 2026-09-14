@@ -482,8 +482,13 @@ and “Leer más”; name the destination or result.
 For all new or redesigned operational tables, use `/admin/horarios` as the
 reference for the containing section: `ElevatedSurface`, a padded title and
 context header, the shared `ListToolbar` and `FilterBar`/`FilterChip` controls,
-then a result count and the records. `/tareas` applies this pattern to a semantic
-desktop table and mobile record list. Use shared color tokens without local
+then a result count and the records. The Tasks `TaskGrid` component applies this
+pattern to a semantic desktop table and mobile record list. The `/tareas` board
+uses day/week calendar views: seven day columns when the surface is at least
+70rem wide, and a labeled agenda grouped by day on smaller screens. Day view
+uses a seven-day navigation strip and labeled task records. Date, view and
+filters persist in navigation URLs; mobile date/area controls expand on demand.
+Use shared color tokens without local
 palette overrides. Filter selection uses the shared soft chip treatment, not a
 primary action button. Primary CTAs belong in the page header.
 

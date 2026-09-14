@@ -9,16 +9,51 @@ export function invitationDigest(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
+export function getAuthenticationTrustedOrigins({
+  baseURL,
+  configuredOrigins,
+  environment,
+  nodeEnvironment,
+}: {
+  baseURL: string;
+  configuredOrigins?: string | undefined;
+  environment?: string | undefined;
+  nodeEnvironment?: string | undefined;
+}) {
+  const origins = [new URL(baseURL).origin];
+  if (
+    nodeEnvironment !== "development" ||
+    environment === "production" ||
+    !configuredOrigins
+  )
+    return origins;
+
+  for (const value of configuredOrigins.split(",")) {
+    const candidate = value.trim();
+    if (!candidate) continue;
+    const url = new URL(candidate);
+    if (
+      !(["http:", "https:"] as string[]).includes(url.protocol) ||
+      url.origin !== candidate
+    )
+      throw new Error("AUTH_TRUSTED_ORIGINS must contain exact HTTP(S) origins.");
+    if (!origins.includes(url.origin)) origins.push(url.origin);
+  }
+  return origins;
+}
+
 export function createAuthentication({
   database,
   client,
   baseURL,
+  trustedOrigins,
   secret,
   sendMail,
 }: {
   database: Db;
   client: MongoClient;
   baseURL: string;
+  trustedOrigins?: string[];
   secret: string;
   sendMail: (message: { to: string; subject: string; text: string }) => Promise<void>;
 }) {
@@ -39,7 +74,7 @@ export function createAuthentication({
     appName: "Colaboradores DNA",
     baseURL,
     secret,
-    trustedOrigins: [new URL(baseURL).origin],
+    trustedOrigins: trustedOrigins ?? [new URL(baseURL).origin],
     database: mongodbAdapter(database, { client, transaction: true }),
     user: {
       modelName: "auth_users",
