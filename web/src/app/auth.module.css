@@ -109,7 +109,17 @@
   }
 
   .compactOnMobile .formPanel {
-    padding: var(--space-6);
+    min-height: 100dvh;
+    padding: clamp(var(--space-4), 5vw, var(--space-6));
+  }
+
+  .compactOnMobile .formContent {
+    padding: clamp(var(--space-6), 7vw, var(--space-8));
+    border: 1px solid var(--color-sidebar-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-sidebar-surface);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(1rem) saturate(1.2);
   }
 
   .compactBrand {

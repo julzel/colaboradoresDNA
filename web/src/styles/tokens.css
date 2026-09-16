@@ -60,7 +60,7 @@
   --color-area-inventario-soft: #f3f1f7;
 
   /* Semantic colors */
-  --color-canvas: var(--neutral-50);
+  --color-canvas: #eef2f4;
   --color-surface: var(--neutral-0);
   --color-surface-subtle: var(--neutral-25);
   --color-surface-muted: var(--neutral-100);
@@ -130,7 +130,7 @@
     var(--color-sidebar);
   --background-primary-action: var(--brand-cyan);
   --color-primary-action-text: var(--neutral-0);
-  --color-topbar: rgb(247 245 239 / 92%);
+  --color-topbar: #eef2f4;
   --color-skeleton: var(--neutral-100);
   --color-skeleton-highlight: rgb(255 255 255 / 72%);
   --color-progress-track: var(--neutral-100);
