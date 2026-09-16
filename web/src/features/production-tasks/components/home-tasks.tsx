@@ -65,7 +65,7 @@ export async function HomeTasks() {
                     {task.assigneeEmployeeIds.map((id) => (
                       <span className={styles.person} key={id}>
                         {employeeNames.get(id) ?? "Colaborador anterior"}
-                        {id === board.currentEmployeeId && <small> · Vos</small>}
+                        {id === board.currentEmployeeId && <small> · Tú</small>}
                       </span>
                     ))}
                   </dd>

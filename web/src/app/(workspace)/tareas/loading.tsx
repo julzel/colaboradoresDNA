@@ -1,8 +1,5 @@
-import { Container } from "@/components/ui/container/container";
+import { TasksLoading } from "@/features/production-tasks/components/tasks-loading";
+
 export default function LoadingTasks() {
-  return (
-    <Container>
-      <p role="status">Cargando tareas…</p>
-    </Container>
-  );
+  return <TasksLoading />;
 }

@@ -362,6 +362,61 @@
   min-width: 0;
 }
 
+.loadingPlanHeader,
+.loadingToolbar,
+.loadingNavigation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.loadingPlanHeader,
+.loadingToolbar {
+  justify-content: space-between;
+}
+
+.loadingPlanHeader,
+.loadingToolbar,
+.loadingDayStrip {
+  padding: var(--space-4);
+}
+
+.loadingCopy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.loadingNavigation {
+  flex-wrap: wrap;
+}
+
+.loadingToolbar {
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.loadingDayStrip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.loadingTaskList {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.loadingTask {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-inline-start: 3px solid var(--color-skeleton);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+}
+
 .resultCount {
   margin: 0 0 var(--space-2);
   color: var(--color-text-muted);
