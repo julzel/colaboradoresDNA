@@ -102,7 +102,13 @@ export function AuthForm({
   return (
     <form className={styles.form} onSubmit={submit}>
       {mode !== "sign-up" && (
-        <header className={styles.intro}>
+        <header
+          className={
+            mode === "sign-in" && !challenge && !recover
+              ? `${styles.intro} ${styles.signInIntro}`
+              : styles.intro
+          }
+        >
           <h2>
             {challenge
               ? "Verificá tu identidad"
@@ -110,7 +116,7 @@ export function AuthForm({
                 ? "Recuperá tu contraseña"
                 : mode === "reset"
                   ? "Restablecé tu contraseña"
-                  : "Te damos la bienvenida"}
+                  : ""}
           </h2>
           <p>
             {challenge
@@ -121,7 +127,7 @@ export function AuthForm({
                 ? "Te enviaremos un enlace para crear una contraseña nueva."
                 : mode === "reset"
                   ? "Elegí una contraseña nueva para volver a entrar a tu cuenta."
-                  : "Iniciá sesión para entrar al espacio de trabajo."}
+                  : ""}
           </p>
         </header>
       )}
