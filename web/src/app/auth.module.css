@@ -16,18 +16,21 @@
 }
 
 .brand {
-  display: inline-flex;
+  display: grid;
   width: fit-content;
-  align-items: center;
-  gap: var(--space-3);
+  align-self: center;
+  justify-items: center;
+  gap: var(--space-2);
   color: inherit;
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 800;
   letter-spacing: -0.025em;
+  text-align: center;
   text-decoration: none;
 }
 
 .brandCopy {
+  color: var(--color-accent);
   max-width: 31rem;
 }
 
