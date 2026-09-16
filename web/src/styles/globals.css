@@ -68,6 +68,22 @@ textarea:hover:not(:disabled) {
   border-color: var(--color-accent);
 }
 
+/* iOS Safari zooms the viewport when an editable control uses text below 16px. */
+@media (width < 48rem) {
+  input:not(
+    [type="checkbox"],
+    [type="color"],
+    [type="file"],
+    [type="hidden"],
+    [type="radio"],
+    [type="range"]
+  ),
+  select,
+  textarea {
+    font-size: 1rem !important;
+  }
+}
+
 .skip-link {
   position: fixed;
   z-index: 100;
