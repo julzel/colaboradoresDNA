@@ -76,6 +76,12 @@
   line-height: var(--line-body);
 }
 
+@media (width <= 48rem) {
+  .signInIntro p {
+    display: none;
+  }
+}
+
 .successIcon {
   display: grid;
   width: 4rem;

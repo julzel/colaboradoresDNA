@@ -74,6 +74,51 @@
   gap: var(--space-6);
 }
 
+.compactBrand {
+  display: none;
+  color: var(--color-text);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-align: center;
+  text-decoration: none;
+}
+
+.compactLogo {
+  width: 8.25rem;
+}
+
+.compactLogo img {
+  width: 100%;
+}
+
+@media (width <= 48rem) {
+  .compactOnMobile {
+    --color-text: var(--color-sidebar-text);
+    --color-text-muted: var(--color-sidebar-muted);
+    --color-text-subtle: var(--color-sidebar-muted);
+    --color-surface: var(--color-sidebar-surface);
+    --color-surface-muted: var(--color-sidebar-surface);
+    --color-border: var(--color-sidebar-border);
+
+    background: var(--background-navigation);
+  }
+
+  .compactOnMobile .brandPanel {
+    display: none;
+  }
+
+  .compactOnMobile .formPanel {
+    padding: var(--space-6);
+  }
+
+  .compactBrand {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+  }
+}
+
 @media (width > 48rem) {
   .shell {
     grid-template-columns: minmax(18rem, 0.8fr) minmax(22rem, 1.2fr);

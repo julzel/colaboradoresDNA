@@ -3,9 +3,20 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/logo/logo";
 import styles from "@/app/auth.module.css";
 
-export function AuthPageShell({ children }: { children: ReactNode }) {
+export function AuthPageShell({
+  children,
+  compactOnMobile = false,
+}: {
+  children: ReactNode;
+  compactOnMobile?: boolean;
+}) {
   return (
-    <main className={styles.shell} id="main-content">
+    <main
+      className={
+        compactOnMobile ? `${styles.shell} ${styles.compactOnMobile}` : styles.shell
+      }
+      id="main-content"
+    >
       <section className={styles.brandPanel}>
         <Link
           className={styles.brand}
@@ -28,7 +39,19 @@ export function AuthPageShell({ children }: { children: ReactNode }) {
         </span>
       </section>
       <section className={styles.formPanel} aria-label="Acceso a tu cuenta">
-        <div className={styles.formContent}>{children}</div>
+        <div className={styles.formContent}>
+          {compactOnMobile && (
+            <Link
+              className={styles.compactBrand}
+              href="/"
+              aria-label="Ir al inicio de Colaboradores DNA"
+            >
+              <span>Colaboradores</span>
+              <Logo className={styles.compactLogo ?? ""} priority tone="light" />
+            </Link>
+          )}
+          {children}
+        </div>
       </section>
     </main>
   );
