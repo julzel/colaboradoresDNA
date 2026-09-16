@@ -23,20 +23,16 @@ export function AuthPageShell({
           href="/"
           aria-label="Ir al inicio de Colaboradores DNA"
         >
-          <Logo priority />
           <span>Colaboradores</span>
+          <Logo className={styles.compactLogo ?? ""} priority tone="light" />
         </Link>
         <div className={styles.brandCopy}>
           <p className={styles.eyebrow}>Espacio interno</p>
-          <h1>Todo tu equipo, en un mismo lugar.</h1>
+          <h1>¡Bienvenido, equipo!</h1>
           <p>
-            Consultá eventos, solicitudes y tareas operativas con acceso seguro para
-            cada colaborador.
+            Consultá eventos, solicitudes y tareas operativas.
           </p>
         </div>
-        <span className={styles.support}>
-          Acceso exclusivo para personas invitadas.
-        </span>
       </section>
       <section className={styles.formPanel} aria-label="Acceso a tu cuenta">
         <div className={styles.formContent}>

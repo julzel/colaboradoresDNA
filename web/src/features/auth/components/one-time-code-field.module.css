@@ -33,11 +33,16 @@
   color: transparent;
   caret-color: transparent;
   cursor: text;
-  opacity: 0;
+
+  /* Keep the native input rendered so mobile browsers can offer Paste. */
+  opacity: 1;
+  -webkit-touch-callout: default;
+  user-select: text;
 }
 
 .cells {
   display: grid;
+  pointer-events: none;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: clamp(0.35rem, 2vw, var(--space-2));
 }
