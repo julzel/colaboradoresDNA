@@ -14,12 +14,21 @@ export default async function HomePage() {
   const showAgenda = dashboard.role !== "collaborator";
   const overview = await getCalendarDashboardOverview({ includeAgenda: showAgenda });
   const dashboardDate = getDashboardDate();
+  const homeTasks = (
+    <Container>
+      <Suspense fallback={<p role="status">Cargando mis tareas…</p>}>
+        <HomeTasks />
+      </Suspense>
+    </Container>
+  );
 
   return (
     <div className={styles.page}>
       <Container>
         <DashboardWelcome date={dashboardDate} displayName={dashboard.displayName} />
       </Container>
+
+      {dashboard.role === "collaborator" && homeTasks}
 
       <Container>
         <DashboardHighlights {...overview} showAgenda={showAgenda} />
@@ -30,11 +39,7 @@ export default async function HomePage() {
           <AdministratorModuleLinks />
         </Container>
       )}
-      <Container>
-        <Suspense fallback={<p role="status">Cargando mis tareas…</p>}>
-          <HomeTasks />
-        </Suspense>
-      </Container>
+      {dashboard.role !== "collaborator" && homeTasks}
     </div>
   );
 }
