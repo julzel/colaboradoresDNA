@@ -91,7 +91,7 @@ export function TaskCalendar({
                             ? task.assigneeEmployeeIds.map((id) => (
                                 <span className={styles.person} key={id}>
                                   {names.get(id) ?? "Colaborador anterior"}
-                                  {id === currentEmployeeId && <small> · Vos</small>}
+                                  {id === currentEmployeeId && <small> · Tú</small>}
                                 </span>
                               ))
                             : "Sin asignar"}
