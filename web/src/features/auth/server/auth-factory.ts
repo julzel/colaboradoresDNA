@@ -59,6 +59,7 @@ export function createAuthentication({
 }) {
   if (secret.length < 32)
     throw new Error("BETTER_AUTH_SECRET must contain at least 32 characters.");
+  const resetMail = new WeakMap<Request, Parameters<typeof sendMail>[0]>();
   async function findSignupInvitation(email: string, token: string) {
     if (!email || !token || token.length > 256) return null;
     return database.collection("platform_users").findOne({
@@ -98,12 +99,17 @@ export function createAuthentication({
       maxPasswordLength: 128,
       requireEmailVerification: true,
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: async ({ user, url }) =>
-        sendMail({
+      sendResetPassword: async ({ user, url }, request) => {
+        const message = {
           to: user.email,
           subject: "Restablecer contraseña · Colaboradores DNA",
           text: `Usá este enlace para restablecer tu contraseña:\n${url}\nSi no lo solicitaste, ignorá este mensaje.`,
-        }),
+        };
+        // Better Auth swallows callback failures. Send HTTP recovery mail from the
+        // after hook so SMTP failures produce a safe, retryable response instead.
+        if (request) resetMail.set(request, message);
+        else await sendMail(message);
+      },
     },
     emailVerification: {
       sendOnSignUp: true,
@@ -224,6 +230,20 @@ export function createAuthentication({
           });
       }),
       after: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === "/request-password-reset" && ctx.request) {
+          const message = resetMail.get(ctx.request);
+          resetMail.delete(ctx.request);
+          if (message) {
+            try {
+              await sendMail(message);
+            } catch {
+              throw new APIError("SERVICE_UNAVAILABLE", {
+                code: "PASSWORD_RESET_DELIVERY_FAILED",
+                message: "No pudimos solicitar el enlace. Intentá de nuevo más tarde.",
+              });
+            }
+          }
+        }
         const result = ctx.context.returned;
         const verifiedSession = ctx.context.newSession ?? ctx.context.session;
         if (

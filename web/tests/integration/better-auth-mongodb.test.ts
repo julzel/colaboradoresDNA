@@ -11,6 +11,7 @@ import { migrateLegacyAccounts } from "@/features/auth/server/legacy-account-mig
 
 const databaseName = `dna_auth_test_${randomBytes(12).toString("hex")}`;
 const emails: Array<{ to: string; subject: string; text: string }> = [];
+let failMail = false;
 const baseURL = "http://localhost:3000";
 let client: MongoClient;
 let auth: ReturnType<typeof createAuthentication>;
@@ -77,6 +78,7 @@ describe.skipIf(process.env.RUN_AUTH_LIVE !== "1")(
         baseURL,
         secret: randomBytes(32).toString("base64"),
         sendMail: async (message) => {
+          if (failMail) throw new Error("Synthetic mail delivery failure");
           emails.push(message);
         },
       });
@@ -242,6 +244,25 @@ describe.skipIf(process.env.RUN_AUTH_LIVE !== "1")(
           })
         ).ok,
       ).toBe(false);
+      const oldPasswordLogin = await recovery.request("/api/auth/sign-in/email", {
+        email: invitedEmail,
+        password,
+      });
+      expect(oldPasswordLogin.status).toBe(401);
+      const newPasswordLogin = await recovery.request("/api/auth/sign-in/email", {
+        email: invitedEmail,
+        password: "A-different-test-password-825!",
+      });
+      expect((await newPasswordLogin.json()).twoFactorRedirect).toBe(true);
+      expect(await (await recovery.request("/api/auth/get-session")).json()).toBeNull();
+      expect(
+        (
+          await recovery.request("/api/auth/two-factor/verify-backup-code", {
+            code: backupCodes[1],
+          })
+        ).status,
+      ).toBe(200);
+      await recovery.request("/api/auth/sign-out", {});
       await db
         .collection("platform_users")
         .updateOne({ _id: platform.insertedId }, { $set: { status: "deactivated" } });
@@ -256,6 +277,163 @@ describe.skipIf(process.env.RUN_AUTH_LIVE !== "1")(
         .findOne({ userId: new ObjectId(sessionBefore.user.id) });
       expect(stored?.secret).not.toContain(new URL(totpURI).searchParams.get("secret"));
     }, 60000);
+
+    it("protects recovery against unknown emails, expired tokens, invalid passwords and untrusted redirects", async () => {
+      const db = client.db(databaseName);
+      const actor = browser("192.0.2.30");
+      const email = "recovery@example.test";
+      const invitation = randomBytes(32).toString("hex");
+      await db.collection("platform_users").insertOne({
+        normalizedEmail: email,
+        displayName: "Recovery test",
+        status: "invited",
+        authUserId: null,
+        invitation: {
+          invitationId: invitationDigest(invitation),
+          expiresAt: new Date(Date.now() + 86400000),
+          status: "pending",
+        },
+      });
+      expect(
+        (
+          await actor.request(
+            "/api/auth/sign-up/email",
+            { email, password: "A-long-test-password-719!", name: "Recovery test" },
+            { "x-invitation-token": invitation },
+          )
+        ).status,
+      ).toBe(200);
+      const known = await actor.request("/api/auth/request-password-reset", {
+        email,
+        redirectTo: "/reset-password",
+      });
+      expect(known.status).toBe(200);
+      const mailCount = emails.length;
+      const unknown = await actor.request("/api/auth/request-password-reset", {
+        email: "unknown-recovery@example.test",
+        redirectTo: "/reset-password",
+      });
+      expect(unknown.status).toBe(200);
+      expect(await unknown.json()).toEqual(await known.json());
+      expect(emails).toHaveLength(mailCount);
+
+      const resetURL = emails
+        .findLast((mail) => mail.to === email)!
+        .text.match(/http\S+/)![0];
+      const callback = await actor.request(resetURL);
+      expect(callback.status).toBe(302);
+      const redirect = new URL(callback.headers.get("location")!, baseURL);
+      expect(redirect.pathname).toBe("/reset-password");
+      const token = redirect.searchParams.get("token")!;
+      const verification = await db
+        .collection("auth_verifications")
+        .findOne({ identifier: `reset-password:${token}` });
+      expect(verification!.expiresAt.getTime() - Date.now()).toBeGreaterThan(3500000);
+      expect(verification!.expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(
+        3600000,
+      );
+      for (const [newPassword, code] of [
+        ["short", "PASSWORD_TOO_SHORT"],
+        ["x".repeat(129), "PASSWORD_TOO_LONG"],
+      ]) {
+        const response = await actor.request("/api/auth/reset-password", {
+          token,
+          newPassword,
+        });
+        expect(response.status).toBe(400);
+        expect((await response.json()).code).toBe(code);
+      }
+      expect(
+        await db
+          .collection("auth_verifications")
+          .findOne({ identifier: `reset-password:${token}` }),
+      ).not.toBeNull();
+      await db
+        .collection("auth_verifications")
+        .updateOne(
+          { identifier: `reset-password:${token}` },
+          { $set: { expiresAt: new Date(Date.now() - 1000) } },
+        );
+      const expiredCallback = await actor.request(resetURL);
+      const expiredRedirect = new URL(
+        expiredCallback.headers.get("location")!,
+        baseURL,
+      );
+      expect(expiredRedirect.pathname).toBe("/reset-password");
+      expect(expiredRedirect.searchParams.get("error")).toBe("INVALID_TOKEN");
+      expect(expiredRedirect.searchParams.has("token")).toBe(false);
+      const expiredReset = await actor.request("/api/auth/reset-password", {
+        token,
+        newPassword: "A-different-test-password-825!",
+      });
+      expect(expiredReset.status).toBe(400);
+      expect((await expiredReset.json()).code).toBe("INVALID_TOKEN");
+      const unsafe = browser("192.0.2.31");
+      expect(
+        (
+          await unsafe.request("/api/auth/request-password-reset", {
+            email,
+            redirectTo: "https://attacker.example/reset",
+          })
+        ).status,
+      ).toBe(403);
+      expect(emails).toHaveLength(mailCount);
+      expect(
+        (
+          await unsafe.request(
+            "/api/auth/request-password-reset",
+            { email, redirectTo: "/reset-password" },
+            { origin: "https://attacker.example" },
+          )
+        ).status,
+      ).toBe(403);
+      expect(emails).toHaveLength(mailCount);
+    }, 30000);
+
+    it("surfaces mail failures and rate-limits recovery requests", async () => {
+      const actor = browser("192.0.2.32");
+      const email = "mail-failure@example.test";
+      await client.db(databaseName).collection("auth_users").insertOne({
+        email,
+        name: "Mail delivery test",
+        emailVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      failMail = true;
+      try {
+        const response = await actor.request("/api/auth/request-password-reset", {
+          email,
+          redirectTo: "/reset-password",
+        });
+        expect(response.status).toBe(503);
+        expect(await response.json()).toEqual({
+          code: "PASSWORD_RESET_DELIVERY_FAILED",
+          message: "No pudimos solicitar el enlace. Intentá de nuevo más tarde.",
+        });
+      } finally {
+        failMail = false;
+      }
+      const limited = browser("192.0.2.33");
+      for (let i = 0; i < 3; i++) {
+        expect(
+          (
+            await limited.request("/api/auth/request-password-reset", {
+              email: "unknown-limited@example.test",
+              redirectTo: "/reset-password",
+            })
+          ).status,
+        ).toBe(200);
+      }
+      expect(
+        (
+          await limited.request("/api/auth/request-password-reset", {
+            email: "unknown-limited@example.test",
+            redirectTo: "/reset-password",
+          })
+        ).status,
+      ).toBe(429);
+    });
 
     it("rejects expired or wrong invitations and rate-limits repeated sign-ins", async () => {
       const actor = browser("192.0.2.12");

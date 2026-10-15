@@ -93,6 +93,10 @@ workspace access. Existing Clerk accounts need the migration step first.
   and keep a second enrolled administrator before production.
 - Password-reset links are single-use and expire using Better Auth's one-hour
   default. Resets revoke all sessions and **do not remove MFA**.
+- HTTP recovery requests await SMTP delivery in the provider after hook so mail
+  failures return a retryable `503` without provider details. Successful requests
+  use the same response for known and unknown emails. Invalid, expired or consumed
+  links offer a return to sign-in; a completed reset removes the password form.
 - Sessions last 24 hours and refresh after one hour. Cookie session caching is
   disabled, so authorization sees current database state. Session cookies are
   HttpOnly, SameSite=Lax and Secure on HTTPS.

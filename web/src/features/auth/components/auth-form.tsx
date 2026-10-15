@@ -13,12 +13,14 @@ export function AuthForm({
   invitation = "",
   invitedEmail = "",
   resetToken = "",
+  resetError = "",
   onSignUpComplete,
 }: {
   mode?: "sign-in" | "sign-up" | "reset";
   invitation?: string | undefined;
   invitedEmail?: string | undefined;
   resetToken?: string | undefined;
+  resetError?: string | undefined;
   onSignUpComplete?: (() => void) | undefined;
 }) {
   const [busy, setBusy] = useState(false);
@@ -27,6 +29,8 @@ export function AuthForm({
   const [challenge, setChallenge] = useState(false);
   const [backup, setBackup] = useState(false);
   const [challengeCode, setChallengeCode] = useState("");
+  const [resetInvalid, setResetInvalid] = useState(false);
+  const [resetComplete, setResetComplete] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -46,7 +50,18 @@ export function AuthForm({
         }
         window.location.assign("/");
       } else if (recover) {
-        await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" });
+        const result = await authClient.requestPasswordReset({
+          email,
+          redirectTo: "/reset-password",
+        });
+        if (result.error) {
+          setMessage(
+            result.error.status === 429
+              ? "Hiciste demasiados intentos. Esperá un minuto antes de solicitar otro enlace."
+              : "No pudimos solicitar el enlace. Intentá de nuevo más tarde.",
+          );
+          return;
+        }
         setMessage(
           "Si la cuenta existe, recibirás un enlace para restablecer tu contraseña.",
         );
@@ -55,11 +70,17 @@ export function AuthForm({
           token: resetToken,
           newPassword: password,
         });
-        setMessage(
-          result.error
-            ? "El enlace venció o la contraseña no cumple los requisitos."
-            : "Contraseña actualizada. Ya podés iniciar sesión.",
-        );
+        if (result.error) {
+          if (result.error.code === "INVALID_TOKEN") setResetInvalid(true);
+          else
+            setMessage(
+              ["PASSWORD_TOO_SHORT", "PASSWORD_TOO_LONG"].includes(
+                result.error.code ?? "",
+              )
+                ? "Usá una contraseña de entre 12 y 128 caracteres."
+                : "No pudimos actualizar la contraseña. Intentá de nuevo más tarde.",
+            );
+        } else setResetComplete(true);
       } else if (mode === "sign-up") {
         const result = await authClient.signUp.email(
           { email, password, name: "Persona invitada", callbackURL: "/sign-in" },
@@ -98,6 +119,24 @@ export function AuthForm({
   if (mode === "sign-up" && (!invitation || !invitedEmail))
     return (
       <p>Necesitás una invitación vigente. Solicitá el enlace a administración.</p>
+    );
+  if (mode === "reset" && (!resetToken || resetError || resetInvalid || resetComplete))
+    return (
+      <div className={styles.form}>
+        <header className={styles.intro}>
+          <h2>
+            {resetComplete ? "Contraseña actualizada" : "Solicitá un enlace nuevo"}
+          </h2>
+          <p role="status">
+            {resetComplete
+              ? "Ya podés iniciar sesión con tu nueva contraseña."
+              : "El enlace no es válido o venció. Solicitá uno nuevo desde el inicio de sesión."}
+          </p>
+        </header>
+        <ButtonLink href="/sign-in" fullWidth variant="secondary">
+          {resetComplete ? "Iniciar sesión" : "Volver al inicio de sesión"}
+        </ButtonLink>
+      </div>
     );
   return (
     <form className={styles.form} onSubmit={submit}>
@@ -242,6 +281,7 @@ export function AuthForm({
       </p>
       {mode === "sign-in" && !challenge && (
         <Button
+          disabled={busy}
           variant="quiet"
           onClick={() => {
             setRecover(!recover);
