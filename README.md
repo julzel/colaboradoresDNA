@@ -75,6 +75,12 @@ RUN_PTO_LIVE=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run tes
 ```
 
 Auth integration tests capture emails in memory; they do not send real email.
+Run `pnpm test:auth:local` from `web/` for isolated auth integration tests plus
+the browser recovery flow through a local SMTP inbox. This starts a disposable
+MongoDB replica set and Next.js server, overrides local auth and email settings,
+and never sends external email. Install Chromium with
+`pnpm exec playwright install chromium` first. Use `--integration-only` to skip
+the browser checks.
 See the [repository audit](./docs/repository-audit-2026-09-07.md) for earlier
 findings; its Clerk-specific configuration is superseded by this migration.
 

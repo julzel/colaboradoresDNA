@@ -95,6 +95,9 @@ importers:
       "@types/react-dom":
         specifier: 19.1.9
         version: 19.1.9(@types/react@19.1.12)
+      "@types/smtp-server":
+        specifier: ^3.5.13
+        version: 3.5.13
       "@vitejs/plugin-react":
         specifier: 5.0.2
         version: 5.0.2(vite@7.3.6(@types/node@24.3.0)(tsx@4.23.13))
@@ -116,6 +119,9 @@ importers:
       prettier:
         specifier: 3.6.2
         version: 3.6.2
+      smtp-server:
+        specifier: ^3.19.22
+        version: 3.19.22
       stylelint:
         specifier: 16.23.1
         version: 16.23.1(typescript@5.9.2)
@@ -1688,6 +1694,12 @@ packages:
     resolution:
       {
         integrity: sha512-cMoR+FoAf/Jyq6+Df2/Z41jISvGZZ2eTlnsaJRptmZ76Caldwy1odD4xTr/gNV9VLj0AWgg/nmkevIyUfIIq5w==,
+      }
+
+  "@types/smtp-server@3.5.13":
+    resolution:
+      {
+        integrity: sha512-S3rGl2KbViH+98/CgHipPIWgtAFnjxLsppxIRbgJHNuZL7Y+py+7kZjT7xS+wOmCxYTn4O7IqLqkvekg99MDVQ==,
       }
 
   "@types/webidl-conversions@7.0.3":
@@ -3788,6 +3800,12 @@ packages:
       }
     engines: { node: ">= 0.4" }
 
+  ipv6-normalize@1.0.1:
+    resolution:
+      {
+        integrity: sha512-Bm6H79i01DjgGTCWjUuCjJ6QDo1HB96PT/xCYuyJUP9WFbVDrLSbG4EZCvOCun2rNswZb0c3e4Jt/ws795esHA==,
+      }
+
   is-array-buffer@3.0.5:
     resolution:
       {
@@ -4624,6 +4642,13 @@ packages:
       }
     engines: { node: ">=20.0.0" }
 
+  nodemailer@10.1.1:
+    resolution:
+      {
+        integrity: sha512-pbqZRoeYUO+1E8TJ/11WeY4D2EVujj1hsYjz3qff/vUFDtGnmi7p3iqzTFslYOfQ6PnjVcWxx/CIUSHCSrO/QA==,
+      }
+    engines: { node: ">=20.0.0" }
+
   normalize-path@3.0.0:
     resolution:
       {
@@ -4979,6 +5004,13 @@ packages:
       {
         integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==,
       }
+
+  punycode.js@2.3.1:
+    resolution:
+      {
+        integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==,
+      }
+    engines: { node: ">=6" }
 
   punycode@2.3.1:
     resolution:
@@ -5370,6 +5402,13 @@ packages:
         integrity: sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==,
       }
     engines: { node: ">=10" }
+
+  smtp-server@3.19.22:
+    resolution:
+      {
+        integrity: sha512-tFAL2UmSPDvxSIpH809XcZ61Pri2uM/8/EmGO4ptf8fAsoOrHbCeyv5jWAVE21zKQk/OEzEQHgJYjfUQF8lFxw==,
+      }
+    engines: { node: ">=20.0.0" }
 
   sonner@2.0.7:
     resolution:
@@ -6958,6 +6997,11 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
+  "@types/smtp-server@3.5.13":
+    dependencies:
+      "@types/node": 24.3.0
+      "@types/nodemailer": 8.0.1
+
   "@types/webidl-conversions@7.0.3": {}
 
   "@types/whatwg-url@13.0.0":
@@ -8391,6 +8435,8 @@ snapshots:
       hasown: 2.0.4
       side-channel: 1.1.1
 
+  ipv6-normalize@1.0.1: {}
+
   is-array-buffer@3.0.5:
     dependencies:
       call-bind: 1.0.9
@@ -8868,6 +8914,8 @@ snapshots:
 
   nodemailer@10.0.1: {}
 
+  nodemailer@10.1.1: {}
+
   normalize-path@3.0.0: {}
 
   nwsapi@2.2.24: {}
@@ -9048,6 +9096,8 @@ snapshots:
       loose-envify: 1.4.0
       object-assign: 4.1.1
       react-is: 16.13.1
+
+  punycode.js@2.3.1: {}
 
   punycode@2.3.1: {}
 
@@ -9334,6 +9384,12 @@ snapshots:
       ansi-styles: 4.3.0
       astral-regex: 2.0.0
       is-fullwidth-code-point: 3.0.0
+
+  smtp-server@3.19.22:
+    dependencies:
+      ipv6-normalize: 1.0.1
+      nodemailer: 10.1.1
+      punycode.js: 2.3.1
 
   sonner@2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:

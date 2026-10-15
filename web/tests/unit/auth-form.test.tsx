@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthForm } from "@/features/auth/components/auth-form";
 import { SignUpFlow } from "@/features/auth/components/sign-up-flow";
+import ResetPasswordPage from "@/app/reset-password/page";
 
 const api = vi.hoisted(() => ({
   signIn: vi.fn(),
@@ -112,6 +113,107 @@ describe("application-owned authentication forms", () => {
       redirectTo: "/reset-password",
     });
   });
+  it.each([
+    [500, "No pudimos solicitar el enlace. Intentá de nuevo más tarde."],
+    [
+      429,
+      "Hiciste demasiados intentos. Esperá un minuto antes de solicitar otro enlace.",
+    ],
+  ])(
+    "reports a failed recovery request (%s) without claiming an email was sent",
+    async (status, message) => {
+      api.recover.mockResolvedValue({ error: { status, message: "Sensitive detail" } });
+      render(<AuthForm />);
+      fireEvent.click(screen.getByRole("button", { name: "Olvidé mi contraseña" }));
+      fireEvent.change(screen.getByLabelText("Correo electrónico"), {
+        target: { value: "user@example.test" },
+      });
+      fireEvent.click(
+        screen.getByRole("button", { name: "Enviar enlace de recuperación" }),
+      );
+      await screen.findByText(message);
+      expect(screen.queryByText(/Si la cuenta existe/)).not.toBeInTheDocument();
+      expect(screen.queryByText("Sensitive detail")).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Enviar enlace de recuperación" }),
+      ).toBeEnabled();
+    },
+  );
+  it.each([
+    {},
+    { error: "INVALID_TOKEN" },
+    { token: "synthetic-token", error: "INVALID_TOKEN" },
+    { token: ["first", "second"] },
+  ])(
+    "offers recovery instead of a password form for an invalid reset URL (%j)",
+    async (params) => {
+      render(await ResetPasswordPage({ searchParams: Promise.resolve(params) }));
+      expect(
+        screen.getByRole("heading", { name: "Solicitá un enlace nuevo" }),
+      ).toBeVisible();
+      expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Volver al inicio de sesión" }),
+      ).toHaveAttribute("href", "/sign-in");
+      expect(api.reset).not.toHaveBeenCalled();
+    },
+  );
+  it("finishes reset with a sign-in link and removes the used password form", async () => {
+    api.reset.mockResolvedValue({ data: { status: true } });
+    render(
+      await ResetPasswordPage({
+        searchParams: Promise.resolve({ token: "synthetic-token" }),
+      }),
+    );
+    const password = screen.getByLabelText("Nueva contraseña");
+    expect(password).toHaveAttribute("minlength", "12");
+    expect(password).toHaveAttribute("maxlength", "128");
+    fireEvent.change(password, { target: { value: "A-new-long-password-723!" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar contraseña" }));
+    await screen.findByRole("heading", { name: "Contraseña actualizada" });
+    expect(api.reset).toHaveBeenCalledWith({
+      token: "synthetic-token",
+      newPassword: "A-new-long-password-723!",
+    });
+    expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Iniciar sesión" })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+  });
+  it("handles a token that expires or is consumed while the reset form is open", async () => {
+    api.reset.mockResolvedValue({ error: { code: "INVALID_TOKEN" } });
+    render(<AuthForm mode="reset" resetToken="synthetic-token" />);
+    fireEvent.change(screen.getByLabelText("Nueva contraseña"), {
+      target: { value: "A-new-long-password-723!" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar contraseña" }));
+    await screen.findByRole("heading", { name: "Solicitá un enlace nuevo" });
+    expect(
+      screen.queryByRole("button", { name: "Guardar contraseña" }),
+    ).not.toBeInTheDocument();
+  });
+  it.each([
+    ["PASSWORD_TOO_SHORT", "Usá una contraseña de entre 12 y 128 caracteres."],
+    ["PASSWORD_TOO_LONG", "Usá una contraseña de entre 12 y 128 caracteres."],
+    [
+      "INTERNAL_SERVER_ERROR",
+      "No pudimos actualizar la contraseña. Intentá de nuevo más tarde.",
+    ],
+  ])(
+    "keeps the reset form available after a retryable failure (%s)",
+    async (code, message) => {
+      api.reset.mockResolvedValue({ error: { code, message: "Sensitive detail" } });
+      render(<AuthForm mode="reset" resetToken="synthetic-token" />);
+      fireEvent.change(screen.getByLabelText("Nueva contraseña"), {
+        target: { value: "A-new-long-password-723!" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Guardar contraseña" }));
+      await screen.findByText(message);
+      expect(screen.getByRole("button", { name: "Guardar contraseña" })).toBeEnabled();
+      expect(screen.queryByText("Sensitive detail")).not.toBeInTheDocument();
+    },
+  );
   it("recovers from a network failure without exposing provider details", async () => {
     api.signIn.mockRejectedValue(new Error("Sensitive provider detail"));
     render(<AuthForm />);
